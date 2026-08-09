@@ -1,0 +1,72 @@
+{
+  "name": "docviz-builder",
+  "version": "0.1.0",
+  "description": "Compila bloques declarativos de diagramas dentro de Markdown a imagenes SVG/PNG, produciendo Markdown estandar y portable.",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "engines": {
+    "node": ">=20.11"
+  },
+  "bin": {
+    "docviz": "./bin/docviz.mjs"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "bin",
+    "dist",
+    "scripts",
+    "README.md",
+    "AGENTS.md"
+  ],
+  "scripts": {
+    "setup": "node scripts/fetch-plantuml.mjs",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "docviz": "node --experimental-strip-types bin/docviz.mjs",
+    "docs:check": "node bin/docviz.mjs check docs-src",
+    "docs:build": "node bin/docviz.mjs build docs-src --output docs",
+    "docs:verify": "node bin/docviz.mjs verify docs",
+    "docs:test": "npm run docs:verify && vitest run tests/integration",
+    "docs:preview": "node bin/docviz.mjs preview docs",
+    "showcase": "node bin/docviz.mjs build examples --output artifacts/showcase --clean",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "mcp": "node bin/docviz-mcp.mjs"
+  },
+  "dependencies": {
+    "@hpcc-js/wasm-graphviz": "^1.28.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@terrastruct/d2": "^0.1.33",
+    "commander": "^14.0.2",
+    "likec4": "^1.59.2",
+    "mdast-util-to-string": "^4.0.0",
+    "mermaid": "^11.16.1",
+    "puppeteer-core": "^25.5.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5",
+    "unist-util-visit": "^5.0.0",
+    "vega": "^6.3.1",
+    "vega-lite": "^6.4.3",
+    "yaml": "^2.8.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@fission-ai/openspec": "^1.8.0",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.1.10",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.10"
+  }
+}

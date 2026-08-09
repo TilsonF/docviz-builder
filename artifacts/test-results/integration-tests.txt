@@ -1,0 +1,24 @@
+
+ RUN  v4.1.10 /Users/usuario1/Documents/Proyecticos/docviz-builder
+
+ ✓ tests/integration/renderers.test.ts > Caso 1 — PlantUML (Sequence) > genera y valida un diagrama de secuencia 1163ms
+ ✓ tests/integration/renderers.test.ts > Caso 2 — Mermaid (Flowchart) > genera y valida un flowchart 1714ms
+ ✓ tests/integration/renderers.test.ts > Caso 3 — D2 (Strategy Tree) > genera y valida un arbol de estrategia 394ms
+ ✓ tests/integration/renderers.test.ts > Caso 4 — Vega-Lite (Bar Chart) > genera y valida un grafico de barras 208ms
+ ✓ tests/integration/renderers.test.ts > Caso 4 — Vega-Lite (Bar Chart) > rechaza la carga remota de datos 3ms
+ ✓ tests/integration/renderers.test.ts > Caso 5 — Graphviz (grafo de dependencias) > genera y valida un grafo de dependencias 46ms
+ ✓ tests/integration/renderers.test.ts > Caso 6 — Multiples diagramas en un mismo documento > renderiza PlantUML, D2, Vega-Lite, Mermaid y LikeC4 en el mismo Markdown 3475ms
+ ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > falla el build y reporta archivo, linea, renderer y motivo 1177ms
+ ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > con --continue-on-error conserva el bloque original y sigue 382ms
+ ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > reporta un lenguaje de DSL mal escrito antes de renderizar 5ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > regenera todo la primera vez, nada la segunda y solo lo cambiado la tercera 539ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > el resultado es deterministico byte a byte entre ejecuciones 894ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > cambiar el tema invalida el cache 1365ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > --clean borra la salida pero conserva los aciertos de cache 575ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > el mismo diagrama repetido en dos documentos comparte recurso 780ms
+
+ Test Files  2 passed (2)
+      Tests  15 passed (15)
+   Start at  10:58:52
+   Duration  13.06s (transform 89ms, setup 0ms, import 194ms, tests 12.74s, environment 0ms)
+

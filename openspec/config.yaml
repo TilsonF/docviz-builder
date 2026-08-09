@@ -1,0 +1,19 @@
+schema: spec-driven
+
+context: |
+  DocViz Builder: compilador de bloques declarativos de diagramas dentro de
+  Markdown. TypeScript ESM sobre Node 20+. Seis motores locales (PlantUML,
+  Mermaid, D2, Vega-Lite, Graphviz, LikeC4) y un backend opcional de Kroki
+  self-hosted. Sin servicios externos por defecto: la documentacion tratada
+  puede ser confidencial.
+
+  Convenciones:
+  - Comentarios y documentacion en espanol, sin tildes en el codigo fuente.
+  - Pruebas con vitest; umbral de cobertura 90% lineas y 85% ramas.
+  - Los identificadores de dominio (renderer, block, asset) se mantienen en
+    ingles por coherencia con las APIs de los motores.
+
+rules:
+  spec:
+    - Cada requirement debe expresar una decision, no una implementacion.
+    - Todo requirement lleva al menos un scenario en formato DADO/CUANDO/ENTONCES.

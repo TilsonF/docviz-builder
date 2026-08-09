@@ -1,0 +1,472 @@
+
+ RUN  v4.1.10 /Users/usuario1/Documents/Proyecticos/docviz-builder
+
+ ✓ tests/unit/renderer-errors.test.ts > D2 > reporta un error de compilacion 335ms
+ ✓ tests/unit/renderer-errors.test.ts > D2 > renderiza correctamente un diagrama valido 94ms
+ ✓ tests/unit/renderer-errors.test.ts > Graphviz > reporta sintaxis DOT invalida 36ms
+ ✓ tests/unit/renderer-errors.test.ts > PlantUML > traduce el error de sintaxis a un motivo legible 979ms
+ ✓ tests/unit/renderer-errors.test.ts > PlantUML > aborta al superar el tiempo maximo 3ms
+ ✓ tests/unit/renderer-errors.test.ts > PlantUML > acepta un diagrama sin marcas de apertura envolviendolo 647ms
+ ✓ tests/unit/renderer-errors.test.ts > PlantUML > genera PNG cuando se le pide 633ms
+ ✓ tests/unit/renderer-errors.test.ts > Vega-Lite > reporta una especificacion que Vega rechaza 192ms
+ ✓ tests/unit/renderer-errors.test.ts > LikeC4 > reporta un modelo invalido 186ms
+ ✓ tests/unit/renderer-errors.test.ts > LikeC4 > usa la vista indice implicita si el modelo no declara ninguna 134ms
+ ✓ tests/unit/renderer-errors.test.ts > LikeC4 > elige la vista cuyo titulo coincide con el del bloque 88ms
+ ✓ tests/unit/renderer-errors.test.ts > Mermaid > reporta un diagrama invalido con el detalle del motor 2668ms
+ ✓ tests/unit/renderer-errors.test.ts > Mermaid > produce el mismo SVG para la misma entrada 1525ms
+ ✓ tests/unit/renderer-errors.test.ts > Mermaid > renderiza tambien secuencias y gantt 756ms
+ ✓ tests/unit/renderer-errors.test.ts > Mermaid > conserva la hoja de estilos apuntando al id real del svg 742ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_types > publica el catalogo completo 1ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_types > renderableTypes reune los tres catalogos ordenados 0ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_validate_document > valida contenido en memoria y describe cada bloque 8ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_validate_document > reporta un error del DSL con su detalle 3ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_validate_document > valida un directorio de proyecto 1ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_validate_document > devuelve el error de configuracion en lugar de lanzarlo 1ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > renderiza un tipo del DSL eligiendo el motor 383ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > renderiza un grafico 198ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > acepta tambien el nombre de un motor directamente 42ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > escribe el recurso cuando se indica outputDir 1654ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > rechaza un tipo inexistente listando los validos 0ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > devuelve el error del DSL sin lanzarlo 1ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_render_diagram > respeta el tema pedido 2ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_build_document y docviz_preview > compila y verifica en una sola llamada 379ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_build_document y docviz_preview > devuelve el resumen de la salida 448ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_build_document y docviz_preview > devuelve el Markdown compilado de un documento concreto 480ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_build_document y docviz_preview > impide leer fuera del directorio de salida 4ms
+ ✓ tests/unit/mcp-tools.test.ts > docviz_build_document y docviz_preview > informa del fallo de compilacion con el detalle completo 4ms
+ ✓ tests/unit/builder.test.ts > collectMarkdown > recorre subdirectorios y ordena el resultado 2ms
+ ✓ tests/unit/builder.test.ts > collectMarkdown > ignora directorios ocultos y node_modules 1ms
+ ✓ tests/unit/builder.test.ts > collectMarkdown > devuelve lista vacia si el directorio no existe 0ms
+ ✓ tests/unit/builder.test.ts > check > lista los bloques detectados con su motor 7ms
+ ✓ tests/unit/builder.test.ts > check > reporta un renderer deshabilitado 1ms
+ ✓ tests/unit/builder.test.ts > check > reporta un formato imposible para el motor 1ms
+ ✓ tests/unit/builder.test.ts > check > reporta un DSL invalido con archivo y sin renderizar 2ms
+ ✓ tests/unit/builder.test.ts > check > no falla con un proyecto sin documentos 0ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > rechaza que origen y salida sean el mismo directorio 1ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > copia los archivos que no son Markdown 2ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > preserva la estructura de subdirectorios 363ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > usa rutas relativas correctas desde documentos anidados 438ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > --clean elimina la salida previa 5ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > informa por el callback de log en modo verbose 477ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > respeta el formato pedido en la valla 1417ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > respeta la longitud de hash configurada 418ms
+ ✓ tests/unit/builder.test.ts > build — reglas generales > escribe los recursos en el assetsDir configurado 417ms
+ ✓ tests/unit/cli.test.ts > docviz types > lista los tipos del DSL y los temas 2ms
+ ✓ tests/unit/cli.test.ts > docviz check > acepta un proyecto valido 8ms
+ ✓ tests/unit/cli.test.ts > docviz check > con --verbose detalla cada bloque y su motor 1ms
+ ✓ tests/unit/cli.test.ts > docviz check > falla con codigo 1 y reporta el bloque roto 3ms
+ ✓ tests/unit/cli.test.ts > docviz check > acepta un directorio de origen explicito 1ms
+ ✓ tests/unit/cli.test.ts > docviz check > informa de un tema inexistente sin trazas de pila 1ms
+ ✓ tests/unit/cli.test.ts > docviz verify > acepta una salida correcta 2ms
+ ✓ tests/unit/cli.test.ts > docviz verify > falla si hay una imagen rota 1ms
+ ✓ tests/unit/cli.test.ts > docviz verify > falla si quedo un bloque declarativo sin compilar 1ms
+ ✓ tests/unit/cli.test.ts > docviz build > compila, informa estadisticas y respeta --theme 361ms
+ ✓ tests/unit/cli.test.ts > docviz build > falla y reporta cuando un diagrama es invalido 37ms
+ ✓ tests/unit/cli.test.ts > docviz build > con --continue-on-error termina en 1 pero deja salida 489ms
+ ✓ tests/unit/cli.test.ts > docviz build > rechaza un backend invalido 3ms
+ ✓ tests/unit/renderers-config.test.ts > Graphviz > rechaza un motor de layout inexistente 1ms
+ ✓ tests/unit/renderers-config.test.ts > Graphviz > acepta los motores validos 0ms
+ ✓ tests/unit/renderers-config.test.ts > Graphviz > la version incluye el motor elegido 28ms
+ ✓ tests/unit/renderers-config.test.ts > Graphviz > applyTheme inserta los atributos por defecto tras la llave 1ms
+ ✓ tests/unit/renderers-config.test.ts > Graphviz > applyTheme falla si el grafo no tiene cuerpo 0ms
+ ✓ tests/unit/renderers-config.test.ts > Graphviz > rechaza PNG 0ms
+ ✓ tests/unit/renderers-config.test.ts > PlantUML > resuelve el jar por defecto dentro del paquete 0ms
+ ✓ tests/unit/renderers-config.test.ts > PlantUML > bloquea directivas que leen archivos o URLs 0ms
+ ✓ tests/unit/renderers-config.test.ts > PlantUML > soporta SVG y PNG 0ms
+ ✓ tests/unit/renderers-config.test.ts > PlantUML > informa si Java no esta disponible 1ms
+ ✓ tests/unit/renderers-config.test.ts > D2 > rechaza un diagrama vacio 0ms
+ ✓ tests/unit/renderers-config.test.ts > D2 > rechaza PNG 0ms
+ ✓ tests/unit/renderers-config.test.ts > D2 > la version incluye el layout 0ms
+ ✓ tests/unit/renderers-config.test.ts > D2 > dispose es idempotente 0ms
+ ✓ tests/unit/renderers-config.test.ts > Mermaid > rechaza un diagrama vacio antes de abrir el navegador 0ms
+ ✓ tests/unit/renderers-config.test.ts > Mermaid > rechaza PNG 0ms
+ ✓ tests/unit/renderers-config.test.ts > Mermaid > informa con instrucciones si no hay navegador 0ms
+ ✓ tests/unit/renderers-config.test.ts > Mermaid > dispose sin navegador abierto no falla 0ms
+ ✓ tests/unit/renderers-config.test.ts > LikeC4 > rechaza un modelo vacio 0ms
+ ✓ tests/unit/renderers-config.test.ts > LikeC4 > rechaza PNG 0ms
+ ✓ tests/unit/renderers-config.test.ts > LikeC4 > la version incluye la del emisor SVG propio 1ms
+ ✓ tests/unit/renderers-config.test.ts > Vega-Lite > rechaza JSON invalido 0ms
+ ✓ tests/unit/renderers-config.test.ts > Vega-Lite > rechaza una raiz que no sea objeto 0ms
+ ✓ tests/unit/renderers-config.test.ts > Vega-Lite > rechaza data.url anidado 0ms
+ ✓ tests/unit/renderers-config.test.ts > Vega-Lite > rechaza PNG 0ms
+ ✓ tests/unit/renderers-config.test.ts > localizacion del navegador > prioriza la ruta explicita y las variables de entorno 0ms
+ ✓ tests/unit/renderers-config.test.ts > localizacion del navegador > incluye rutas del sistema 0ms
+ ✓ tests/unit/renderers-config.test.ts > localizacion del navegador > el texto de ayuda menciona las tres alternativas 0ms
+ ✓ tests/unit/renderers-config.test.ts > packageVersion > lee la version de un paquete instalado 0ms
+ ✓ tests/unit/renderers-config.test.ts > packageVersion > devuelve el valor por defecto si el paquete no existe 0ms
+ ✓ tests/unit/renderers-config.test.ts > packageVersion > cachea el resultado 0ms
+ ✓ tests/unit/renderers-config.test.ts > buildRegistry con backend kroki > usa Kroki para los motores que lo soportan y local para LikeC4 0ms
+ ✓ tests/unit/renderers-config.test.ts > buildRegistry con backend kroki > permite fijar el backend por motor 0ms
+ ✓ tests/unit/renderers-config.test.ts > buildRegistry con backend kroki > resuelve la ruta del jar relativa a la raiz del proyecto 0ms
+ ✓ tests/unit/renderers-base.test.ts > withTimeout > devuelve el resultado si termina a tiempo 1ms
+ ✓ tests/unit/renderers-base.test.ts > withTimeout > lanza RenderError al superar el limite 21ms
+ ✓ tests/unit/renderers-base.test.ts > withTimeout > aborta la senal al agotarse el tiempo 21ms
+ ✓ tests/unit/renderers-base.test.ts > withTimeout > propaga el error del trabajo 0ms
+ ✓ tests/unit/renderers-base.test.ts > enforceSize > acepta contenido dentro del limite 0ms
+ ✓ tests/unit/renderers-base.test.ts > enforceSize > rechaza contenido que lo supera e indica como subirlo 0ms
+ ✓ tests/unit/renderers-base.test.ts > assertFormat > acepta un formato soportado 0ms
+ ✓ tests/unit/renderers-base.test.ts > assertFormat > rechaza un formato no soportado listando los validos 0ms
+ ✓ tests/unit/renderers-base.test.ts > svgResult y pngResult > normaliza, sanea y empaqueta el SVG 1ms
+ ✓ tests/unit/renderers-base.test.ts > svgResult y pngResult > aplica el limite de tamano al SVG 0ms
+ ✓ tests/unit/renderers-base.test.ts > svgResult y pngResult > empaqueta PNG con su mime 0ms
+ ✓ tests/unit/renderers-base.test.ts > svgResult y pngResult > aplica el limite de tamano al PNG 0ms
+ ✓ tests/unit/renderers-base.test.ts > asRenderError > conserva un RenderError existente 0ms
+ ✓ tests/unit/renderers-base.test.ts > asRenderError > envuelve un Error con el mensaje de contexto 0ms
+ ✓ tests/unit/renderers-base.test.ts > asRenderError > envuelve un valor no-Error 0ms
+ ✓ tests/unit/renderers-base.test.ts > reutilizacion del reloj > no deja temporizadores vivos tras completar 0ms
+ ✓ tests/unit/preview.test.ts > indice > lista los documentos compilados 9ms
+ ✓ tests/unit/preview.test.ts > documentos > renderiza el Markdown como HTML legible 2ms
+ ✓ tests/unit/preview.test.ts > documentos > convierte las imagenes en figuras con pie 1ms
+ ✓ tests/unit/preview.test.ts > documentos > no interpreta el contenido de los bloques de codigo 1ms
+ ✓ tests/unit/preview.test.ts > documentos > sirve el original con ?raw=1 1ms
+ ✓ tests/unit/preview.test.ts > recursos > sirve los SVG con su tipo MIME 1ms
+ ✓ tests/unit/preview.test.ts > recursos > devuelve 404 para un recurso inexistente 0ms
+ ✓ tests/unit/preview.test.ts > recursos > devuelve 404 para un directorio 0ms
+ ✓ tests/unit/preview.test.ts > contencion de rutas > rechaza intentos de salir del directorio servido 1ms
+ ✓ tests/unit/preview.test.ts > contencion de rutas > rechaza una ruta codificada que sube de directorio 0ms
+ ✓ tests/unit/preview.test.ts > ciclo de vida > expone url y puerto reales 0ms
+ ✓ tests/unit/verify.test.ts > verify — caso correcto > no reporta problemas cuando todo esta en su sitio 6ms
+ ✓ tests/unit/verify.test.ts > verify — caso correcto > acepta rutas relativas desde subdirectorios 1ms
+ ✓ tests/unit/verify.test.ts > verify — caso correcto > ignora el ancla y la query al resolver el recurso 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta un recurso inexistente 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta un recurso vacio 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta rutas absolutas del sistema de archivos 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta URLs externas 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > acepta imagenes incrustadas como data URI 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta un recurso fuera del directorio de salida 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta imagenes sin texto alternativo 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > detecta bloques declarativos que quedaron sin compilar 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > no marca como residual un bloque de codigo normal 1ms
+ ✓ tests/unit/verify.test.ts > verify — problemas detectados > devuelve cero documentos si el directorio no existe 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta bloques `plantuml` 4ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta bloques `mermaid` 1ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta bloques `d2` 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta bloques `vega-lite` 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta bloques `graphviz` 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta bloques `likec4` 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > resuelve alias de lenguaje al tipo canonico 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > ignora bloques de lenguajes no registrados 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > detecta varios bloques y los devuelve en orden de aparicion 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — deteccion de lenguajes > conserva el resto del Markdown intacto en el AST 3ms
+ ✓ tests/unit/scan.test.ts > scanDocument — titulo del diagrama > toma el encabezado inmediatamente anterior 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — titulo del diagrama > prefiere el titulo declarado en la valla 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — titulo del diagrama > usa un titulo por defecto si no hay encabezado previo 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — titulo del diagrama > el titulo del DSL gana al encabezado 3ms
+ ✓ tests/unit/scan.test.ts > parseMeta > devuelve un objeto vacio sin meta 0ms
+ ✓ tests/unit/scan.test.ts > parseMeta > lee title con comillas dobles, simples y sin comillas 0ms
+ ✓ tests/unit/scan.test.ts > parseMeta > lee el formato solicitado y descarta valores invalidos 0ms
+ ✓ tests/unit/scan.test.ts > parseMeta > acepta alt como sinonimo de title 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — DSL de alto nivel > compila `diagram` al motor correspondiente 0ms
+ ✓ tests/unit/scan.test.ts > scanDocument — DSL de alto nivel > compila `chart` a Vega-Lite 1ms
+ ✓ tests/unit/scan.test.ts > scanDocument — DSL de alto nivel > compila `architecture` a LikeC4 1ms
+ ✓ tests/unit/dsl.test.ts > catalogo del DSL > expone las tres vallas 1ms
+ ✓ tests/unit/dsl.test.ts > catalogo del DSL > publica los tipos disponibles 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `sequence` se resuelve con plantuml 3ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `class` se resuelve con plantuml 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `state` se resuelve con plantuml 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `activity` se resuelve con plantuml 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `flow` se resuelve con mermaid 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `gantt` se resuelve con mermaid 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `strategy-tree` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `issue-tree` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `capability-map` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `operating-model` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `value-chain` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `before-after` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `timeline` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `roadmap` se resuelve con d2 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > `dependency-map` se resuelve con graphviz 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — eleccion automatica de motor > matrix-2x2 exige exactamente cuatro cuadrantes 1ms
+ ✓ tests/unit/dsl.test.ts > diagram — sequence > produce PlantUML valido y conserva el titulo 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — sequence > declara cada participante una sola vez 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — sequence > distingue mensaje solido de respuesta discontinua 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — sequence > acepta el tipo de participante 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — sequence > rechaza un participante no declarado con un mensaje accionable 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — sequence > admite notas 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — class > emite atributos, metodos y relaciones 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — class > rechaza relaciones hacia clases no declaradas 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — class > rechaza un tipo de relacion inexistente 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — flow y gantt > genera Mermaid con ids sinteticos y etiquetas entrecomilladas 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — flow y gantt > admite formas declaradas 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — flow y gantt > rechaza una forma inexistente 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — flow y gantt > genera un gantt con secciones y dependencias 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — flow y gantt > exige start o after en cada tarea 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — arboles ejecutivos > anida ramas de varios niveles 0ms
+ ✓ tests/unit/dsl.test.ts > diagram — arboles ejecutivos > acepta la forma corta de ramas sin hijos 0ms
+ ✓ tests/unit/dsl.test.ts > chart > bar produce una especificacion Vega-Lite con los datos incrustados 1ms
+ ✓ tests/unit/dsl.test.ts > chart > line y area cambian la marca 1ms
+ ✓ tests/unit/dsl.test.ts > chart > horizontal-bar intercambia los ejes 0ms
+ ✓ tests/unit/dsl.test.ts > chart > series multiples anaden color y apilado 0ms
+ ✓ tests/unit/dsl.test.ts > chart > grouped-bar usa xOffset en lugar de apilar 0ms
+ ✓ tests/unit/dsl.test.ts > chart > scatter exige x e y numericos 0ms
+ ✓ tests/unit/dsl.test.ts > chart > heatmap usa x, y y valor 0ms
+ ✓ tests/unit/dsl.test.ts > chart > waterfall calcula los acumulados en el compilador 0ms
+ ✓ tests/unit/dsl.test.ts > chart > rechaza un tipo de grafico inexistente 0ms
+ ✓ tests/unit/dsl.test.ts > chart > exige label y value en cada punto 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > genera un modelo LikeC4 con especificacion, modelo y vista 1ms
+ ✓ tests/unit/dsl.test.ts > architecture > anida los hijos dentro del padre y usa el nombre cualificado 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > mapea la clase a su forma LikeC4 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > acepta alias de clase en espanol 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > acepta la forma corta de relacion 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > rechaza referencias a elementos inexistentes 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > rechaza un padre inexistente 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > rechaza una clase de elemento inexistente 0ms
+ ✓ tests/unit/dsl.test.ts > architecture > sanea identificadores no validos en LikeC4 0ms
+ ✓ tests/unit/dsl.test.ts > errores generales del DSL > rechaza YAML invalido con un mensaje claro 0ms
+ ✓ tests/unit/dsl.test.ts > errores generales del DSL > rechaza un bloque vacio y sugiere un ejemplo 0ms
+ ✓ tests/unit/dsl.test.ts > errores generales del DSL > rechaza un tipo de diagrama inexistente listando los validos 0ms
+ ✓ tests/unit/dsl.test.ts > errores generales del DSL > rechaza un lenguaje que no es DSL 0ms
+ ✓ tests/unit/dsl-branches.test.ts > activity > emite decisiones con ramas si/no 3ms
+ ✓ tests/unit/dsl-branches.test.ts > activity > acepta "si" como sinonimo de "yes" 0ms
+ ✓ tests/unit/dsl-branches.test.ts > activity > emite ramas paralelas 1ms
+ ✓ tests/unit/dsl-branches.test.ts > activity > emite notas 0ms
+ ✓ tests/unit/dsl-branches.test.ts > activity > acepta pasos declarados como mapa con nombre 0ms
+ ✓ tests/unit/dsl-branches.test.ts > state > marca el estado inicial y los finales 0ms
+ ✓ tests/unit/dsl-branches.test.ts > state > admite [*] como extremo explicito de una transicion 0ms
+ ✓ tests/unit/dsl-branches.test.ts > state > rechaza estados no declarados 0ms
+ ✓ tests/unit/dsl-branches.test.ts > gantt > acepta title, axisFormat, end y milestone 0ms
+ ✓ tests/unit/dsl-branches.test.ts > gantt > rechaza una dependencia hacia una tarea aun no declarada 0ms
+ ✓ tests/unit/dsl-branches.test.ts > gantt > exige duracion o fin salvo en hitos 0ms
+ ✓ tests/unit/dsl-branches.test.ts > flow > usa conectores discontinuos 0ms
+ ✓ tests/unit/dsl-branches.test.ts > flow > declara nodos que no participan en ninguna relacion 0ms
+ ✓ tests/unit/dsl-branches.test.ts > flow > limpia caracteres que romperian la etiqueta de arista 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > strategy-pillars agrupa items bajo cada pilar 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > capability-map usa rejilla por dominio 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > operating-model encadena capas 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > value-chain usa la forma step 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > before-after admite etiquetas propias 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > matrix-2x2 escribe los ejes y admite cuadrantes con items 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > roadmap admite fases con y sin items 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > tree admite otra direccion 0ms
+ ✓ tests/unit/dsl-branches.test.ts > diagramas ejecutivos restantes > tree rechaza una direccion inexistente 0ms
+ ✓ tests/unit/dsl-branches.test.ts > dependency-map > declara nodos, aristas etiquetadas y discontinuas 0ms
+ ✓ tests/unit/dsl-branches.test.ts > chart — variantes > pie y donut usan arcos 0ms
+ ✓ tests/unit/dsl-branches.test.ts > chart — variantes > showValues anade una capa de texto 0ms
+ ✓ tests/unit/dsl-branches.test.ts > chart — variantes > acepta x/y/name/category como sinonimos de label 0ms
+ ✓ tests/unit/dsl-branches.test.ts > chart — variantes > acepta y como sinonimo de value 0ms
+ ✓ tests/unit/dsl-branches.test.ts > chart — variantes > scatter admite series y tamano 0ms
+ ✓ tests/unit/dsl-branches.test.ts > chart — variantes > acepta titulos de eje y leyenda 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > parseEdgeExpression invierte las flechas hacia la izquierda 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > parseEdgeExpression admite ..> y => 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > parseEdgeExpression falla con un formato irreconocible 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > toEdge acepta el mapa explicito con estilo 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > asArrowShorthand solo reconoce mapas de una entrada con flecha 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > nameOf rechaza elementos vacios 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > oneOf normaliza y valida 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > optionalNumber acepta cadenas numericas y rechaza texto 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > los escapes por motor neutralizan los delimitadores 0ms
+ ✓ tests/unit/dsl-branches.test.ts > utilidades del DSL > IdFactory reutiliza el id de una misma clave 0ms
+ ✓ tests/unit/config-security.test.ts > configuracion por defecto > es local, con cache y sin servicios externos 1ms
+ ✓ tests/unit/config-security.test.ts > mergeConfig > fusiona el YAML sobre los valores por defecto 0ms
+ ✓ tests/unit/config-security.test.ts > mergeConfig > acepta theme como cadena 0ms
+ ✓ tests/unit/config-security.test.ts > mergeConfig > acepta deshabilitar un renderer con un booleano 0ms
+ ✓ tests/unit/config-security.test.ts > mergeConfig > rechaza un formato invalido 0ms
+ ✓ tests/unit/config-security.test.ts > mergeConfig > rechaza un backend invalido 0ms
+ ✓ tests/unit/config-security.test.ts > mergeConfig > rechaza una raiz que no sea mapa 0ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > funciona sin archivo de configuracion 0ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > lee docviz.config.yaml del directorio 3ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > las opciones de CLI ganan al archivo 1ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > --renderer-url cambia el backend a kroki 0ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > rechaza un tema inexistente listando los validos 1ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > rechaza un assetsDir que se salga de la salida 0ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > rechaza una longitud de hash fuera de rango 0ms
+ ✓ tests/unit/config-security.test.ts > loadConfig > rechaza YAML malformado indicando el archivo 1ms
+ ✓ tests/unit/config-security.test.ts > temas > incluye los cuatro temas documentados 0ms
+ ✓ tests/unit/config-security.test.ts > temas > cada tema define configuracion para los seis motores 0ms
+ ✓ tests/unit/config-security.test.ts > temas > rechaza un tema inexistente 0ms
+ ✓ tests/unit/config-security.test.ts > seguridad de Kroki > acepta una instancia local 0ms
+ ✓ tests/unit/config-security.test.ts > seguridad de Kroki > bloquea el servicio publico kroki.io por defecto 0ms
+ ✓ tests/unit/config-security.test.ts > seguridad de Kroki > permite kroki.io solo con autorizacion explicita 0ms
+ ✓ tests/unit/config-security.test.ts > seguridad de Kroki > bloquea hosts remotos salvo autorizacion explicita 0ms
+ ✓ tests/unit/config-security.test.ts > seguridad de Kroki > rechaza esquemas que no sean http/https 0ms
+ ✓ tests/unit/config-security.test.ts > seguridad de Kroki > rechaza una URL malformada 0ms
+ ✓ tests/unit/config-load.test.ts > findConfigFile > encuentra el archivo en el propio directorio 1ms
+ ✓ tests/unit/config-load.test.ts > findConfigFile > sube por el arbol hasta encontrarlo 1ms
+ ✓ tests/unit/config-load.test.ts > findConfigFile > devuelve undefined si no hay ninguno 0ms
+ ✓ tests/unit/config-load.test.ts > findConfigFile > reconoce los tres nombres admitidos 0ms
+ ✓ tests/unit/config-load.test.ts > loadConfig — ruta explicita > acepta --config con una ruta relativa al cwd 3ms
+ ✓ tests/unit/config-load.test.ts > loadConfig — ruta explicita > falla si la ruta explicita no existe 1ms
+ ✓ tests/unit/config-load.test.ts > loadConfig — ruta explicita > un archivo vacio equivale a la configuracion por defecto 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee las opciones de PlantUML 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee el navegador de Mermaid 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee el layout de D2 e ignora uno invalido 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee el motor de Graphviz 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > acepta vega-lite y vegaLite como clave 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > permite deshabilitar LikeC4 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee las cabeceras de Kroki convirtiendolas a texto 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee backend por motor 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > rechaza un backend por motor invalido 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > lee timeout y tamano maximo 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > acepta output como cadena y source suelto 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > rechaza un nodo que deberia ser mapa 0ms
+ ✓ tests/unit/config-load.test.ts > mergeConfig — subconfiguracion por motor > rechaza timeout o tamano no positivos 1ms
+ ✓ tests/unit/config-load.test.ts > resolveFromRoot > resuelve rutas contra la raiz del proyecto 0ms
+ ✓ tests/unit/config-load.test.ts > resolveFromRoot > respeta una ruta ya absoluta 0ms
+ ✓ tests/unit/transform.test.ts > imageMarkdown > genera sintaxis de imagen estandar 1ms
+ ✓ tests/unit/transform.test.ts > imageMarkdown > escapa corchetes del texto alternativo 0ms
+ ✓ tests/unit/transform.test.ts > imageMarkdown > envuelve entre <> las rutas con espacios 0ms
+ ✓ tests/unit/transform.test.ts > applyReplacements > reemplaza el bloque de codigo por una imagen 3ms
+ ✓ tests/unit/transform.test.ts > applyReplacements > conserva el alt text derivado del titulo 1ms
+ ✓ tests/unit/transform.test.ts > applyReplacements > reemplaza varios bloques manteniendo los desplazamientos 1ms
+ ✓ tests/unit/transform.test.ts > applyReplacements > mantiene intacto el resto del documento byte a byte 3ms
+ ✓ tests/unit/transform.test.ts > applyReplacements > no toca el documento si no hay bloques compilables 0ms
+ ✓ tests/unit/transform.test.ts > applyReplacements > reemplaza tambien bloques indentados dentro de listas 0ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > devuelve undefined y cuenta fallo cuando no hay entrada 1ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > guarda y recupera una entrada 1ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > distingue formatos con el mismo hash 1ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > reparte las entradas en subdirectorios 0ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > no deja archivos temporales tras escribir 0ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > deshabilitado nunca acierta, pero sigue escribiendo 0ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > clear elimina todo el directorio 1ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > resetStats vuelve a cero los contadores 0ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > expone el directorio resuelto 0ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > una entrada corrupta en disco no impide leerla como bytes 1ms
+ ✓ tests/unit/cache-store.test.ts > AssetCache > el directorio por defecto es .docviz-cache 0ms
+ ✓ tests/unit/browser.test.ts > orden de busqueda > la ruta explicita gana a todo lo demas 1ms
+ ✓ tests/unit/browser.test.ts > orden de busqueda > respeta el orden de las variables de entorno 0ms
+ ✓ tests/unit/browser.test.ts > orden de busqueda > incluye las rutas habituales del sistema operativo actual 0ms
+ ✓ tests/unit/browser.test.ts > orden de busqueda > descarta entradas vacias 0ms
+ ✓ tests/unit/browser.test.ts > cache de Playwright > descubre el Chromium descargado por Playwright 2ms
+ ✓ tests/unit/browser.test.ts > cache de Playwright > prefiere la version mas reciente 0ms
+ ✓ tests/unit/browser.test.ts > cache de Playwright > ignora un directorio de cache inexistente 0ms
+ ✓ tests/unit/browser.test.ts > cache de Puppeteer > descubre el Chrome for Testing descargado por Puppeteer 0ms
+ ✓ tests/unit/browser.test.ts > cache de Puppeteer > recorre los tres canales conocidos 1ms
+ ✓ tests/unit/browser.test.ts > findBrowser > devuelve la primera ruta que exista de verdad 0ms
+ ✓ tests/unit/browser.test.ts > findBrowser > ignora una ruta explicita que no existe y sigue buscando 0ms
+ ✓ tests/unit/browser.test.ts > mensaje de ayuda > explica que DocViz no descarga navegadores 0ms
+ ✓ tests/unit/kroki.test.ts > construccion > acepta los tipos soportados por Kroki 1ms
+ ✓ tests/unit/kroki.test.ts > construccion > rechaza un tipo que Kroki no cubre 0ms
+ ✓ tests/unit/kroki.test.ts > construccion > solo PlantUML admite PNG 0ms
+ ✓ tests/unit/kroki.test.ts > render > publica en la ruta correcta con el cuerpo del diagrama 1ms
+ ✓ tests/unit/kroki.test.ts > render > inyecta el tema de PlantUML antes de enviar 0ms
+ ✓ tests/unit/kroki.test.ts > render > envuelve un PlantUML sin marcas de apertura 0ms
+ ✓ tests/unit/kroki.test.ts > render > inyecta los atributos del tema en Graphviz 0ms
+ ✓ tests/unit/kroki.test.ts > render > mezcla el config del tema en Vega-Lite 0ms
+ ✓ tests/unit/kroki.test.ts > render > devuelve PNG sin pasarlo por el pipeline de SVG 0ms
+ ✓ tests/unit/kroki.test.ts > render > rechaza un formato no soportado por el tipo 0ms
+ ✓ tests/unit/kroki.test.ts > render > reporta el codigo de estado y el cuerpo del error 0ms
+ ✓ tests/unit/kroki.test.ts > render > reporta un fallo de red indicando el endpoint 0ms
+ ✓ tests/unit/kroki.test.ts > render > envia las cabeceras configuradas 0ms
+ ✓ tests/unit/kroki.test.ts > render > respeta una URL con ruta base 0ms
+ ✓ tests/unit/kroki.test.ts > version > usa la version reportada por /health 0ms
+ ✓ tests/unit/kroki.test.ts > version > cae al host si /health no responde 0ms
+ ✓ tests/unit/kroki.test.ts > version > cachea la version entre invocaciones 0ms
+ ✓ tests/unit/paths.test.ts > slugify > normaliza acentos y espacios 1ms
+ ✓ tests/unit/paths.test.ts > slugify > elimina caracteres que podrian formar una ruta 0ms
+ ✓ tests/unit/paths.test.ts > slugify > devuelve un valor por defecto si no queda nada util 0ms
+ ✓ tests/unit/paths.test.ts > slugify > acota la longitud 0ms
+ ✓ tests/unit/paths.test.ts > assetFileName > produce `<slug>-<hash>.<ext>` 0ms
+ ✓ tests/unit/paths.test.ts > assertInside — impide path traversal > acepta rutas contenidas 0ms
+ ✓ tests/unit/paths.test.ts > assertInside — impide path traversal > rechaza rutas que suben del directorio raiz 0ms
+ ✓ tests/unit/paths.test.ts > assertInside — impide path traversal > rechaza rutas absolutas fuera del raiz 0ms
+ ✓ tests/unit/paths.test.ts > assertInside — impide path traversal > rechaza bytes nulos 0ms
+ ✓ tests/unit/paths.test.ts > assertInside — impide path traversal > acepta el propio raiz 0ms
+ ✓ tests/unit/paths.test.ts > assertRelativeDir > acepta un subdirectorio relativo 0ms
+ ✓ tests/unit/paths.test.ts > assertRelativeDir > rechaza rutas absolutas 0ms
+ ✓ tests/unit/paths.test.ts > assertRelativeDir > rechaza salir del directorio de salida 0ms
+ ✓ tests/unit/paths.test.ts > assertRelativeDir > rechaza valores vacios 0ms
+ ✓ tests/unit/paths.test.ts > ensureAssetsDir > crea el directorio assets/generated 0ms
+ ✓ tests/unit/paths.test.ts > ensureAssetsDir > es idempotente 0ms
+ ✓ tests/unit/paths.test.ts > ensureAssetsDir > no permite un assetsDir que se salga de la salida 0ms
+ ✓ tests/unit/paths.test.ts > relativeAssetPath > produce una ruta relativa con prefijo explicito 0ms
+ ✓ tests/unit/paths.test.ts > relativeAssetPath > sube de directorio cuando el documento esta anidado 0ms
+ ✓ tests/unit/paths.test.ts > relativeAssetPath > nunca devuelve una ruta absoluta 0ms
+ ✓ tests/unit/paths.test.ts > toPosix > devuelve separadores POSIX 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — estructura > emite un SVG con dimensiones absolutas y margen 1ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — estructura > pinta el fondo del tema 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — estructura > desplaza el contenido cuando los limites no empiezan en el origen 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — estructura > escribe el titulo del nodo 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — estructura > escapa caracteres XML del titulo 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma rectangle 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma person 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma cylinder 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma storage 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma queue 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma browser 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma mobile 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma component 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma document 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > dibuja la forma bucket 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — formas > una forma desconocida cae a rectangulo 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — texto y contraste > anade descripcion y tecnologia 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — texto y contraste > acepta la descripcion como objeto con txt 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — texto y contraste > elige texto oscuro sobre relleno claro y claro sobre oscuro 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — texto y contraste > cae al color de texto del tema si el relleno no es hexadecimal 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — texto y contraste > la opacidad de LikeC4 se compone contra el fondo, no se emite como alpha 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — contenedores > dibuja los grupos con borde discontinuo y su titulo arriba 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > dibuja una curva Bezier con punta de flecha 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > respeta el estilo de linea 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > elige el marcador segun la punta declarada 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > anade marcador de origen si la relacion lo declara 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > dibuja la etiqueta con fondo para que no se pierda sobre la linea 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > omite la etiqueta vacia 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > ignora relaciones sin puntos suficientes 0ms
+ ✓ tests/unit/likec4-svg.test.ts > renderLikeC4View — relaciones > cierra con segmentos rectos los puntos que no completan una tripleta 0ms
+ ✓ tests/unit/likec4-svg.test.ts > wrap > parte por palabras respetando el ancho 0ms
+ ✓ tests/unit/likec4-svg.test.ts > wrap > nunca supera el maximo de lineas 0ms
+ ✓ tests/unit/likec4-svg.test.ts > wrap > marca con elipsis el texto truncado 0ms
+ ✓ tests/unit/likec4-svg.test.ts > wrap > no rompe una palabra mas ancha que el limite 0ms
+ ✓ tests/unit/likec4-svg.test.ts > wrap > devuelve lista vacia para texto vacio 0ms
+ ✓ tests/unit/likec4-svg.test.ts > blend > compone un color sobre otro 0ms
+ ✓ tests/unit/likec4-svg.test.ts > blend > admite notacion corta de tres digitos 0ms
+ ✓ tests/unit/likec4-svg.test.ts > blend > devuelve el color original si no es hexadecimal 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > el mismo input produce el mismo hash 1ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > cambiar el source cambia el hash 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > cambiar el tema cambia el hash 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > cambiar el contenido del tema (sin cambiar su nombre) cambia el hash 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > cambiar la version del renderer cambia el hash 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > cambiar el tipo de renderer cambia el hash 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > cambiar el formato cambia el hash 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > no confunde componentes por concatenacion ambigua 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > respeta la longitud pedida dentro del rango admitido 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > rechaza longitudes fuera de rango 0ms
+ ✓ tests/unit/hash.test.ts > hash del recurso > el hash corto es prefijo del completo 0ms
+ ✓ tests/unit/hash.test.ts > stableStringify > ordena las claves para que el orden de propiedades no altere el hash 0ms
+ ✓ tests/unit/hash.test.ts > stableStringify > conserva el orden de los arrays 0ms
+ ✓ tests/unit/hash.test.ts > stableStringify > ignora propiedades undefined 0ms
+ ✓ tests/unit/hash.test.ts > themeFingerprint > distingue temas distintos 0ms
+ ✓ tests/unit/hash.test.ts > themeFingerprint > es estable entre invocaciones 0ms
+ ✓ tests/unit/hash.test.ts > themeFingerprint > fingerprint distingue objetos distintos 0ms
+ ✓ tests/unit/hash.test.ts > HashRegistry — deteccion de colisiones > acepta un prefijo nuevo 0ms
+ ✓ tests/unit/hash.test.ts > HashRegistry — deteccion de colisiones > marca como duplicado el mismo recurso repetido 0ms
+ ✓ tests/unit/hash.test.ts > HashRegistry — deteccion de colisiones > rechaza dos digests distintos con el mismo prefijo 0ms
+ ✓ tests/unit/svg.test.ts > normalizeSvgDimensions > deriva width y height del viewBox cuando el ancho es porcentual 1ms
+ ✓ tests/unit/svg.test.ts > normalizeSvgDimensions > respeta dimensiones ya numericas 0ms
+ ✓ tests/unit/svg.test.ts > normalizeSvgDimensions > anade viewBox si falta 0ms
+ ✓ tests/unit/svg.test.ts > normalizeSvgDimensions > elimina preserveAspectRatio="none" que deforma el dibujo al escalar 0ms
+ ✓ tests/unit/svg.test.ts > normalizeSvgDimensions > no rompe un documento sin elemento svg 0ms
+ ✓ tests/unit/svg.test.ts > sanitizeSvg > elimina bloques script 0ms
+ ✓ tests/unit/svg.test.ts > sanitizeSvg > elimina scripts autocerrados 0ms
+ ✓ tests/unit/svg.test.ts > sanitizeSvg > elimina manejadores de eventos inline 0ms
+ ✓ tests/unit/svg.test.ts > sanitizeSvg > neutraliza enlaces javascript: 0ms
+ ✓ tests/unit/svg.test.ts > sanitizeSvg > conserva el contenido grafico legitimo 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > renumera los ids en orden de aparicion 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > reescribe las referencias url(#...) 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > reescribe los selectores CSS acotados por el id raiz 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > reescribe href a anclas locales 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > no confunde un id que es prefijo de otro 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > no toca un SVG sin ids 0ms
+ ✓ tests/unit/svg.test.ts > stabilizeSvgIds > produce el mismo resultado para la misma entrada 0ms
+ ✓ tests/unit/svg.test.ts > injectTitle y ensureNamespace > inserta un title accesible 0ms
+ ✓ tests/unit/svg.test.ts > injectTitle y ensureNamespace > escapa el titulo 0ms
+ ✓ tests/unit/svg.test.ts > injectTitle y ensureNamespace > no duplica un title existente 0ms
+ ✓ tests/unit/svg.test.ts > injectTitle y ensureNamespace > anade el namespace si falta 0ms
+ ✓ tests/unit/svg.test.ts > finalizeSvg > aplica todo el pipeline 0ms
+ ✓ tests/unit/svg.test.ts > finalizeSvg > quita la instruccion de proceso propia de PlantUML 0ms
+ ✓ tests/unit/svg.test.ts > finalizeSvg > es determinista 0ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > encuentra un renderer registrado 1ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > lanza un error descriptivo si el renderer no existe 0ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > permite registrar un renderer adicional en caliente 0ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > resuelve alias al tipo canonico 0ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > normaliza mayusculas y espacios 0ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > al desregistrar elimina tambien sus alias 0ms
+ ✓ tests/unit/registry.test.ts > RendererRegistry > un renderer sobrescrito reemplaza al anterior 0ms
+ ✓ tests/unit/registry.test.ts > buildRegistry > registra los seis motores con la configuracion por defecto 0ms
+ ✓ tests/unit/registry.test.ts > buildRegistry > omite los renderers deshabilitados 0ms
+ ✓ tests/unit/registry.test.ts > buildRegistry > expone los alias documentados 0ms
+
+ Test Files  22 passed (22)
+      Tests  463 passed (463)
+   Start at  10:58:32
+   Duration  19.49s (transform 185ms, setup 0ms, import 762ms, tests 17.43s, environment 1ms)
+

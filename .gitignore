@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+
+# El jar de PlantUML pesa ~26 MB: se obtiene con `npm run setup`.
+vendor/
+
+# Cache de recursos generados; se reconstruye solo.
+.docviz-cache/
+
+# Salida intermedia del showcase (las evidencias si se versionan).
+artifacts/showcase/
+
+.DS_Store
+*.log

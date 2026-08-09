@@ -1,0 +1,63 @@
+# Configuracion de DocViz Builder.
+#
+# Todos los valores son opcionales: sin este archivo el build ya funciona en
+# modo local, offline y con el tema "default".
+
+source: docs-src
+
+output:
+  dir: docs
+  assetsDir: assets/generated
+
+theme:
+  name: corporate
+
+formats:
+  plantuml: svg
+  mermaid: svg
+  d2: svg
+  graphviz: svg
+  vega-lite: svg
+  likec4: svg
+
+cache:
+  enabled: true
+  dir: .docviz-cache
+
+hash:
+  length: 12
+
+renderers:
+  # "local" no envia nada a la red. "kroki" requiere una instancia propia.
+  backend: local
+  timeoutMs: 60000
+  maxOutputBytes: 8388608
+
+  kroki:
+    url: http://localhost:8000
+    # El servicio publico kroki.io esta bloqueado salvo autorizacion explicita.
+    allowPublicService: false
+    allowRemoteHost: false
+
+  plantuml:
+    enabled: true
+    # jar: vendor/plantuml.jar
+    maxHeap: 1024m
+
+  mermaid:
+    enabled: true
+    # browserPath: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+
+  d2:
+    enabled: true
+    layout: dagre
+
+  graphviz:
+    enabled: true
+    engine: dot
+
+  vega-lite:
+    enabled: true
+
+  likec4:
+    enabled: true

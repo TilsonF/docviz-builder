@@ -19,12 +19,15 @@ function buildTheme(args: {
   name: string;
   description: string;
   palette: ThemePalette;
+  /** Contraparte oscura. Si se omite, el tema no cambia con el modo del visor. */
+  darkPalette?: ThemePalette;
   d2ThemeID: number;
   d2DarkThemeID: number;
   mermaidBase: 'base' | 'dark';
   fontFamily?: string;
 }): Theme {
   const p = args.palette;
+  const dark = args.darkPalette ?? args.palette;
   const font = args.fontFamily ?? SANS;
   // PlantUML (AWT) y Graphviz calculan las metricas del texto a partir de una
   // fuente concreta instalada, no de una lista de alternativas. Si el nombre no
@@ -190,41 +193,50 @@ function buildTheme(args: {
         text: { color: p.text, fontSize: 11 },
       },
     },
-    likec4: {
-      background: p.background,
-      nodeFill: {
-        primary: p.primary,
-        blue: p.categorical[0],
-        green: p.positive,
-        amber: p.categorical[3],
-        red: p.negative,
-        gray: p.surfaceAlt,
-        slate: p.surfaceAlt,
-        secondary: p.accent,
-        muted: p.surfaceAlt,
-        indigo: p.categorical[1],
-        sky: p.categorical[2],
-      },
-      nodeStroke: {
-        primary: p.primary,
-        blue: p.categorical[0],
-        green: p.positive,
-        amber: p.accent,
-        red: p.negative,
-        gray: p.border,
-        slate: p.border,
-        secondary: p.accent,
-        muted: p.border,
-        indigo: p.categorical[1],
-        sky: p.categorical[2],
-      },
-      nodeText: p.primaryText,
-      nodeTextMuted: p.primaryText,
-      groupFill: p.surfaceAlt,
-      groupStroke: p.border,
-      edgeStroke: p.textMuted,
-      edgeText: p.text,
+    likec4: likec4Palette(p),
+    dark: {
+      palette: dark,
+      likec4: likec4Palette(dark),
     },
+  };
+}
+
+/** Correspondencia entre los colores de LikeC4 y la paleta del tema. */
+function likec4Palette(p: ThemePalette): Theme['likec4'] {
+  return {
+    background: p.background,
+    nodeFill: {
+      primary: p.primary,
+      blue: p.categorical[0],
+      green: p.positive,
+      amber: p.categorical[3],
+      red: p.negative,
+      gray: p.surfaceAlt,
+      slate: p.surfaceAlt,
+      secondary: p.accent,
+      muted: p.surfaceAlt,
+      indigo: p.categorical[1],
+      sky: p.categorical[2],
+    },
+    nodeStroke: {
+      primary: p.primary,
+      blue: p.categorical[0],
+      green: p.positive,
+      amber: p.accent,
+      red: p.negative,
+      gray: p.border,
+      slate: p.border,
+      secondary: p.accent,
+      muted: p.border,
+      indigo: p.categorical[1],
+      sky: p.categorical[2],
+    },
+    nodeText: p.primaryText,
+    nodeTextMuted: p.primaryText,
+    groupFill: p.surfaceAlt,
+    groupStroke: p.border,
+    edgeStroke: p.textMuted,
+    edgeText: p.text,
   };
 }
 
@@ -250,6 +262,22 @@ const defaultTheme = buildTheme({
     negative: '#C2410C',
     neutral: '#94A3B8',
   },
+  darkPalette: {
+    background: '#0D1117',
+    surface: '#161B22',
+    surfaceAlt: '#21262D',
+    border: '#30363D',
+    text: '#E6EDF3',
+    textMuted: '#9BA7B4',
+    primary: '#4C8DFF',
+    primaryText: '#0D1117',
+    accent: '#A371F7',
+    categorical: ['#4C8DFF', '#A371F7', '#3FB950', '#D29922', '#F0883E', '#39C5CF'],
+    sequential: ['#10233D', '#16345C', '#1C4A85', '#2E68B8', '#4C8DFF', '#8CB6F5'],
+    positive: '#3FB950',
+    negative: '#F0883E',
+    neutral: '#6E7681',
+  },
 });
 
 const corporateTheme = buildTheme({
@@ -274,6 +302,22 @@ const corporateTheme = buildTheme({
     negative: '#A8341F',
     neutral: '#8CA3BC',
   },
+  darkPalette: {
+    background: '#0D1117',
+    surface: '#15202B',
+    surfaceAlt: '#1D2C3A',
+    border: '#2C3E52',
+    text: '#DCE7F2',
+    textMuted: '#93AECB',
+    primary: '#5AA0E8',
+    primaryText: '#0D1117',
+    accent: '#3FB6C6',
+    categorical: ['#5AA0E8', '#3FB6C6', '#D9B44A', '#E07A9B', '#8FAEE8', '#4CC08C'],
+    sequential: ['#101E2C', '#16324B', '#1D4A70', '#2E6DA0', '#4189CE', '#5AA0E8'],
+    positive: '#4CC08C',
+    negative: '#F0836A',
+    neutral: '#6B819A',
+  },
 });
 
 const executiveTheme = buildTheme({
@@ -297,6 +341,22 @@ const executiveTheme = buildTheme({
     positive: '#2C6E56',
     negative: '#9B2C1F',
     neutral: '#A8A29E',
+  },
+  darkPalette: {
+    background: '#14120F',
+    surface: '#1E1B17',
+    surfaceAlt: '#2A2620',
+    border: '#423C33',
+    text: '#EDE8DF',
+    textMuted: '#A8A093',
+    primary: '#8FB3DA',
+    primaryText: '#14120F',
+    accent: '#E39A5C',
+    categorical: ['#8FB3DA', '#E39A5C', '#6FC49E', '#D98CA8', '#9FAAB8', '#D8BE72'],
+    sequential: ['#1B1814', '#2B2620', '#453E33', '#6B6152', '#8A8070', '#8FB3DA'],
+    positive: '#6FC49E',
+    negative: '#E8836F',
+    neutral: '#8A857D',
   },
 });
 

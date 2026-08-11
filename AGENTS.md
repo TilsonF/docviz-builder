@@ -239,6 +239,11 @@ Una visualización debe:
 - ser legible al renderizarse;
 - usar el tema definido por el proyecto (no fijes colores a mano).
 
+Los colores del tema traen su equivalente en modo oscuro, así que la misma
+imagen se lee bien en un visor claro y en uno oscuro. Un color escrito a mano
+pierde esa propiedad: quedará igual en ambos modos y probablemente ilegible en
+uno de ellos.
+
 Cuando un diagrama crezca demasiado, divídelo en varios con objetivos
 diferentes. Un diagrama con veinte cajas no explica nada.
 

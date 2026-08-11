@@ -48,8 +48,17 @@ describe('renderLikeC4View — estructura', () => {
     expect(svg).toContain('viewBox="0 0 288 183"');
   });
 
-  it('pinta el fondo del tema', () => {
-    expect(renderLikeC4View(view(), theme)).toContain(`fill="${theme.likec4.background}"`);
+  it('pinta el fondo del tema como variable con respaldo', () => {
+    const svg = renderLikeC4View(view(), theme);
+    expect(svg).toContain(`fill="var(--lc2,${theme.likec4.background})"`);
+    // El valor claro se declara y el oscuro lo sustituye segun el visor.
+    expect(svg).toContain(`--lc2:${theme.likec4.background};`);
+    expect(svg).toContain(`--lc2:${theme.dark.likec4.background};`);
+  });
+
+  it('declara la variante oscura una sola vez', () => {
+    const svg = renderLikeC4View(view(), theme);
+    expect(svg.match(/@media \(prefers-color-scheme:dark\)/g)).toHaveLength(1);
   });
 
   it('desplaza el contenido cuando los limites no empiezan en el origen', () => {
@@ -109,17 +118,25 @@ describe('renderLikeC4View — texto y contraste', () => {
   });
 
   it('elige texto oscuro sobre relleno claro y claro sobre oscuro', () => {
-    expect(contrastText('#FFFFFF', theme)).toBe('#12181F');
-    expect(contrastText('#12508F', theme)).toBe('#FFFFFF');
+    expect(contrastText('#FFFFFF', theme.palette)).toBe('#12181F');
+    expect(contrastText('#12508F', theme.palette)).toBe('#FFFFFF');
   });
 
-  it('cae al color de texto del tema si el relleno no es hexadecimal', () => {
-    expect(contrastText('rgb(1,2,3)', theme)).toBe(theme.palette.text);
+  it('el texto del nodo se invierte entre modo claro y oscuro', () => {
+    // El relleno se compone contra fondos distintos en cada modo, asi que el
+    // color legible tambien cambia; ambos deben quedar declarados.
+    const svg = renderLikeC4View(view({ nodes: [node({ style: { opacity: 15 } })] }), theme);
+    expect(svg).toContain('#12181F');
+    expect(svg).toContain('#FFFFFF');
+  });
+
+  it('cae al color de texto de la paleta si el relleno no es hexadecimal', () => {
+    expect(contrastText('rgb(1,2,3)', theme.palette)).toBe(theme.palette.text);
   });
 
   it('la opacidad de LikeC4 se compone contra el fondo, no se emite como alpha', () => {
     const svg = renderLikeC4View(view({ nodes: [node({ style: { opacity: 15 } })] }), theme);
-    // Sin composicion el texto blanco quedaria sobre un azul claro ilegible.
+    // Sin composicion el texto claro quedaria sobre un azul claro ilegible.
     expect(svg).not.toContain('fill-opacity="0.15"');
     expect(svg).toContain('#12181F');
   });

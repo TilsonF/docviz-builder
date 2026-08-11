@@ -34,8 +34,10 @@ export class LikeC4Renderer implements DiagramRenderer {
 
   async version(): Promise<string> {
     if (this.cachedVersion !== undefined) return this.cachedVersion;
-    // El emisor SVG es nuestro: su version tambien invalida el cache.
-    this.cachedVersion = `likec4-${packageVersion('likec4')}+docviz-svg-1`;
+    // El emisor SVG es nuestro, asi que su version tambien entra en el hash:
+    // hay que subirla al cambiar el dibujado, o el cache serviria imagenes
+    // generadas por el emisor anterior. Version 2: colores duales claro/oscuro.
+    this.cachedVersion = `likec4-${packageVersion('likec4')}+docviz-svg-2`;
     return this.cachedVersion;
   }
 

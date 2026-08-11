@@ -17,7 +17,7 @@ El autor declara **la intención**; DocViz elige el motor.
 
 ## Qué motor atiende cada intención
 
-![Del tipo declarado al motor](./assets/generated/del-tipo-declarado-al-motor-9d674afef7c6.svg)
+![Del tipo declarado al motor](./assets/generated/del-tipo-declarado-al-motor-c3a5b6bfc1f3.svg)
 
 ## Regla de elección
 

@@ -28,12 +28,28 @@ export interface ThemePalette {
   neutral: string;
 }
 
+/** Paleta y ajustes equivalentes para visores en modo oscuro. */
+export interface ThemeDarkVariant {
+  readonly palette: ThemePalette;
+  readonly likec4: Theme['likec4'];
+}
+
 export interface Theme {
   readonly name: string;
   readonly description: string;
   readonly fontFamily: string;
   readonly monoFontFamily: string;
   readonly palette: ThemePalette;
+
+  /**
+   * Contraparte oscura de la paleta.
+   *
+   * Los colores del SVG generado se emiten como variables CSS con este valor
+   * bajo `@media (prefers-color-scheme: dark)`, de modo que la misma imagen se
+   * lea bien en un visor claro y en uno oscuro. En el tema `dark` coincide con
+   * la paleta principal: quien lo elige quiere modo oscuro siempre.
+   */
+  readonly dark: ThemeDarkVariant;
 
   /** Preambulo `skinparam` que se inyecta tras `@startuml`. */
   readonly plantuml: { readonly skinparams: readonly string[] };

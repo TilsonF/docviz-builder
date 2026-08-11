@@ -1,6 +1,6 @@
 # Manual Test Report — DocViz Builder
 
-Fecha: 2026-08-09
+Fecha: 2026-08-11
 
 ## Environment
 
@@ -25,7 +25,9 @@ Fecha: 2026-08-09
 1. `npm run docs:check` sobre `examples/showcase.md`.
 2. `docviz build examples --output artifacts/showcase --clean`.
 3. `docviz verify artifacts/showcase`.
-4. Rasterizado de los 12 SVG a PNG (`scripts/rasterize.mjs`) e inspección visual de cada uno.
+4. Rasterizado de los 12 SVG a PNG (`scripts/rasterize.mjs`) e inspección visual
+   de cada uno **en los dos modos de color**, emulando `prefers-color-scheme` y
+   cargando el SVG como `<img>`, igual que haría un visor Markdown.
 5. Apertura del documento compilado en un navegador real mediante el servidor de
    previsualización (`scripts/capture-preview.mjs`), comprobando en el DOM que
    cada `<img>` tiene `naturalWidth` y `naturalHeight` mayores que cero.
@@ -50,6 +52,10 @@ Fecha: 2026-08-09
 | Graphviz Dependency Graph (DSL `diagram`) | PASS | screenshots/dependencias-internas-de-docviz-*.png |
 | Documento completo en visor real | PASS | screenshots/_preview-showcase.png |
 
+Cada fila se verificó en los dos modos: `screenshots/claro/` y
+`screenshots/oscuro/` contienen la misma imagen renderizada con
+`prefers-color-scheme: light` y `dark` respectivamente.
+
 ## Checklist de validación visual (sección 22)
 
 | Criterio | Resultado | Comprobación |
@@ -64,6 +70,8 @@ Fecha: 2026-08-09
 | Rutas relativas | PASS | Las 12 empiezan por `./` |
 | Markdown legible sin el fuente original | PASS | Ver `showcase-output.md` |
 | El documento se puede mover con `assets/` | PASS | Copiado a `otra/ruta/mas/profunda`: 12/12 siguen cargando |
+| Legible en visor claro | PASS | `screenshots/claro/` (12 imágenes) |
+| Legible en visor oscuro | PASS | `screenshots/oscuro/` (12 imágenes), sin recompilar |
 
 ## Visores probados
 
@@ -89,4 +97,24 @@ Fecha: 2026-08-09
 | 9 | `--backend nube` se aceptaba en silencio | Las opciones de CLI no pasaban por la validación del YAML | Se validan igual que la configuración |
 | 10 | `output: docs` como cadena era rechazado | Se validaba como mapa antes de comprobar la forma corta | Se comprueba primero la forma corta |
 
+| 11 | Texto ilegible en los nodos LikeC4 en modo oscuro | `contrastText` devolvía `primaryText`, que en la paleta oscura significa "texto sobre el color primario" y es oscuro | Devuelve neutros absolutos elegidos por luminancia del relleno real |
+| 12 | El emisor de LikeC4 cambió pero el caché servía la imagen anterior | Su versión no se había subido y el hash no cambió | Versión del emisor a `docviz-svg-2`; el mecanismo funcionó como debía |
+
 Todos ellos se corrigieron y la regresión completa se volvió a ejecutar.
+
+## Modo claro y modo oscuro
+
+Los diagramas se generan una sola vez y se adaptan al visor. Comprobado
+emulando ambos modos en Chromium sobre el mismo archivo:
+
+| Motor | Mecanismo | Claro | Oscuro |
+|---|---|---|---|
+| PlantUML | Variables CSS sustituidas por DocViz | PASS | PASS |
+| Mermaid | Variables CSS sustituidas por DocViz | PASS | PASS |
+| Graphviz | Variables CSS sustituidas por DocViz | PASS | PASS |
+| Vega-Lite | Variables CSS sustituidas por DocViz | PASS | PASS |
+| LikeC4 | El emisor propio calcula cada color con las dos paletas | PASS | PASS |
+| D2 | Par de temas nativo (`themeID` / `darkThemeID`) | PASS | PASS |
+
+El contraste de texto sobre fondo y de texto sobre el color primario se verifica
+además de forma automática con la fórmula WCAG en `tests/unit/color-scheme.test.ts`.

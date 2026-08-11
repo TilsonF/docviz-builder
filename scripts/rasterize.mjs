@@ -21,6 +21,9 @@ if (sourceDir === undefined || targetDir === undefined) {
 }
 const scaleIndex = rest.indexOf('--scale');
 const scale = scaleIndex >= 0 ? Number(rest[scaleIndex + 1]) : 2;
+// `--scheme dark` emula un visor en modo oscuro para comprobar la variante dual.
+const schemeIndex = rest.indexOf('--scheme');
+const scheme = schemeIndex >= 0 ? rest[schemeIndex + 1] : 'light';
 
 const executablePath = findBrowser();
 if (executablePath === undefined) {
@@ -45,9 +48,14 @@ for (const file of files) {
   const width = Number(/\bwidth="(\d+(?:\.\d+)?)"/.exec(openTag)?.[1] ?? 900);
   const height = Number(/\bheight="(\d+(?:\.\d+)?)"/.exec(openTag)?.[1] ?? 700);
 
+  await page.emulateMediaFeatures([{ name: 'prefers-color-scheme', value: scheme }]);
   await page.setViewport({ width: Math.min(width, 2400), height: Math.min(height, 2400), deviceScaleFactor: scale });
+  // El SVG se carga como imagen, igual que en un visor Markdown: es la unica
+  // forma de comprobar que su variante oscura se activa de verdad.
+  const dataUri = `data:image/svg+xml;base64,${Buffer.from(svg, 'utf8').toString('base64')}`;
   await page.setContent(
-    `<!doctype html><html><body style="margin:0;background:#fff">${svg.replace(/^<\?xml[^>]*\?>\s*/, '')}</body></html>`,
+    `<!doctype html><html><body style="margin:0;background:${scheme === 'dark' ? '#0b0d10' : '#ffffff'}">` +
+      `<img src="${dataUri}" width="${width}" height="${height}"></body></html>`,
     { waitUntil: 'load' },
   );
   const png = await page.screenshot({ type: 'png', fullPage: true });

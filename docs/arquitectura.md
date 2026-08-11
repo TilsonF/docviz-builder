@@ -11,19 +11,19 @@ Vega-Lite, Graphviz ni LikeC4.
 
 ## Capas
 
-![Contenedores de DocViz Builder](./assets/generated/contenedores-de-docviz-builder-012670d7cef4.svg)
+![Contenedores de DocViz Builder](./assets/generated/contenedores-de-docviz-builder-01f2f724c789.svg)
 
 ## Recorrido de un bloque
 
-![Del bloque declarativo a la imagen](./assets/generated/del-bloque-declarativo-a-la-imagen-970dd414ceb1.svg)
+![Del bloque declarativo a la imagen](./assets/generated/del-bloque-declarativo-a-la-imagen-286ea8980cb1.svg)
 
 ## Estados de un recurso
 
-![Ciclo de vida de un recurso generado](./assets/generated/ciclo-de-vida-de-un-recurso-generado-8c864583bf04.svg)
+![Ciclo de vida de un recurso generado](./assets/generated/ciclo-de-vida-de-un-recurso-generado-07d4788c8ac1.svg)
 
 ## Dependencias internas
 
-![Dependencias entre módulos](./assets/generated/dependencias-entre-modulos-3c045f81c629.svg)
+![Dependencias entre módulos](./assets/generated/dependencias-entre-modulos-373c171ea354.svg)
 
 ## Decisiones de diseño
 

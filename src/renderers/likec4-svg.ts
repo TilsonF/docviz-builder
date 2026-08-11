@@ -65,6 +65,50 @@ const LINE_GAP = 1.35;
 /** Ancho medio de caracter respecto al tamano de fuente, para el ajuste de linea. */
 const CHAR_RATIO = 0.55;
 
+/** Neutros de maximo contraste para el texto dentro de un nodo. */
+const INK_ON_LIGHT = '#12181F';
+const INK_ON_DARK = '#FFFFFF';
+
+/**
+ * Registro de colores duales del emisor.
+ *
+ * A diferencia del resto de motores, aqui los colores no salen tal cual de la
+ * paleta: se componen con la opacidad del nodo y el color del texto se elige por
+ * contraste. Esos valores calculados no existen en el tema, asi que la
+ * sustitucion textual generica no puede alcanzarlos. Cada decision de color
+ * registra su par claro/oscuro y devuelve una variable CSS.
+ */
+class ColorVars {
+  private readonly byPair = new Map<string, string>();
+
+  /** Devuelve `var(--lcN,<claro>)` para el par indicado. */
+  pair(light: string, dark: string): string {
+    const key = `${light}|${dark}`;
+    let name = this.byPair.get(key);
+    if (name === undefined) {
+      name = `--lc${this.byPair.size + 1}`;
+      this.byPair.set(key, name);
+    }
+    return `var(${name},${light})`;
+  }
+
+  /** Hoja de estilos con los valores claros y su redefinicion en modo oscuro. */
+  styleBlock(): string {
+    if (this.byPair.size === 0) return '';
+    const light: string[] = [];
+    const dark: string[] = [];
+    for (const [key, name] of this.byPair) {
+      const [l, d] = key.split('|') as [string, string];
+      light.push(`${name}:${l};`);
+      dark.push(`${name}:${d};`);
+    }
+    return (
+      `<style>:root{${light.join('')}}` +
+      `@media (prefers-color-scheme:dark){:root{${dark.join('')}}}</style>`
+    );
+  }
+}
+
 export function renderLikeC4View(view: LikeC4View, theme: Theme): string {
   const { bounds } = view;
   const width = Math.max(1, Math.round(bounds.width)) + PADDING * 2;
@@ -72,6 +116,7 @@ export function renderLikeC4View(view: LikeC4View, theme: Theme): string {
   const offsetX = PADDING - bounds.x;
   const offsetY = PADDING - bounds.y;
 
+  const colors = new ColorVars();
   const byId = new Map(view.nodes.map((n) => [n.id, n]));
   // Los contenedores se pintan primero para que las hojas queden por encima.
   const ordered = [...view.nodes].sort((a, b) => a.level - b.level || b.children.length - a.children.length);
@@ -80,20 +125,25 @@ export function renderLikeC4View(view: LikeC4View, theme: Theme): string {
   parts.push(
     `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" role="img">`,
   );
-  parts.push(defs(theme));
-  parts.push(`<rect width="${width}" height="${height}" fill="${theme.likec4.background}"/>`);
+  parts.push(defs(theme, colors));
+  const background = colors.pair(theme.likec4.background, theme.dark.likec4.background);
+  parts.push(`<rect width="${width}" height="${height}" fill="${background}"/>`);
   parts.push(`<g transform="translate(${round(offsetX)},${round(offsetY)})">`);
 
-  for (const node of ordered) parts.push(renderNode(node, theme));
-  for (const edge of view.edges) parts.push(renderEdge(edge, theme, byId));
+  for (const node of ordered) parts.push(renderNode(node, theme, colors));
+  for (const edge of view.edges) parts.push(renderEdge(edge, theme, byId, colors));
 
   parts.push('</g>');
   parts.push('</svg>');
-  return parts.join('\n');
+
+  // La hoja de estilos va justo tras la etiqueta de apertura.
+  const openTagEnd = parts[0]!.length;
+  const body = parts.join('\n');
+  return `${body.slice(0, openTagEnd)}${colors.styleBlock()}${body.slice(openTagEnd)}`;
 }
 
-function defs(theme: Theme): string {
-  const stroke = theme.likec4.edgeStroke;
+function defs(theme: Theme, colors: ColorVars): string {
+  const stroke = colors.pair(theme.likec4.edgeStroke, theme.dark.likec4.edgeStroke);
   return [
     '<defs>',
     `<marker id="lc4-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${stroke}"/></marker>`,
@@ -109,24 +159,20 @@ function defs(theme: Theme): string {
 // Nodos
 // --------------------------------------------------------------------------
 
-function renderNode(node: LikeC4Node, theme: Theme): string {
+function renderNode(node: LikeC4Node, theme: Theme, colors: ColorVars): string {
   const isGroup = node.children.length > 0;
-  const baseFill = isGroup
-    ? theme.likec4.groupFill
-    : (theme.likec4.nodeFill[node.color ?? 'primary'] ?? theme.palette.primary);
-  const stroke = isGroup
-    ? theme.likec4.groupStroke
-    : (theme.likec4.nodeStroke[node.color ?? 'primary'] ?? theme.palette.primary);
+  const key = node.color ?? 'primary';
 
-  // LikeC4 expresa la transparencia del relleno en `style.opacity` (0-100).
-  // Se compone contra el fondo aqui, en lugar de emitir `fill-opacity`, porque
-  // el color del texto debe elegirse contra el color que se vera de verdad: un
-  // azul oscuro al 15% es un azul claro, y encima de el el texto blanco no se
-  // lee.
-  const opacity = node.style?.opacity !== undefined ? clamp(node.style.opacity / 100, 0.08, 1) : 1;
-  const fill = isGroup ? baseFill : blend(baseFill, theme.likec4.background, opacity);
-  const text = isGroup ? theme.palette.text : contrastText(fill, theme);
-  const muted = isGroup ? theme.palette.textMuted : withAlpha(text, 0.75);
+  // Cada decision de color se toma dos veces —con la paleta clara y con la
+  // oscura— y se registra como un par. Asi la misma imagen se lee bien en un
+  // visor claro y en uno oscuro sin renderizar dos veces el diagrama.
+  const light = nodeColors(theme, key, node, isGroup);
+  const dark = nodeColors({ ...theme, palette: theme.dark.palette, likec4: theme.dark.likec4 }, key, node, isGroup);
+
+  const fill = colors.pair(light.fill, dark.fill);
+  const stroke = colors.pair(light.stroke, dark.stroke);
+  const text = colors.pair(light.text, dark.text);
+  const muted = colors.pair(light.muted, dark.muted);
 
   const x = round(node.x);
   const y = round(node.y);
@@ -140,9 +186,7 @@ function renderNode(node: LikeC4Node, theme: Theme): string {
       `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" fill="${fill}" fill-opacity="0.55" stroke="${stroke}" stroke-width="1.2" stroke-dasharray="6 4"/>`,
     );
     // El titulo del contenedor va arriba a la izquierda, fuera del area util.
-    parts.push(
-      textNode(escapeXml(node.title), x + 14, y + 20, TITLE_SIZE, theme.palette.text, 'start', 600, theme),
-    );
+    parts.push(textNode(escapeXml(node.title), x + 14, y + 20, TITLE_SIZE, text, 'start', 600, theme));
   } else {
     parts.push(shapePath(node.shape ?? 'rectangle', x, y, w, h, fill, stroke, 1));
     parts.push(...nodeLabels(node, x, y, w, h, text, muted, theme));
@@ -150,6 +194,39 @@ function renderNode(node: LikeC4Node, theme: Theme): string {
 
   parts.push('</g>');
   return parts.join('\n');
+}
+
+interface NodeColors {
+  fill: string;
+  stroke: string;
+  text: string;
+  muted: string;
+}
+
+/** Resuelve relleno, borde y texto de un nodo para una paleta concreta. */
+function nodeColors(
+  theme: Pick<Theme, 'palette' | 'likec4'>,
+  key: string,
+  node: LikeC4Node,
+  isGroup: boolean,
+): NodeColors {
+  const baseFill = isGroup
+    ? theme.likec4.groupFill
+    : (theme.likec4.nodeFill[key] ?? theme.palette.primary);
+  const stroke = isGroup
+    ? theme.likec4.groupStroke
+    : (theme.likec4.nodeStroke[key] ?? theme.palette.primary);
+
+  // LikeC4 expresa la transparencia del relleno en `style.opacity` (0-100).
+  // Se compone contra el fondo aqui, en lugar de emitir `fill-opacity`, porque
+  // el color del texto debe elegirse contra el color que se vera de verdad: un
+  // azul oscuro al 15 % es un azul claro, y encima de el el texto blanco no se
+  // lee.
+  const opacity = node.style?.opacity !== undefined ? clamp(node.style.opacity / 100, 0.08, 1) : 1;
+  const fill = isGroup ? baseFill : blend(baseFill, theme.likec4.background, opacity);
+  const text = isGroup ? theme.palette.text : contrastText(fill, theme.palette);
+  const muted = isGroup ? theme.palette.textMuted : withAlpha(text, 0.75);
+  return { fill, stroke, text, muted };
 }
 
 function nodeLabels(
@@ -287,11 +364,16 @@ function shapePath(
 // Relaciones
 // --------------------------------------------------------------------------
 
-function renderEdge(edge: LikeC4Edge, theme: Theme, nodes: Map<string, LikeC4Node>): string {
+function renderEdge(
+  edge: LikeC4Edge,
+  theme: Theme,
+  nodes: Map<string, LikeC4Node>,
+  colors: ColorVars,
+): string {
   const points = edge.points ?? [];
   if (points.length < 2) return '';
 
-  const stroke = theme.likec4.edgeStroke;
+  const stroke = colors.pair(theme.likec4.edgeStroke, theme.dark.likec4.edgeStroke);
   const dash =
     edge.line === 'dashed' ? ' stroke-dasharray="7 5"' : edge.line === 'dotted' ? ' stroke-dasharray="2 4"' : '';
   const marker = markerFor(edge.head);
@@ -311,12 +393,14 @@ function renderEdge(edge: LikeC4Edge, theme: Theme, nodes: Map<string, LikeC4Nod
     const boxHeight = lines.length * lineHeight + 6;
     const cx = round(anchor.x + (box?.width ?? 0) / 2);
     const top = round(anchor.y - (box === undefined ? boxHeight / 2 : 2));
+    const labelBackground = colors.pair(theme.likec4.background, theme.dark.likec4.background);
+    const labelText = colors.pair(theme.likec4.edgeText, theme.dark.likec4.edgeText);
     parts.push(
-      `<rect x="${round(cx - boxWidth / 2)}" y="${top}" width="${round(boxWidth)}" height="${round(boxHeight)}" rx="4" fill="${theme.likec4.background}" fill-opacity="0.92"/>`,
+      `<rect x="${round(cx - boxWidth / 2)}" y="${top}" width="${round(boxWidth)}" height="${round(boxHeight)}" rx="4" fill="${labelBackground}" fill-opacity="0.92"/>`,
     );
     let cursor = top + BODY_SIZE + 2;
     for (const line of lines) {
-      parts.push(textNode(escapeXml(line), cx, cursor, BODY_SIZE, theme.likec4.edgeText, 'middle', 500, theme));
+      parts.push(textNode(escapeXml(line), cx, cursor, BODY_SIZE, labelText, 'middle', 500, theme));
       cursor += lineHeight;
     }
   }
@@ -435,16 +519,23 @@ function normalizeText(value: unknown): string | undefined {
 // Color
 // --------------------------------------------------------------------------
 
-/** Elige texto claro u oscuro segun la luminancia del relleno (WCAG). */
-export function contrastText(fill: string, theme: Theme): string {
+/**
+ * Elige texto claro u oscuro segun la luminancia del relleno (WCAG).
+ *
+ * Devuelve neutros absolutos, no tokens de la paleta: el criterio es el
+ * contraste contra ese relleno concreto, y el relleno ya cambia entre el modo
+ * claro y el oscuro. Usar `primaryText` seria un error de significado —ese token
+ * es "texto sobre el color primario", que en la paleta oscura es oscuro.
+ */
+export function contrastText(fill: string, palette: Theme['palette']): string {
   const rgb = parseHex(fill);
-  if (rgb === undefined) return theme.palette.text;
+  if (rgb === undefined) return palette.text;
   const [r, g, b] = rgb.map((c) => {
     const s = c / 255;
     return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
   }) as [number, number, number];
   const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance > 0.45 ? '#12181F' : '#FFFFFF';
+  return luminance > 0.45 ? INK_ON_LIGHT : INK_ON_DARK;
 }
 
 /** Compone `fg` sobre `bg` con la opacidad dada y devuelve un color opaco. */

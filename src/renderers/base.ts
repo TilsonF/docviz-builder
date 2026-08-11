@@ -5,6 +5,7 @@
 
 import { RenderError } from '../core/errors.js';
 import { MIME_TYPES, type OutputFormat, type RenderOptions, type RenderResult } from '../core/types.js';
+import { applyColorScheme } from './color-scheme.js';
 import { finalizeSvg } from './svg-utils.js';
 
 /** Ejecuta una promesa con limite de tiempo; superarlo es un `RenderError`. */
@@ -61,7 +62,8 @@ export function svgResult(
   svg: string,
   options: RenderOptions,
 ): RenderResult {
-  const finalized = finalizeSvg(svg, options.title);
+  // El esquema dual se aplica al final, sobre los colores que el tema ya inyecto.
+  const finalized = applyColorScheme(finalizeSvg(svg, options.title), options.theme);
   const content = Buffer.from(finalized, 'utf8');
   enforceSize(renderer, content, options.maxOutputBytes);
   return { format: 'svg', content, mimeType: MIME_TYPES.svg };

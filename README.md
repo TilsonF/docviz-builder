@@ -317,6 +317,25 @@ del mismo documento.
 docviz build docs-src --output docs --theme executive
 ```
 
+### Una imagen, dos modos
+
+Los tres temas claros declaran además su contraparte oscura, y el SVG generado
+lleva las dos: los colores se emiten como variables CSS que se redefinen bajo
+`@media (prefers-color-scheme: dark)`.
+
+Un SVG referenciado desde `<img>` se renderiza como su propio documento, así que
+el navegador le aplica la preferencia del lector. El resultado es **un solo
+archivo** que se lee bien en GitHub en modo claro y en un portal en modo oscuro,
+sin duplicar recursos ni escribir `<picture>` a mano.
+
+| Motor | Cómo obtiene su variante oscura |
+|---|---|
+| PlantUML, Mermaid, Graphviz, Vega-Lite | Los colores del tema se reescriben como variables CSS |
+| LikeC4 | El emisor propio calcula cada color con las dos paletas |
+| D2 | Trae su propio par de temas (`themeID` / `darkThemeID`) |
+
+El tema `dark` es de un solo modo: quien lo elige quiere oscuro siempre.
+
 ---
 
 ## Caché y determinismo

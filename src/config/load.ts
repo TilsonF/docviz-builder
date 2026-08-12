@@ -34,6 +34,9 @@ export function defaultConfig(rootDir: string): DocVizConfig {
       graphviz: 'svg',
       'vega-lite': 'svg',
       likec4: 'svg',
+      'plantuml-c4': 'svg',
+      svgbob: 'svg',
+      bpmn: 'svg',
     },
     theme: { name: 'default' },
     cache: { enabled: true, dir: DEFAULT_CACHE_DIR },
@@ -54,6 +57,8 @@ export function defaultConfig(rootDir: string): DocVizConfig {
       graphviz: { enabled: true, engine: 'dot' },
       vegaLite: { enabled: true },
       likec4: { enabled: true },
+      svgbob: { enabled: true },
+      bpmn: { enabled: true },
     },
     rootDir,
   };
@@ -212,6 +217,10 @@ export function mergeConfig(base: DocVizConfig, raw: unknown): DocVizConfig {
     if (likec4 !== undefined && typeof likec4['enabled'] === 'boolean') {
       r.likec4.enabled = likec4['enabled'];
     }
+    applyEngine(r.svgbob, renderers['svgbob'], 'renderers.svgbob', () => undefined);
+    applyEngine(r.bpmn, renderers['bpmn'], 'renderers.bpmn', (cfg, node) => {
+      if (typeof node['browserPath'] === 'string') cfg.browserPath = node['browserPath'];
+    });
   }
 
   return out;

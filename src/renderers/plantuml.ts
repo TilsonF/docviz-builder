@@ -17,12 +17,22 @@ import { assertFormat, pngResult, svgResult } from './base.js';
 const TYPE = 'plantuml';
 const SUPPORTED: readonly OutputFormat[] = ['svg', 'png'];
 
+/**
+ * Inclusiones permitidas: solo la biblioteca estandar que viaja dentro del jar.
+ *
+ * `!include <C4/C4_Context>` no toca el sistema de archivos ni la red: PlantUML
+ * resuelve la forma `<...>` contra los recursos empaquetados. Es lo que permite
+ * dibujar C4, y bloquearla obligaria a depender de un servicio externo para algo
+ * que ya esta en la maquina.
+ */
+const STDLIB_INCLUDE = /^\s*!include(?:sub)?\s+<[^>\n]+>\s*$/i;
+
 /** Directivas de PlantUML que permiten leer o escribir en disco / en la red. */
 const FORBIDDEN_DIRECTIVES: ReadonlyArray<{ re: RegExp; what: string }> = [
-  { re: /^\s*!include(?:url|sub)?\b/im, what: '!include' },
+  { re: /^\s*!includeurl\b/im, what: '!includeurl' },
+  { re: /^\s*!include(?:sub)?\b/im, what: '!include' },
   { re: /^\s*!import\b/im, what: '!import' },
   { re: /^\s*!theme\s+.*\bfrom\b/im, what: '!theme ... from' },
-  { re: /^\s*!pragma\s+teoz\s+false/im, what: '' }, // permitido: no bloquea nada
 ];
 
 export interface PlantUmlOptions {
@@ -108,15 +118,24 @@ export class PlantUmlRenderer implements DiagramRenderer {
     return `${trimmed.slice(0, insertAt)}\n${skin}\n${trimmed.slice(insertAt)}\n`;
   }
 
-  /** Bloquea las directivas que harian que PlantUML lea disco o red. */
+  /**
+   * Bloquea las directivas que harian que PlantUML lea disco o red.
+   *
+   * Se evalua linea a linea: una inclusion de la biblioteca estandar del jar es
+   * legitima, y comprobar el documento entero de una vez no permitiria
+   * distinguirla de un `!include /etc/passwd` en la linea siguiente.
+   */
   private assertNoFileAccess(source: string): void {
-    for (const { re, what } of FORBIDDEN_DIRECTIVES) {
-      if (what !== '' && re.test(source)) {
-        throw new RenderError(
-          TYPE,
-          `la directiva ${what} esta deshabilitada por seguridad`,
-          'DocViz no permite que un diagrama lea archivos ni URLs externas',
-        );
+    for (const line of source.split('\n')) {
+      if (STDLIB_INCLUDE.test(line)) continue;
+      for (const { re, what } of FORBIDDEN_DIRECTIVES) {
+        if (re.test(line)) {
+          throw new RenderError(
+            TYPE,
+            `la directiva ${what} esta deshabilitada por seguridad`,
+            'DocViz solo admite la biblioteca estandar empaquetada, con la forma !include <biblioteca/archivo>',
+          );
+        }
       }
     }
   }

@@ -27,6 +27,8 @@ export interface RenderersConfig {
   graphviz: { enabled: boolean; backend?: RendererBackend; engine: string };
   vegaLite: { enabled: boolean; backend?: RendererBackend };
   likec4: { enabled: boolean };
+  svgbob: { enabled: boolean };
+  bpmn: { enabled: boolean; browserPath?: string };
 }
 
 export interface DocVizConfig {

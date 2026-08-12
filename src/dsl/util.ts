@@ -18,8 +18,16 @@ export function asRecord(value: unknown, field: string): Record<string, unknown>
   return value as Record<string, unknown>;
 }
 
+/**
+ * Texto obligatorio.
+ *
+ * Acepta numeros y booleanos porque YAML los convierte sin avisar: en
+ * `- name: 2025` el valor llega como numero, y rechazarlo obligaria al autor a
+ * entrecomillar cualquier etiqueta que parezca un dato.
+ */
 export function requireString(record: Record<string, unknown>, key: string, field: string): string {
   const value = record[key];
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value !== 'string' || value.trim() === '') {
     fail(`falta el campo obligatorio "${key}" en ${field}`, `valor recibido: ${preview(value)}`);
   }
@@ -62,8 +70,14 @@ export function optionalArray(value: unknown, field: string): unknown[] {
   return value;
 }
 
-/** Acepta `- Texto` o `- name: Texto` de forma indistinta. */
+/**
+ * Acepta `- Texto` o `- name: Texto` de forma indistinta.
+ *
+ * Los numeros se admiten porque YAML los convierte solo: en `quadrants: [1, 2]`
+ * el autor esta escribiendo etiquetas, no cantidades.
+ */
 export function nameOf(item: unknown, field: string, key = 'name'): string {
+  if (typeof item === 'number' || typeof item === 'boolean') return String(item);
   if (typeof item === 'string') {
     const t = item.trim();
     if (t === '') fail(`${field} contiene un elemento vacio`);
@@ -71,6 +85,20 @@ export function nameOf(item: unknown, field: string, key = 'name'): string {
   }
   const record = asRecord(item, field);
   return requireString(record, key, field);
+}
+
+/**
+ * Normaliza `- Texto` y `- {name: Texto, ...}` a un mapa.
+ *
+ * Es el patron mas repetido del DSL: casi todas las listas admiten la forma
+ * corta. Centralizarlo evita que cada compilador olvide que YAML convierte
+ * `- 2025` en numero y rompa con una etiqueta perfectamente valida.
+ */
+export function asNamedRecord(raw: unknown, field: string, key = 'name'): Record<string, unknown> {
+  if (typeof raw === 'string' || typeof raw === 'number' || typeof raw === 'boolean') {
+    return { [key]: String(raw) };
+  }
+  return asRecord(raw, field);
 }
 
 export function oneOf<T extends string>(

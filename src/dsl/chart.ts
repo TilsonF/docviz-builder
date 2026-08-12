@@ -9,37 +9,12 @@ import { fail } from './util.js';
 import {
   asRecord,
   optionalArray,
+  optionalNumber,
   optionalString,
   requireArray,
   requireNumber,
   requireString,
 } from './util.js';
-
-export interface CompiledChart {
-  rendererType: 'vega-lite';
-  source: string;
-}
-
-export const CHART_TYPES = [
-  'bar',
-  'column',
-  'horizontal-bar',
-  'stacked-bar',
-  'grouped-bar',
-  'line',
-  'area',
-  'scatter',
-  'heatmap',
-  'pie',
-  'donut',
-  'waterfall',
-] as const;
-
-export type ChartType = (typeof CHART_TYPES)[number];
-
-export function chartTypeNames(): string[] {
-  return [...CHART_TYPES];
-}
 
 interface Point {
   label: string;
@@ -47,12 +22,13 @@ interface Point {
   series?: string;
 }
 
-export function compileChart(doc: Record<string, unknown>): CompiledChart {
-  const type = requireString(doc, 'type', 'chart').toLowerCase() as ChartType;
-  if (!CHART_TYPES.includes(type)) {
-    fail(`el tipo de grafico "${type}" no existe`, `tipos disponibles: ${chartTypeNames().join(', ')}`);
-  }
-
+/**
+ * Compila un grafico de un tipo ya resuelto por el catalogo.
+ *
+ * Separar la resolucion del tipo de su compilacion permite que el catalogo sea
+ * la unica fuente de nombres y alias.
+ */
+export function compileChartOfType(doc: Record<string, unknown>, type: string): string {
   const title = optionalString(doc, 'title');
   const xTitle = optionalString(doc, 'xTitle') ?? optionalString(doc, 'xLabel');
   const yTitle = optionalString(doc, 'yTitle') ?? optionalString(doc, 'yLabel');
@@ -74,12 +50,27 @@ export function compileChart(doc: Record<string, unknown>): CompiledChart {
     case 'waterfall':
       Object.assign(spec, waterfall(doc, xTitle, yTitle));
       break;
+    case 'histogram':
+      Object.assign(spec, histogram(doc, xTitle, yTitle));
+      break;
+    case 'box-plot':
+      Object.assign(spec, boxPlot(doc, xTitle, yTitle));
+      break;
+    case 'bullet':
+      Object.assign(spec, bullet(doc, xTitle));
+      break;
+    case 'slope':
+      Object.assign(spec, slope(doc, yTitle));
+      break;
+    case 'funnel':
+      Object.assign(spec, funnel(doc, xTitle));
+      break;
     default:
       Object.assign(spec, cartesian(type, doc, xTitle, yTitle));
       break;
   }
 
-  return { rendererType: 'vega-lite', source: JSON.stringify(spec, null, 2) };
+  return JSON.stringify(spec, null, 2);
 }
 
 /**
@@ -129,20 +120,20 @@ function readPoint(raw: unknown, field: string): Point {
 }
 
 function cartesian(
-  type: ChartType,
+  type: string,
   doc: Record<string, unknown>,
   xTitle: string | undefined,
   yTitle: string | undefined,
 ): Record<string, unknown> {
   const { points, multiSeries } = readPoints(doc);
   const horizontal = type === 'horizontal-bar';
-  const stacked = type === 'stacked-bar';
+  const stacked = type === 'stacked-bar' || type === 'stacked-area';
   const grouped = type === 'grouped-bar';
 
   const mark =
     type === 'line'
       ? { type: 'line', point: true, strokeWidth: 2.5 }
-      : type === 'area'
+      : type === 'area' || type === 'stacked-area'
         ? { type: 'area', line: true, opacity: 0.8 }
         : { type: 'bar', cornerRadiusEnd: 3 };
 
@@ -326,4 +317,193 @@ function toRow(p: Point): Record<string, unknown> {
   const row: Record<string, unknown> = { label: p.label, value: p.value };
   if (p.series !== undefined) row['series'] = p.series;
   return row;
+}
+
+// --------------------------------------------------------------------------
+// Tipos anadidos: distribucion, comparacion contra objetivo y embudo
+// --------------------------------------------------------------------------
+
+/** Distribucion de una variable continua a partir de valores en bruto. */
+function histogram(
+  doc: Record<string, unknown>,
+  xTitle: string | undefined,
+  yTitle: string | undefined,
+): Record<string, unknown> {
+  const raw = requireArray(doc['values'] ?? doc['valores'] ?? doc['data'], 'chart.values');
+  const values = raw.map((v, i) => {
+    const n = typeof v === 'number' ? v : Number(v);
+    if (!Number.isFinite(n)) {
+      fail(`chart.values[${i}] debe ser numerico`, `valor recibido: ${JSON.stringify(v)}`);
+    }
+    return { value: n };
+  });
+  const bins = optionalNumber(doc, 'bins', 'chart.bins');
+
+  return {
+    data: { values },
+    mark: { type: 'bar', cornerRadiusEnd: 2 },
+    encoding: {
+      x: {
+        field: 'value',
+        type: 'quantitative',
+        // `maxbins` deja que Vega elija cortes redondos; un numero fijo de
+        // barras produce limites como 3,7 que nadie sabe leer.
+        bin: bins !== undefined ? { maxbins: Math.round(bins) } : true,
+        title: xTitle ?? null,
+      },
+      y: { aggregate: 'count', type: 'quantitative', title: yTitle ?? 'Frecuencia' },
+    },
+  };
+}
+
+/** Mediana, dispersion y atipicos por grupo. */
+function boxPlot(
+  doc: Record<string, unknown>,
+  xTitle: string | undefined,
+  yTitle: string | undefined,
+): Record<string, unknown> {
+  const groups = requireArray(doc['groups'] ?? doc['grupos'], 'chart.groups');
+  const rows: Array<{ group: string; value: number }> = [];
+
+  for (const rawGroup of groups) {
+    const group = asRecord(rawGroup, 'chart.groups');
+    const name = requireString(group, 'name', 'chart.groups');
+    const values = requireArray(group['values'] ?? group['valores'], 'chart.groups[].values');
+    if (values.length < 3) {
+      fail(
+        `el grupo "${name}" tiene ${values.length} observaciones`,
+        'una caja necesita al menos tres valores para que la mediana signifique algo',
+      );
+    }
+    for (const v of values) {
+      const n = typeof v === 'number' ? v : Number(v);
+      if (!Number.isFinite(n)) fail(`los valores de "${name}" deben ser numericos`, `valor recibido: ${String(v)}`);
+      rows.push({ group: name, value: n });
+    }
+  }
+
+  return {
+    data: { values: rows },
+    mark: { type: 'boxplot', extent: 1.5, size: 34 },
+    encoding: {
+      x: { field: 'group', type: 'nominal', title: xTitle ?? null, axis: { labelAngle: 0 } },
+      y: { field: 'value', type: 'quantitative', title: yTitle ?? null, scale: { zero: false } },
+      color: { field: 'group', type: 'nominal', legend: null },
+    },
+  };
+}
+
+/** Valor real frente a su objetivo, un indicador por fila. */
+function bullet(doc: Record<string, unknown>, xTitle: string | undefined): Record<string, unknown> {
+  const rows = requireArray(doc['data'] ?? doc['indicadores'], 'chart.data').map((raw) => {
+    const record = asRecord(raw, 'chart.data');
+    return {
+      label: requireString(record, 'label', 'chart.data'),
+      value: requireNumber(record, 'value', 'chart.data'),
+      target: requireNumber(record, 'target', 'chart.data'),
+    };
+  });
+
+  // Se deja aire tras el mayor de los dos valores: si el objetivo queda pegado
+  // al borde, su marca se confunde con el eje.
+  const techo = Math.max(...rows.map((r) => Math.max(r.value, r.target))) * 1.12;
+
+  return {
+    data: { values: rows },
+    // Dos capas: la barra del valor y una marca de tic para el objetivo.
+    layer: [
+      {
+        mark: { type: 'bar', cornerRadiusEnd: 2, size: 18 },
+        encoding: {
+          x: {
+            field: 'value',
+            type: 'quantitative',
+            title: xTitle ?? null,
+            scale: { domainMax: Math.ceil(techo) },
+          },
+          y: { field: 'label', type: 'nominal', title: null, sort: null },
+        },
+      },
+      {
+        // Sin color explicito: lo aporta el tema, que ademas trae su variante
+        // oscura. Un valor fijo aqui seria ilegible en un visor en modo oscuro.
+        mark: { type: 'tick', thickness: 4, size: 30 },
+        encoding: {
+          x: { field: 'target', type: 'quantitative' },
+          y: { field: 'label', type: 'nominal', sort: null },
+        },
+      },
+    ],
+  };
+}
+
+/** Cambio entre dos momentos, con una linea por elemento. */
+function slope(doc: Record<string, unknown>, yTitle: string | undefined): Record<string, unknown> {
+  const from = optionalString(doc, 'from') ?? 'Antes';
+  const to = optionalString(doc, 'to') ?? 'Despues';
+  const rows: Array<{ label: string; momento: string; value: number; order: number }> = [];
+
+  for (const raw of requireArray(doc['data'], 'chart.data')) {
+    const record = asRecord(raw, 'chart.data');
+    const label = requireString(record, 'label', 'chart.data');
+    rows.push({ label, momento: from, value: requireNumber(record, 'before', 'chart.data'), order: 0 });
+    rows.push({ label, momento: to, value: requireNumber(record, 'after', 'chart.data'), order: 1 });
+  }
+
+  return {
+    data: { values: rows },
+    mark: { type: 'line', point: true, strokeWidth: 2.5 },
+    encoding: {
+      x: {
+        field: 'momento',
+        type: 'ordinal',
+        sort: { field: 'order' },
+        title: null,
+        axis: { labelAngle: 0 },
+        scale: { padding: 0.35 },
+      },
+      y: { field: 'value', type: 'quantitative', title: yTitle ?? null },
+      color: { field: 'label', type: 'nominal', title: null },
+    },
+  };
+}
+
+/** Caida de volumen por etapas sucesivas. */
+function funnel(doc: Record<string, unknown>, xTitle: string | undefined): Record<string, unknown> {
+  const points = requireArray(doc['data'] ?? doc['etapas'], 'chart.data').map((raw, index) => {
+    const record = asRecord(raw, 'chart.data');
+    return {
+      label: requireString(record, 'label', 'chart.data'),
+      value: requireNumber(record, 'value', 'chart.data'),
+      order: index,
+    };
+  });
+
+  const first = points[0]?.value ?? 0;
+  const rows = points.map((p) => ({
+    ...p,
+    // El porcentaje respecto a la primera etapa es lo que se quiere leer.
+    porcentaje: first > 0 ? Math.round((p.value / first) * 1000) / 10 : 0,
+  }));
+
+  return {
+    data: { values: rows },
+    layer: [
+      {
+        mark: { type: 'bar', cornerRadiusEnd: 2 },
+        encoding: {
+          y: { field: 'label', type: 'nominal', sort: { field: 'order' }, title: null },
+          x: { field: 'value', type: 'quantitative', title: xTitle ?? null },
+        },
+      },
+      {
+        mark: { type: 'text', align: 'left', dx: 6, fontSize: 11 },
+        encoding: {
+          y: { field: 'label', type: 'nominal', sort: { field: 'order' } },
+          x: { field: 'value', type: 'quantitative' },
+          text: { field: 'porcentaje', type: 'quantitative', format: '.1f' },
+        },
+      },
+    ],
+  };
 }

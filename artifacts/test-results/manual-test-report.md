@@ -1,6 +1,6 @@
 # Manual Test Report — DocViz Builder
 
-Fecha: 2026-08-11
+Fecha: 2026-08-12
 
 ## Environment
 
@@ -14,24 +14,34 @@ Fecha: 2026-08-11
 | PlantUML | PlantUML version 1.2026.0 (Fri Jan 09 12:26:13 GMT-05:00 2026) |
 | Mermaid | 11.16.1 |
 | D2 | 0.1.33 (WebAssembly) |
+| svgbob | 1.0.0 (WebAssembly) |
+| bpmn-js | 18.24.0 |
 | Graphviz | 1.28.0 (WebAssembly) |
 | Vega-Lite | 6.4.3 + Vega 6.3.1 |
 | Java | java version "25.0.2" 2026-01-20 LTS |
 | Navegador | Google Chrome del sistema (headless, sin red) |
 | OS | macOS 26.1 (arm64) |
 
+## Alcance
+
+El catalogo cubre **57 tipos** de visualizacion. `examples/catalogo.md` los
+contiene todos —se genera desde el catalogo, no se escribe a mano— y se compila
+en cada validacion, de modo que la prueba manual recorre el catalogo completo y
+no una muestra.
+
 ## Procedimiento
 
-1. `npm run docs:check` sobre `examples/showcase.md`.
-2. `docviz build examples --output artifacts/showcase --clean`.
-3. `docviz verify artifacts/showcase`.
-4. Rasterizado de los 12 SVG a PNG (`scripts/rasterize.mjs`) e inspección visual
+1. `npm run catalog` para regenerar `examples/catalogo.md` desde el catalogo.
+2. `npm run docs:check` sobre `examples/`.
+3. `docviz build examples --output artifacts/showcase --clean` (69 diagramas).
+4. `docviz verify artifacts/showcase`.
+5. Rasterizado de los 69 SVG a PNG (`scripts/rasterize.mjs`) e inspección visual
    de cada uno **en los dos modos de color**, emulando `prefers-color-scheme` y
    cargando el SVG como `<img>`, igual que haría un visor Markdown.
-5. Apertura del documento compilado en un navegador real mediante el servidor de
+6. Apertura de los documentos compilados en un navegador real mediante el servidor de
    previsualización (`scripts/capture-preview.mjs`), comprobando en el DOM que
    cada `<img>` tiene `naturalWidth` y `naturalHeight` mayores que cero.
-6. Prueba de portabilidad: copia de `showcase.md` junto a `assets/` a una ruta
+7. Prueba de portabilidad: copia de `showcase.md` junto a `assets/` a una ruta
    distinta y nueva verificación en el navegador.
 
 ## Results
@@ -51,6 +61,7 @@ Fecha: 2026-08-11
 | Vega-Lite Line Chart (DSL `chart`) | PASS | screenshots/evolucion-de-la-cobertura-de-pruebas-*.png |
 | Graphviz Dependency Graph (DSL `diagram`) | PASS | screenshots/dependencias-internas-de-docviz-*.png |
 | Documento completo en visor real | PASS | screenshots/_preview-showcase.png |
+| Catalogo completo (57 tipos) en visor real | PASS | screenshots/_preview-catalogo.png |
 
 Cada fila se verificó en los dos modos: `screenshots/claro/` y
 `screenshots/oscuro/` contienen la misma imagen renderizada con
@@ -70,8 +81,8 @@ Cada fila se verificó en los dos modos: `screenshots/claro/` y
 | Rutas relativas | PASS | Las 12 empiezan por `./` |
 | Markdown legible sin el fuente original | PASS | Ver `showcase-output.md` |
 | El documento se puede mover con `assets/` | PASS | Copiado a `otra/ruta/mas/profunda`: 12/12 siguen cargando |
-| Legible en visor claro | PASS | `screenshots/claro/` (12 imágenes) |
-| Legible en visor oscuro | PASS | `screenshots/oscuro/` (12 imágenes), sin recompilar |
+| Legible en visor claro | PASS | `screenshots/claro/` (69 imágenes) |
+| Legible en visor oscuro | PASS | `screenshots/oscuro/` (69 imágenes), sin recompilar |
 
 ## Visores probados
 
@@ -99,6 +110,12 @@ Cada fila se verificó en los dos modos: `screenshots/claro/` y
 
 | 11 | Texto ilegible en los nodos LikeC4 en modo oscuro | `contrastText` devolvía `primaryText`, que en la paleta oscura significa "texto sobre el color primario" y es oscuro | Devuelve neutros absolutos elegidos por luminancia del relleno real |
 | 12 | El emisor de LikeC4 cambió pero el caché servía la imagen anterior | Su versión no se había subido y el hash no cambió | Versión del emisor a `docviz-svg-2`; el mecanismo funcionó como debía |
+
+| 13 | Las etiquetas del `radar` se salían del lienzo y quedaban cortadas | Mermaid declara un `viewBox` menor que el contenido en sus notaciones recientes | Se mide el contenido real en el navegador y se ajusta el lienzo |
+| 14 | `- name: 2025` se rechazaba como campo obligatorio | YAML convierte el valor en número y el validador exigía texto | Los validadores aceptan números y booleanos como etiqueta |
+| 15 | `donut` perdió su agujero al pasar por el catálogo | Se declaró como alias de `pie`, y el compilador recibía el nombre canónico | `donut` es un tipo propio |
+| 16 | El objetivo del `bullet` usaba un color fijo | No adaptaba al modo oscuro | El color lo aporta el tema |
+| 17 | Tres tipos declaraban respaldos sin compilador | Se anunciaba una alternativa que no existía | Se retiraron; una prueba impide volver a prometerlas |
 
 Todos ellos se corrigieron y la regresión completa se volvió a ejecutar.
 

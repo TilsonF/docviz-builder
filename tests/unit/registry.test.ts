@@ -78,11 +78,19 @@ describe('RendererRegistry', () => {
 });
 
 describe('buildRegistry', () => {
-  it('registra los seis motores con la configuracion por defecto', () => {
+  it('registra todos los motores con la configuracion por defecto', () => {
     const registry = buildRegistry(defaultConfig(process.cwd()));
     expect(registry.types().sort()).toEqual(
-      ['d2', 'graphviz', 'likec4', 'mermaid', 'plantuml', 'vega-lite'].sort(),
+      ['bpmn', 'd2', 'graphviz', 'likec4', 'mermaid', 'plantuml', 'plantuml-c4', 'svgbob', 'vega-lite'].sort(),
     );
+  });
+
+  it('plantuml-c4 acompana a plantuml y desaparece con el', () => {
+    const config = defaultConfig(process.cwd());
+    config.renderers.plantuml.enabled = false;
+    const registry = buildRegistry(config);
+    expect(registry.has('plantuml')).toBe(false);
+    expect(registry.has('plantuml-c4')).toBe(false);
   });
 
   it('omite los renderers deshabilitados', () => {

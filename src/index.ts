@@ -57,13 +57,18 @@ export { renderLikeC4View } from './renderers/likec4-svg.js';
 
 export {
   compileDsl,
-  compileDiagram,
-  compileChart,
   compileArchitecture,
   dslCatalog,
+  dslCatalogDetailed,
+  diagramTypeNames,
+  chartTypeNames,
+  findType,
+  typeNames,
+  TYPE_CATALOG,
   isDslLanguage,
   DSL_LANGUAGES,
 } from './dsl/index.js';
+export type { TypeSpec, DslLang } from './dsl/index.js';
 
 export { build, check, collectMarkdown } from './build/builder.js';
 export type { BuildOptions, BuildResult, CheckResult } from './build/builder.js';

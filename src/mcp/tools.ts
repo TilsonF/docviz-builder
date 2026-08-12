@@ -12,9 +12,10 @@ import { build, check } from '../build/builder.js';
 import { verify } from '../build/verify.js';
 import { loadConfig, resolveFromRoot } from '../config/load.js';
 import { DocVizError, BuildFailedError } from '../core/errors.js';
-import { compileDsl, dslCatalog, isDslLanguage } from '../dsl/index.js';
+import { compileDsl, dslCatalog, dslCatalogDetailed, isDslLanguage } from '../dsl/index.js';
+import { TYPE_CATALOG } from '../dsl/catalog.js';
 import { buildRegistry } from '../renderers/index.js';
-import { getTheme } from '../themes/index.js';
+import { getTheme, themeNames } from '../themes/index.js';
 import { toPosix } from '../core/paths.js';
 
 export interface ToolResult {
@@ -259,9 +260,32 @@ export async function previewDocument(args: {
   }
 }
 
-/** `docviz_types`: catalogo de tipos y temas disponibles. */
-export function listTypes(): ToolResult {
-  return { ok: true, ...dslCatalog(), themes: Object.keys({ default: 0, corporate: 0, executive: 0, dark: 0 }) };
+/**
+ * `docviz_types`: catalogo de tipos y temas.
+ *
+ * Devuelve el proposito y el cuando usar de cada tipo, no solo su nombre: un
+ * listado de nombres obliga a adivinar, y adivinar es justo lo que se quiere
+ * evitar.
+ */
+export function listTypes(args: { detailed?: boolean } = {}): ToolResult {
+  if (args.detailed === false) {
+    return { ok: true, ...dslCatalog(), themes: themeNames() };
+  }
+  return {
+    ok: true,
+    themes: themeNames(),
+    types: dslCatalogDetailed().map((spec) => ({
+      type: spec.type,
+      lang: spec.lang,
+      engine: spec.engine,
+      fallbacks: spec.fallbacks ?? [],
+      aliases: spec.aliases ?? [],
+      purpose: spec.purpose,
+      whenToUse: spec.whenToUse,
+      whenNotToUse: spec.whenNotToUse,
+      example: spec.example,
+    })),
+  };
 }
 
 /** Determina a que valla de DSL pertenece un tipo. */
@@ -289,4 +313,108 @@ async function ensureDir(dir: string): Promise<string> {
   const { mkdir } = await import('node:fs/promises');
   await mkdir(dir, { recursive: true });
   return dir;
+}
+
+// --------------------------------------------------------------------------
+// Recomendacion de tipo
+// --------------------------------------------------------------------------
+
+/**
+ * `docviz_suggest`
+ *
+ * Recibe una frase con lo que se quiere explicar y devuelve los tipos mas
+ * adecuados, con su esqueleto listo para rellenar.
+ *
+ * Existe porque recordar cuarenta y tantos tipos no es razonable, ni para una
+ * persona ni para un modelo. Consultar es mas fiable que recordar, y el
+ * esqueleto evita el segundo error habitual: acertar el tipo y equivocarse en
+ * la forma.
+ */
+export function suggestType(args: { need: string; limit?: number }): ToolResult {
+  const need = (args.need ?? '').trim();
+  if (need === '') {
+    return { ok: false, error: 'describe en una frase que quieres explicar' };
+  }
+
+  const terms = tokenize(need);
+  const scored = TYPE_CATALOG.map((spec) => ({ spec, score: score(spec, terms) }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score || a.spec.type.localeCompare(b.spec.type));
+
+  const limit = Math.min(Math.max(args.limit ?? 3, 1), 8);
+  const matches = scored.slice(0, limit);
+
+  if (matches.length === 0) {
+    return {
+      ok: true,
+      need,
+      matches: [],
+      // Sin coincidencia, la respuesta util no es una lista larga sino un aviso:
+      // muchas veces la respuesta correcta es no dibujar nada.
+      advice:
+        'Ninguna intencion del catalogo encaja claramente. Comprueba si una tabla o un parrafo ' +
+        'comunican mejor; si aun asi quieres un diagrama, consulta docviz_types.',
+    };
+  }
+
+  return {
+    ok: true,
+    need,
+    matches: matches.map(({ spec }) => ({
+      type: spec.type,
+      lang: spec.lang,
+      engine: spec.engine,
+      purpose: spec.purpose,
+      whenToUse: spec.whenToUse,
+      whenNotToUse: spec.whenNotToUse,
+      block: `\`\`\`${spec.lang}\n${spec.example}\n\`\`\``,
+    })),
+  };
+}
+
+const STOP_WORDS = new Set([
+  'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas', 'de', 'del', 'al', 'y', 'o', 'que',
+  'como', 'para', 'por', 'con', 'sin', 'en', 'se', 'su', 'sus', 'lo', 'es', 'son', 'quiero',
+  'necesito', 'mostrar', 'explicar', 'dibujar', 'diagrama', 'grafico', 'the', 'a', 'of', 'to',
+]);
+
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
+}
+
+/**
+ * Puntua un tipo frente a los terminos de la peticion.
+ *
+ * Las palabras clave pesan mas que el texto libre: son las que el catalogo
+ * declara a proposito para este uso, mientras que una coincidencia en la
+ * descripcion puede ser casual.
+ */
+function score(spec: { type: string; keywords: readonly string[]; purpose: string; whenToUse: string }, terms: readonly string[]): number {
+  if (terms.length === 0) return 0;
+  const keywords = spec.keywords.map((k) => k.toLowerCase());
+  const prose = `${spec.purpose} ${spec.whenToUse}`.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const name = spec.type.toLowerCase();
+
+  let total = 0;
+  for (const term of terms) {
+    if (name.includes(term)) total += 6;
+    if (keywords.some((k) => k === term)) total += 5;
+    else if (keywords.some((k) => k.includes(term) || term.includes(k))) total += 3;
+    // Coincidencia por raiz: quien escribe "interactuan" se refiere a
+    // "interaccion", y exigir la forma exacta desaprovecha el catalogo.
+    else if (keywords.some((k) => sharePrefix(k, term))) total += 2;
+    if (prose.includes(term)) total += 1;
+  }
+  return total;
+}
+
+/** Dos palabras comparten raiz si coinciden en sus primeros seis caracteres. */
+function sharePrefix(a: string, b: string): boolean {
+  const n = 6;
+  return a.length >= n && b.length >= n && a.slice(0, n) === b.slice(0, n);
 }

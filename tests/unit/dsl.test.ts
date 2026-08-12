@@ -347,7 +347,14 @@ describe('chart', () => {
   });
 
   it('rechaza un tipo de grafico inexistente', () => {
-    expect(() => compile('chart', 'type: radar\ndata: []')).toThrow(/el tipo de grafico "radar" no existe/);
+    expect(() => compile('chart', 'type: mandala\ndata: []')).toThrow(/el tipo de grafico "mandala" no existe/);
+  });
+
+  it('avisa si el tipo pertenece a otra valla', () => {
+    // `radar` existe, pero como diagrama: el error debe decirlo, no negar el tipo.
+    expect(() => compile('chart', 'type: radar\naxes: [A, B, C]\nvalues: [1,2,3]')).toThrow(
+      /pertenece a la valla `diagram`/,
+    );
   });
 
   it('exige label y value en cada punto', () => {

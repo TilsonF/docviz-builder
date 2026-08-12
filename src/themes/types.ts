@@ -66,6 +66,15 @@ export interface Theme {
     readonly darkThemeID: number;
     readonly sketch: boolean;
     readonly pad: number;
+    /**
+     * Sobrescritura de la paleta de D2, en claro y en oscuro.
+     *
+     * D2 no acepta colores sueltos por elemento desde fuera: solo permite
+     * redefinir las ranuras de su tema. Se inyectan en la fuente para que sus
+     * diagramas sigan la identidad del proyecto en lugar de la suya.
+     */
+    readonly overrides: Readonly<Record<string, string>>;
+    readonly darkOverrides: Readonly<Record<string, string>>;
   };
 
   /** Atributos por defecto inyectados en el grafo Graphviz. */

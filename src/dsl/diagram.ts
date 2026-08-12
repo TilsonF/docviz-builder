@@ -1,20 +1,13 @@
 /**
- * Bloque `diagram`: el agente declara la intencion, DocViz elige el motor.
+ * Compiladores de los tipos originales de `diagram`.
  *
- *   sequence      -> PlantUML
- *   class         -> PlantUML
- *   state         -> PlantUML
- *   activity      -> PlantUML
- *   flow          -> Mermaid
- *   gantt         -> Mermaid
- *   strategy-tree -> D2
- *   capability-map-> D2
- *   dependency-map-> Graphviz
- *   ...
+ * Que tipo atiende cada uno lo decide el catalogo (`catalog.ts`) y lo despacha
+ * `compile.ts`; aqui solo esta la traduccion al lenguaje de cada motor.
  */
 
 import { fail } from './util.js';
 import {
+  asNamedRecord,
   asRecord,
   d2Label,
   dotLabel,
@@ -29,99 +22,6 @@ import {
   requireString,
   toEdge,
 } from './util.js';
-
-export interface CompiledDiagram {
-  rendererType: string;
-  source: string;
-}
-
-/** Tipo de `diagram` -> motor destino. Es el mapa que el agente ya no necesita saber. */
-export const DIAGRAM_TYPES: Readonly<Record<string, string>> = {
-  // UML (PlantUML)
-  sequence: 'plantuml',
-  'uml-sequence': 'plantuml',
-  class: 'plantuml',
-  'uml-class': 'plantuml',
-  state: 'plantuml',
-  'uml-state': 'plantuml',
-  activity: 'plantuml',
-  'uml-activity': 'plantuml',
-  // Flujos y cronogramas (Mermaid)
-  flow: 'mermaid',
-  flowchart: 'mermaid',
-  gantt: 'mermaid',
-  // Diagramas ejecutivos (D2)
-  'strategy-tree': 'd2',
-  'issue-tree': 'd2',
-  'decision-tree': 'd2',
-  'strategy-pillars': 'd2',
-  'capability-map': 'd2',
-  'operating-model': 'd2',
-  'value-chain': 'd2',
-  'before-after': 'd2',
-  'matrix-2x2': 'd2',
-  timeline: 'd2',
-  roadmap: 'd2',
-  // Dependencias (Graphviz)
-  'dependency-map': 'graphviz',
-  'dependency-graph': 'graphviz',
-};
-
-export function diagramTypeNames(): string[] {
-  return Object.keys(DIAGRAM_TYPES).sort();
-}
-
-export function compileDiagram(doc: Record<string, unknown>): CompiledDiagram {
-  const type = requireString(doc, 'type', 'diagram').toLowerCase();
-  const renderer = DIAGRAM_TYPES[type];
-  if (renderer === undefined) {
-    fail(`el tipo de diagrama "${type}" no existe`, `tipos disponibles: ${diagramTypeNames().join(', ')}`);
-  }
-
-  switch (type) {
-    case 'sequence':
-    case 'uml-sequence':
-      return { rendererType: renderer, source: sequence(doc) };
-    case 'class':
-    case 'uml-class':
-      return { rendererType: renderer, source: classDiagram(doc) };
-    case 'state':
-    case 'uml-state':
-      return { rendererType: renderer, source: stateDiagram(doc) };
-    case 'activity':
-    case 'uml-activity':
-      return { rendererType: renderer, source: activityDiagram(doc) };
-    case 'flow':
-    case 'flowchart':
-      return { rendererType: renderer, source: flowchart(doc) };
-    case 'gantt':
-      return { rendererType: renderer, source: gantt(doc) };
-    case 'strategy-tree':
-    case 'issue-tree':
-    case 'decision-tree':
-      return { rendererType: renderer, source: tree(doc) };
-    case 'strategy-pillars':
-      return { rendererType: renderer, source: pillars(doc) };
-    case 'capability-map':
-      return { rendererType: renderer, source: capabilityMap(doc) };
-    case 'operating-model':
-      return { rendererType: renderer, source: operatingModel(doc) };
-    case 'value-chain':
-      return { rendererType: renderer, source: valueChain(doc) };
-    case 'before-after':
-      return { rendererType: renderer, source: beforeAfter(doc) };
-    case 'matrix-2x2':
-      return { rendererType: renderer, source: matrix2x2(doc) };
-    case 'timeline':
-    case 'roadmap':
-      return { rendererType: renderer, source: roadmap(doc) };
-    case 'dependency-map':
-    case 'dependency-graph':
-      return { rendererType: renderer, source: dependencyGraph(doc) };
-    default:
-      fail(`el tipo "${type}" esta declarado pero no implementado`);
-  }
-}
 
 // --------------------------------------------------------------------------
 // PlantUML
@@ -138,7 +38,7 @@ const PARTICIPANT_KINDS = [
   'queue',
 ] as const;
 
-function sequence(doc: Record<string, unknown>): string {
+export function sequence(doc: Record<string, unknown>): string {
   const participants = requireArray(doc['participants'], 'diagram.participants');
   const flow = requireArray(doc['flow'], 'diagram.flow');
   const ids = new IdFactory('P');
@@ -198,14 +98,14 @@ const RELATION_ARROWS: Readonly<Record<string, string>> = {
   uses: '..>',
 };
 
-function classDiagram(doc: Record<string, unknown>): string {
+export function classDiagram(doc: Record<string, unknown>): string {
   const classes = requireArray(doc['classes'], 'diagram.classes');
   const relations = optionalArray(doc['relations'], 'diagram.relations');
   const declared = new Set<string>();
 
   const lines: string[] = ['@startuml', 'hide empty members'];
   for (const raw of classes) {
-    const record = typeof raw === 'string' ? { name: raw } : asRecord(raw, 'diagram.classes');
+    const record = asNamedRecord(raw, 'diagram.classes', 'name');
     const name = requireString(record, 'name', 'diagram.classes');
     declared.add(name);
     const stereotype = optionalString(record, 'stereotype');
@@ -261,14 +161,14 @@ function classDiagram(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function stateDiagram(doc: Record<string, unknown>): string {
+export function stateDiagram(doc: Record<string, unknown>): string {
   const states = requireArray(doc['states'], 'diagram.states');
   const transitions = requireArray(doc['transitions'], 'diagram.transitions');
   const ids = new IdFactory('S');
 
   const lines: string[] = ['@startuml', 'hide empty description'];
   for (const raw of states) {
-    const record = typeof raw === 'string' ? { name: raw } : asRecord(raw, 'diagram.states');
+    const record = asNamedRecord(raw, 'diagram.states', 'name');
     const name = requireString(record, 'name', 'diagram.states');
     const id = ids.id(name);
     lines.push(`state "${plantUmlText(name)}" as ${id}`);
@@ -302,7 +202,7 @@ function resolveState(ids: IdFactory, name: string, field: string): string {
   return id;
 }
 
-function activityDiagram(doc: Record<string, unknown>): string {
+export function activityDiagram(doc: Record<string, unknown>): string {
   const flow = requireArray(doc['flow'], 'diagram.flow');
   const lines: string[] = ['@startuml', 'start'];
   emitActivitySteps(flow, lines, '', 'diagram.flow');
@@ -362,7 +262,7 @@ const FLOW_SHAPES: Readonly<Record<string, [string, string]>> = {
   hexagon: ['{{', '}}'],
 };
 
-function flowchart(doc: Record<string, unknown>): string {
+export function flowchart(doc: Record<string, unknown>): string {
   const direction = oneOf(optionalString(doc, 'direction'), ['lr', 'tb', 'rl', 'bt', 'td'], 'diagram.direction', 'lr');
   const edges = requireArray(doc['flow'] ?? doc['edges'], 'diagram.flow');
   const declared = optionalArray(doc['nodes'], 'diagram.nodes');
@@ -372,7 +272,7 @@ function flowchart(doc: Record<string, unknown>): string {
   const lines: string[] = [`flowchart ${direction.toUpperCase()}`];
 
   for (const raw of declared) {
-    const record = typeof raw === 'string' ? { name: raw } : asRecord(raw, 'diagram.nodes');
+    const record = asNamedRecord(raw, 'diagram.nodes', 'name');
     const name = requireString(record, 'name', 'diagram.nodes');
     ids.id(name);
     const shape = optionalString(record, 'shape');
@@ -424,7 +324,7 @@ function escapeMermaidEdgeLabel(label: string): string {
 
 const GANTT_STATUS = ['done', 'active', 'crit', 'milestone'] as const;
 
-function gantt(doc: Record<string, unknown>): string {
+export function gantt(doc: Record<string, unknown>): string {
   const sections = requireArray(doc['sections'], 'diagram.sections');
   const dateFormat = optionalString(doc, 'dateFormat') ?? 'YYYY-MM-DD';
   const axisFormat = optionalString(doc, 'axisFormat');
@@ -439,7 +339,7 @@ function gantt(doc: Record<string, unknown>): string {
     const section = asRecord(rawSection, 'diagram.sections');
     lines.push(`    section ${sanitizeGantt(requireString(section, 'name', 'diagram.sections'))}`);
     for (const rawTask of requireArray(section['tasks'], 'diagram.sections[].tasks')) {
-      const task = typeof rawTask === 'string' ? { name: rawTask } : asRecord(rawTask, 'diagram.sections[].tasks');
+      const task = asNamedRecord(rawTask, 'diagram.sections[].tasks', 'name');
       const name = requireString(task, 'name', 'diagram.sections[].tasks');
       const id = ids.id(name);
       const parts: string[] = [];
@@ -498,7 +398,7 @@ function toTreeNode(raw: unknown, field: string): TreeNode {
   return { name, children };
 }
 
-function tree(doc: Record<string, unknown>): string {
+export function tree(doc: Record<string, unknown>): string {
   const root = requireString(doc, 'root', 'diagram.root');
   const branches = requireArray(doc['branches'], 'diagram.branches').map((b) =>
     toTreeNode(b, 'diagram.branches'),
@@ -521,7 +421,7 @@ function tree(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function pillars(doc: Record<string, unknown>): string {
+export function pillars(doc: Record<string, unknown>): string {
   const root = requireString(doc, 'root', 'diagram.root');
   const items = requireArray(doc['pillars'] ?? doc['branches'], 'diagram.pillars');
   const ids = new IdFactory('p');
@@ -543,7 +443,7 @@ function pillars(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function capabilityMap(doc: Record<string, unknown>): string {
+export function capabilityMap(doc: Record<string, unknown>): string {
   const domains = requireArray(doc['domains'] ?? doc['areas'], 'diagram.domains');
   const ids = new IdFactory('c');
   const lines: string[] = ['direction: right', `grid-columns: ${Math.min(domains.length, 3)}`, ''];
@@ -567,7 +467,7 @@ function capabilityMap(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function operatingModel(doc: Record<string, unknown>): string {
+export function operatingModel(doc: Record<string, unknown>): string {
   const layers = requireArray(doc['layers'], 'diagram.layers');
   const ids = new IdFactory('l');
   const lines: string[] = ['direction: down', ''];
@@ -593,7 +493,7 @@ function operatingModel(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function valueChain(doc: Record<string, unknown>): string {
+export function valueChain(doc: Record<string, unknown>): string {
   const stages = requireArray(doc['stages'] ?? doc['steps'], 'diagram.stages');
   const ids = new IdFactory('s');
   const lines: string[] = ['direction: right', ''];
@@ -607,7 +507,7 @@ function valueChain(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function beforeAfter(doc: Record<string, unknown>): string {
+export function beforeAfter(doc: Record<string, unknown>): string {
   const before = requireArray(doc['before'], 'diagram.before');
   const after = requireArray(doc['after'], 'diagram.after');
   const beforeLabel = optionalString(doc, 'beforeLabel') ?? 'Antes';
@@ -632,7 +532,7 @@ function beforeAfter(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function matrix2x2(doc: Record<string, unknown>): string {
+export function matrix2x2(doc: Record<string, unknown>): string {
   const axes = asRecord(doc['axes'], 'diagram.axes');
   const xAxis = requireString(axes, 'x', 'diagram.axes.x');
   const yAxis = requireString(axes, 'y', 'diagram.axes.y');
@@ -643,7 +543,7 @@ function matrix2x2(doc: Record<string, unknown>): string {
   const ids = new IdFactory('q');
   const lines: string[] = ['direction: right', 'grid-columns: 2', 'grid-gap: 24', ''];
   for (const raw of quadrants) {
-    const quadrant = typeof raw === 'string' ? { name: raw } : asRecord(raw, 'diagram.quadrants');
+    const quadrant = asNamedRecord(raw, 'diagram.quadrants', 'name');
     const name = requireString(quadrant, 'name', 'diagram.quadrants');
     const id = ids.id(`q/${name}`);
     const items = optionalArray(quadrant['items'], 'diagram.quadrants[].items');
@@ -662,14 +562,14 @@ function matrix2x2(doc: Record<string, unknown>): string {
   return lines.join('\n');
 }
 
-function roadmap(doc: Record<string, unknown>): string {
+export function roadmap(doc: Record<string, unknown>): string {
   const phases = requireArray(doc['phases'] ?? doc['milestones'], 'diagram.phases');
   const ids = new IdFactory('f');
   const lines: string[] = ['direction: right', ''];
   const phaseIds: string[] = [];
 
   for (const raw of phases) {
-    const phase = typeof raw === 'string' ? { name: raw } : asRecord(raw, 'diagram.phases');
+    const phase = asNamedRecord(raw, 'diagram.phases', 'name');
     const name = requireString(phase, 'name', 'diagram.phases');
     const id = ids.id(`f/${name}`);
     phaseIds.push(id);
@@ -693,7 +593,7 @@ function roadmap(doc: Record<string, unknown>): string {
 // Graphviz
 // --------------------------------------------------------------------------
 
-function dependencyGraph(doc: Record<string, unknown>): string {
+export function dependencyGraph(doc: Record<string, unknown>): string {
   const edges = requireArray(doc['dependencies'] ?? doc['edges'] ?? doc['flow'], 'diagram.dependencies');
   const declared = optionalArray(doc['nodes'], 'diagram.nodes');
   const direction = oneOf(optionalString(doc, 'direction'), ['tb', 'lr', 'rl', 'bt'], 'diagram.direction', 'lr');

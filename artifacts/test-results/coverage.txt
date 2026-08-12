@@ -2,115 +2,131 @@
  RUN  v4.1.10 /Users/usuario1/Documents/Proyecticos/docviz-builder
       Coverage enabled with v8
 
- ✓ tests/unit/renderer-errors.test.ts (15 tests) 8152ms
-     ✓ traduce el error de sintaxis a un motivo legible  734ms
-     ✓ acepta un diagrama sin marcas de apertura envolviendolo  650ms
-     ✓ genera PNG cuando se le pide  641ms
-     ✓ reporta un diagrama invalido con el detalle del motor  1767ms
-     ✓ produce el mismo SVG para la misma entrada  1559ms
-     ✓ renderiza tambien secuencias y gantt  771ms
-     ✓ conserva la hoja de estilos apuntando al id real del svg  768ms
- ✓ tests/integration/renderers.test.ts (10 tests) 8795ms
-     ✓ genera y valida un diagrama de secuencia  1171ms
-     ✓ genera y valida un flowchart  1803ms
-     ✓ genera y valida un arbol de estrategia  387ms
-     ✓ renderiza PlantUML, D2, Vega-Lite, Mermaid y LikeC4 en el mismo Markdown  3647ms
-     ✓ falla el build y reporta archivo, linea, renderer y motivo  1172ms
-     ✓ con --continue-on-error conserva el bloque original y sigue  391ms
- ✓ tests/integration/cache.test.ts (5 tests) 3979ms
-     ✓ regenera todo la primera vez, nada la segunda y solo lo cambiado la tercera  588ms
-     ✓ el resultado es deterministico byte a byte entre ejecuciones  968ms
-     ✓ cambiar el tema invalida el cache  1191ms
-     ✓ --clean borra la salida pero conserva los aciertos de cache  705ms
-     ✓ el mismo diagrama repetido en dos documentos comparte recurso  518ms
- ✓ tests/unit/mcp-tools.test.ts (18 tests) 3865ms
-     ✓ renderiza un tipo del DSL eligiendo el motor  472ms
-     ✓ escribe el recurso cuando se indica outputDir  1783ms
-     ✓ compila y verifica en una sola llamada  387ms
-     ✓ devuelve el resumen de la salida  475ms
-     ✓ devuelve el Markdown compilado de un documento concreto  509ms
- ✓ tests/unit/builder.test.ts (17 tests) 3985ms
-     ✓ preserva la estructura de subdirectorios  387ms
-     ✓ usa rutas relativas correctas desde documentos anidados  459ms
-     ✓ informa por el callback de log en modo verbose  505ms
-     ✓ respeta el formato pedido en la valla  1583ms
-     ✓ respeta la longitud de hash configurada  530ms
-     ✓ escribe los recursos en el assetsDir configurado  471ms
- ✓ tests/unit/cli.test.ts (13 tests) 1057ms
-     ✓ compila, informa estadisticas y respeta --theme  403ms
-     ✓ con --continue-on-error termina en 1 pero deja salida  535ms
- ✓ tests/unit/renderers-base.test.ts (16 tests) 47ms
- ✓ tests/unit/renderers-config.test.ts (34 tests) 69ms
- ✓ tests/unit/preview.test.ts (11 tests) 26ms
- ✓ tests/unit/verify.test.ts (13 tests) 20ms
- ✓ tests/unit/scan.test.ts (21 tests) 19ms
- ✓ tests/unit/dsl.test.ts (57 tests) 19ms
+ ✓ tests/unit/renderer-errors.test.ts (15 tests) 8521ms
+     ✓ traduce el error de sintaxis a un motivo legible  772ms
+     ✓ acepta un diagrama sin marcas de apertura envolviendolo  652ms
+     ✓ genera PNG cuando se le pide  653ms
+     ✓ reporta un diagrama invalido con el detalle del motor  2083ms
+     ✓ produce el mismo SVG para la misma entrada  1547ms
+     ✓ renderiza tambien secuencias y gantt  770ms
+     ✓ conserva la hoja de estilos apuntando al id real del svg  766ms
+ ✓ tests/integration/renderers.test.ts (10 tests) 9212ms
+     ✓ genera y valida un diagrama de secuencia  1217ms
+     ✓ genera y valida un flowchart  1805ms
+     ✓ genera y valida un arbol de estrategia  415ms
+     ✓ renderiza PlantUML, D2, Vega-Lite, Mermaid y LikeC4 en el mismo Markdown  3892ms
+     ✓ falla el build y reporta archivo, linea, renderer y motivo  1259ms
+     ✓ con --continue-on-error conserva el bloque original y sigue  411ms
+ ✓ tests/integration/cache.test.ts (5 tests) 4240ms
+     ✓ regenera todo la primera vez, nada la segunda y solo lo cambiado la tercera  602ms
+     ✓ el resultado es deterministico byte a byte entre ejecuciones  964ms
+     ✓ cambiar el tema invalida el cache  1359ms
+     ✓ --clean borra la salida pero conserva los aciertos de cache  632ms
+     ✓ el mismo diagrama repetido en dos documentos comparte recurso  674ms
+ ✓ tests/unit/builder.test.ts (17 tests) 3777ms
+     ✓ preserva la estructura de subdirectorios  402ms
+     ✓ usa rutas relativas correctas desde documentos anidados  442ms
+     ✓ informa por el callback de log en modo verbose  517ms
+     ✓ respeta el formato pedido en la valla  1339ms
+     ✓ respeta la longitud de hash configurada  555ms
+     ✓ escribe los recursos en el assetsDir configurado  474ms
+ ✓ tests/unit/mcp-tools.test.ts (26 tests) 4373ms
+     ✓ renderiza un tipo del DSL eligiendo el motor  399ms
+     ✓ escribe el recurso cuando se indica outputDir  2300ms
+     ✓ compila y verifica en una sola llamada  406ms
+     ✓ devuelve el resumen de la salida  455ms
+     ✓ devuelve el Markdown compilado de un documento concreto  544ms
+(node:20243) ExperimentalWarning: Importing WebAssembly module instances is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/unit/renderers-nuevos.test.ts (15 tests) 2223ms
+     ✓ dibuja el proceso compilado desde el DSL  1586ms
+     ✓ reporta un XML invalido con el detalle del motor  570ms
+ ✓ tests/unit/cli.test.ts (13 tests) 1068ms
+     ✓ compila, informa estadisticas y respeta --theme  406ms
+     ✓ con --continue-on-error termina en 1 pero deja salida  548ms
+ ✓ tests/unit/renderers-base.test.ts (16 tests) 48ms
+ ✓ tests/unit/renderers-config.test.ts (34 tests) 68ms
+ ✓ tests/unit/catalog.test.ts (20 tests) 26ms
+ ✓ tests/unit/preview.test.ts (11 tests) 25ms
+ ✓ tests/unit/verify.test.ts (13 tests) 19ms
+ ✓ tests/unit/dsl.test.ts (58 tests) 20ms
+ ✓ tests/unit/dsl-nuevos.test.ts (57 tests) 20ms
+ ✓ tests/unit/scan.test.ts (21 tests) 20ms
+ ✓ tests/unit/dsl-ramas.test.ts (42 tests) 15ms
  ✓ tests/unit/dsl-branches.test.ts (40 tests) 14ms
+ ✓ tests/unit/cache-store.test.ts (11 tests) 11ms
  ✓ tests/unit/config-security.test.ts (24 tests) 12ms
- ✓ tests/unit/cache-store.test.ts (11 tests) 12ms
- ✓ tests/unit/config-load.test.ts (22 tests) 11ms
- ✓ tests/unit/transform.test.ts (9 tests) 11ms
- ✓ tests/unit/browser.test.ts (12 tests) 10ms
+ ✓ tests/unit/fallbacks.test.ts (22 tests) 12ms
+ ✓ tests/unit/config-load.test.ts (22 tests) 12ms
+ ✓ tests/unit/transform.test.ts (9 tests) 13ms
+ ✓ tests/unit/browser.test.ts (12 tests) 11ms
  ✓ tests/unit/kroki.test.ts (17 tests) 6ms
  ✓ tests/unit/paths.test.ts (21 tests) 5ms
  ✓ tests/unit/likec4-svg.test.ts (40 tests) 5ms
- ✓ tests/unit/color-scheme.test.ts (19 tests) 5ms
+ ✓ tests/unit/color-scheme.test.ts (19 tests) 4ms
  ✓ tests/unit/hash.test.ts (20 tests) 4ms
  ✓ tests/unit/svg.test.ts (24 tests) 4ms
- ✓ tests/unit/registry.test.ts (10 tests) 3ms
+ ✓ tests/unit/registry.test.ts (11 tests) 3ms
 
- Test Files  25 passed (25)
-      Tests  499 passed (499)
-   Start at  13:48:47
-   Duration  33.05s (transform 193ms, setup 0ms, import 989ms, tests 30.13s, environment 1ms)
+ Test Files  30 passed (30)
+      Tests  665 passed (665)
+   Start at  20:08:22
+   Duration  37.39s (transform 277ms, setup 0ms, import 1.25s, tests 33.79s, environment 1ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |    95.4 |    86.02 |   94.94 |   97.09 |                   
+All files          |   95.67 |    86.68 |   93.92 |   97.27 |                   
  src               |   88.73 |    74.35 |      75 |   88.23 |                   
   cli.ts           |   88.73 |    74.35 |      75 |   88.23 | 158-167,212       
- src/build         |   96.76 |    86.66 |   93.02 |   97.59 |                   
-  builder.ts       |   95.68 |    82.14 |    87.5 |   96.89 | 81-88,263,325     
+ src/build         |   96.77 |    86.66 |   93.18 |   97.59 |                   
+  builder.ts       |   95.71 |    82.14 |   88.23 |   96.89 | 81-88,263,327     
   preview.ts       |   96.99 |    92.45 |   95.83 |    97.6 | 39-40,127         
   verify.ts        |     100 |    84.61 |     100 |     100 | 62-65,67          
- src/config        |   97.41 |    89.72 |     100 |   99.18 |                   
-  load.ts          |   97.41 |    89.72 |     100 |   99.18 | 185               
+ src/config        |   95.62 |    88.51 |   88.88 |    98.4 |                   
+  load.ts          |   95.62 |    88.51 |   88.88 |    98.4 | 190,222           
  src/core          |   97.81 |     92.4 |   97.91 |   98.15 |                   
   errors.ts        |     100 |    88.88 |     100 |     100 | 44                
   hash.ts          |   96.55 |     90.9 |    90.9 |   95.83 | 104               
   ...ge-version.ts |   95.45 |    88.88 |     100 |     100 | 35                
   registry.ts      |   94.11 |    84.61 |     100 |    93.1 | 66,70             
- src/dsl           |   95.74 |    87.25 |   98.85 |   97.22 |                   
-  architecture.ts  |   86.61 |     77.5 |    90.9 |   88.42 | ...10,264-266,278 
-  chart.ts         |   99.08 |    97.16 |     100 |     100 | 127,184           
-  diagram.ts       |   99.51 |    87.04 |     100 |   99.74 | 122               
-  index.ts         |   92.59 |    81.25 |     100 |    92.3 | 88,108            
-  util.ts          |   91.07 |    85.98 |     100 |   96.73 | 16,24,54          
+ src/dsl           |   96.56 |     88.2 |   96.15 |   97.58 |                   
+  architecture.ts  |    94.4 |     92.5 |   91.66 |    95.9 | 85,269-271,283    
+  chart.ts         |   98.73 |    89.87 |     100 |     100 | ...42-443,473-486 
+  compile.ts       |   85.71 |    81.25 |      75 |      84 | 145,177-179       
+  diagram-bpmn.ts  |   99.09 |    94.36 |     100 |     100 | 75,91,143-144     
+  ...am-product.ts |   97.53 |    90.69 |     100 |   97.26 | 75,97,148,205,235 
+  ...-technical.ts |   92.65 |    83.22 |   93.93 |   94.14 | ...55,399-409,431 
+  diagram.ts       |   99.74 |    85.71 |     100 |     100 | ...96-497,566,597 
+  fallbacks.ts     |   96.79 |    86.48 |     100 |   97.88 | 316-318           
+  index.ts         |   93.54 |    89.65 |      75 |    93.1 | 125-130           
+  util.ts          |   92.43 |    88.42 |     100 |    96.9 | 16,32,62          
  src/markdown      |      96 |    90.38 |     100 |     100 |                   
   scan.ts          |   95.23 |       90 |     100 |     100 | 55-57,67,81,133   
- src/mcp           |    90.9 |    68.96 |   81.25 |   95.55 |                   
-  tools.ts         |    90.9 |    68.96 |   81.25 |   95.55 | 39,87,255-258     
- src/renderers     |   94.63 |    84.66 |   94.23 |   96.87 |                   
+ src/mcp           |    92.3 |    77.65 |      90 |   96.74 |                   
+  tools.ts         |    92.3 |    77.65 |      90 |   96.74 | 40,88,256-259     
+ src/renderers     |   94.35 |    84.15 |   92.26 |   96.84 |                   
   base.ts          |     100 |       90 |     100 |     100 | 29                
+  bpmn.ts          |   79.41 |       60 |    64.7 |   85.48 | ...12-113,130,175 
   browser.ts       |      90 |    68.42 |     100 |    90.9 | 53,103-104        
   color-scheme.ts  |   96.42 |    90.47 |     100 |   97.77 | 60                
-  d2.ts            |   93.75 |     90.9 |    87.5 |   96.66 | 85                
+  d2.ts            |   94.73 |     92.3 |    90.9 |   97.14 | 86                
   graphviz.ts      |   94.87 |    82.35 |     100 |   97.36 | 76                
-  index.ts         |     100 |       80 |     100 |     100 | 44,69-85          
+  index.ts         |     100 |    82.14 |     100 |     100 | 73-89,114-118     
   kroki.ts         |   98.38 |    92.68 |   88.88 |     100 | 93,105-132        
   likec4-svg.ts    |   99.14 |    92.96 |     100 |     100 | ...73,510,535,552 
   likec4.ts        |   91.42 |    73.33 |   85.71 |   96.66 | 67                
-  mermaid.ts       |      72 |    46.42 |   66.66 |   77.61 | ...38-148,180,211 
-  plantuml.ts      |   94.31 |    74.46 |     100 |   97.43 | 87,212            
+  mermaid.ts       |   81.81 |    56.52 |   70.58 |   88.13 | ...25-126,165,196 
+  plantuml.ts      |   93.47 |    72.34 |     100 |   97.53 | 97,231            
   svg-utils.ts     |   97.05 |    88.88 |     100 |     100 | ...,81,97,166,176 
+  svgbob.ts        |    91.3 |    83.33 |     100 |   90.47 | 50,53             
   vega-lite.ts     |   97.77 |    93.33 |     100 |     100 | 32-47             
 -------------------|---------|----------|---------|---------|-------------------
 
 =============================== Coverage summary ===============================
-Statements   : 95.4% ( 2451/2569 )
-Branches     : 86.02% ( 1262/1467 )
-Functions    : 94.94% ( 376/396 )
-Lines        : 97.09% ( 2238/2305 )
+Statements   : 95.67% ( 3366/3518 )
+Branches     : 86.68% ( 1790/2065 )
+Functions    : 93.92% ( 526/560 )
+Lines        : 97.27% ( 3072/3158 )
 ================================================================================

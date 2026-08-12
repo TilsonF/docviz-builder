@@ -15,6 +15,7 @@ import {
   previewDocument,
   renderDiagram,
   renderableTypes,
+  suggestType,
   validateDocument,
 } from '../../src/mcp/tools.js';
 
@@ -37,7 +38,7 @@ afterAll(async () => {
 
 describe('docviz_types', () => {
   it('publica el catalogo completo', () => {
-    const result = listTypes();
+    const result = listTypes({ detailed: false });
     expect(result.ok).toBe(true);
     expect(result['diagram']).toContain('sequence');
     expect(result['chart']).toContain('bar');
@@ -190,5 +191,75 @@ describe('docviz_build_document y docviz_preview', () => {
     const result = await buildDocuments({ cwd: root });
     expect(result.ok).toBe(false);
     expect(String(result['detail'])).toContain('renderer: graphviz');
+  });
+});
+
+describe('docviz_suggest', () => {
+  it('recomienda el tipo adecuado para una necesidad descrita en una frase', () => {
+    const casos: Array<[string, string]> = [
+      ['comparar la cobertura de pruebas entre sprints', 'line'],
+      ['como interactuan el frontend y la api al autenticar', 'sequence'],
+      ['el proceso de aprobacion para auditoria', 'bpmn'],
+      ['priorizar iniciativas por esfuerzo e impacto', 'quadrant'],
+      ['el modelo de datos de pedidos y lineas', 'erd'],
+      ['que puede hacer cada actor en el portal', 'use-case'],
+      ['un boceto de la pantalla de login', 'wireframe'],
+      ['la madurez del equipo en varias dimensiones', 'radar'],
+      ['el ciclo de vida de una solicitud', 'state'],
+      ['como se reparten los defectos por origen', 'sankey'],
+    ];
+    for (const [need, expected] of casos) {
+      const result = suggestType({ need, limit: 3 });
+      const types = (result['matches'] as Array<{ type: string }>).map((m) => m.type);
+      expect(types[0], `"${need}" sugirio ${types.join(', ')}`).toBe(expected);
+    }
+  });
+
+  it('devuelve el bloque listo para rellenar', () => {
+    const result = suggestType({ need: 'una secuencia de mensajes entre servicios', limit: 1 });
+    const first = (result['matches'] as Array<Record<string, string>>)[0]!;
+    expect(first['block']).toContain('```diagram');
+    expect(first['block']).toContain('type: sequence');
+    expect(first['whenNotToUse']).toBeTruthy();
+  });
+
+  it('respeta el limite pedido', () => {
+    expect((suggestType({ need: 'proceso', limit: 2 })['matches'] as unknown[]).length).toBeLessThanOrEqual(2);
+    expect((suggestType({ need: 'proceso', limit: 99 })['matches'] as unknown[]).length).toBeLessThanOrEqual(8);
+  });
+
+  it('aconseja no dibujar cuando nada encaja', () => {
+    const result = suggestType({ need: 'zzzz qqqq' });
+    expect(result['matches']).toEqual([]);
+    expect(String(result['advice'])).toContain('tabla');
+  });
+
+  it('exige una descripcion', () => {
+    expect(suggestType({ need: '   ' }).ok).toBe(false);
+  });
+});
+
+describe('docviz_types con metadatos', () => {
+  it('describe cada tipo, no solo su nombre', () => {
+    const result = listTypes();
+    const types = result['types'] as Array<Record<string, unknown>>;
+    expect(types.length).toBeGreaterThan(40);
+    const sequence = types.find((t) => t['type'] === 'sequence')!;
+    expect(sequence['purpose']).toBeTruthy();
+    expect(sequence['whenToUse']).toBeTruthy();
+    expect(sequence['whenNotToUse']).toBeTruthy();
+    expect(String(sequence['example'])).toContain('participants');
+  });
+
+  it('declara los respaldos de cada tipo', () => {
+    const types = listTypes()['types'] as Array<Record<string, unknown>>;
+    const gantt = types.find((t) => t['type'] === 'gantt')!;
+    expect(gantt['fallbacks']).toContain('plantuml');
+  });
+
+  it('en modo breve devuelve solo los nombres', () => {
+    const result = listTypes({ detailed: false });
+    expect(result['diagram']).toContain('sequence');
+    expect(result['types']).toBeUndefined();
   });
 });

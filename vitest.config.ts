@@ -19,6 +19,9 @@ export default defineConfig({
       exclude: [
         // Punto de entrada del servidor MCP: solo cablea el SDK sobre stdio.
         'src/mcp/server.ts',
+        // Se ejecuta dentro de Chromium, no en este proceso: ninguna
+        // herramienta de cobertura del proceso puede observarlo.
+        'src/renderers/in-page.ts',
         // Reexportaciones puras.
         'src/index.ts',
         'src/core/types.ts',

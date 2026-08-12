@@ -1,0 +1,14 @@
+import { buildRegistry } from './dist/renderers/index.js';
+import { defaultConfig } from './dist/config/load.js';
+import { getTheme } from './dist/themes/index.js';
+import { writeFile, mkdir } from 'node:fs/promises';
+const reg = buildRegistry(defaultConfig(process.cwd()));
+const r = reg.get('d2');
+const theme = getTheme('corporate');
+const src = 'direction: right\nn1: "Reducir defectos" { style.bold: true }\nn2: Calidad\nn3: Proceso\nn1 -> n2\nn1 -> n3';
+const res = await r.render(src, { format:'svg', theme, title:'T', timeoutMs:60000, maxOutputBytes:8*1024*1024 });
+await mkdir('/tmp/d2pal', { recursive: true });
+await writeFile('/tmp/d2pal/d2.svg', res.content);
+const t = res.content.toString();
+console.log('paleta clara aplicada:', t.includes('#12508F'), '| bloque oscuro:', /prefers-color-scheme/.test(t), '| paleta oscura:', t.includes('#5AA0E8'));
+await reg.disposeAll(); process.exit(0);

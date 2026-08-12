@@ -36,32 +36,84 @@ estas tres vallas:
 
 ### Qué tipo elegir
 
-| Necesidad | `type` |
-|---|---|
-| Quién habla con quién y en qué orden | `sequence` |
-| Estructura de clases o entidades | `class` |
-| Estados y transiciones | `state` |
-| Proceso con decisiones | `activity` |
-| Flujo sencillo de extremo a extremo | `flow` |
-| Cronograma | `gantt` |
-| Descomposición de un objetivo | `strategy-tree` |
-| Causas de un problema | `issue-tree` |
-| Capacidades por dominio | `capability-map` |
-| Capas de un modelo operativo | `operating-model` |
-| Cadena de valor | `value-chain` |
-| Comparación de dos escenarios | `before-after` |
-| Priorización en dos ejes | `matrix-2x2` |
-| Fases en el tiempo | `roadmap` |
-| Dependencias entre módulos | `dependency-map` |
-| Arquitectura C4 | `c4-context`, `c4-container`, `c4-component` |
-| Comparación entre categorías | `bar` |
-| Evolución temporal | `line` |
-| Correlación | `scatter` |
-| Densidad en dos dimensiones | `heatmap` |
-| Descomposición de una variación | `waterfall` |
+Busca por **lo que quieres explicar**, no por la tecnología.
 
-Si no recuerdas un tipo, ejecuta `npx docviz types` o llama a la herramienta MCP
-`docviz_types`.
+#### Diagramas — bloque `diagram`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| Quien habla con quien y en que orden | `sequence` | plantuml |
+| Estructura de clases o entidades y sus relaciones | `class` | plantuml |
+| Estados de una entidad y las transiciones entre ellos | `state` | plantuml |
+| Proceso con decisiones y ramas paralelas | `activity` | plantuml |
+| Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
+| Que puede hacer cada actor con el sistema | `use-case` | plantuml |
+| Componentes de software agrupados y como se conectan | `component` | plantuml |
+| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml |
+| Boceto de una pantalla: campos, botones y disposicion | `wireframe` | plantuml |
+| Estructura de un JSON dibujada como arbol | `json` | plantuml |
+| Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
+| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml |
+| Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
+| Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
+| Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |
+| Historia de ramas, commits y fusiones | `git-graph` | mermaid |
+| Tarjetas repartidas por columna de estado | `kanban` | mermaid |
+| Elementos situados en dos ejes continuos | `quadrant` | mermaid |
+| Como se reparte una cantidad al pasar de un estado a otro | `sankey` | mermaid |
+| Composicion de un total por area proporcional | `treemap` | mermaid |
+| Perfil de varias dimensiones a la vez | `radar` | mermaid |
+| Exploracion de un tema en ramas libres | `mindmap` | mermaid (o plantuml) |
+| Bloques dispuestos en rejilla, sin semantica de flujo | `block` | mermaid |
+| Descomposicion de un objetivo en lineas de accion | `strategy-tree` | d2 |
+| Descomposicion de un problema en sus causas | `issue-tree` | d2 |
+| Alternativas de una decision y sus ramas | `decision-tree` | d2 |
+| Pilares que sostienen un objetivo, con su contenido | `strategy-pillars` | d2 |
+| Capacidades agrupadas por dominio | `capability-map` | d2 |
+| Capas de un modelo operativo, de negocio a infraestructura | `operating-model` | d2 |
+| Etapas encadenadas que generan valor | `value-chain` | d2 |
+| Comparacion de dos escenarios | `before-after` | d2 |
+| Cuatro cuadrantes con su contenido, sin coordenadas | `matrix-2x2` | d2 |
+| Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
+| Fases futuras con su contenido | `roadmap` | d2 |
+| Quien depende de quien | `dependency-map` | graphviz |
+| Proceso de negocio en notacion BPMN, con carriles por rol | `bpmn` | bpmn |
+| Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
+
+#### Gráficos — bloque `chart`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| Comparacion entre categorias | `bar` | vega-lite |
+| Comparacion entre categorias con etiquetas largas | `horizontal-bar` | vega-lite |
+| Composicion de un total por categoria | `stacked-bar` | vega-lite |
+| Comparacion de varias series por categoria | `grouped-bar` | vega-lite |
+| Evolucion de una magnitud en el tiempo | `line` | vega-lite |
+| Evolucion con enfasis en el volumen acumulado | `area` | vega-lite |
+| Evolucion de la composicion de un total | `stacked-area` | vega-lite |
+| Relacion entre dos magnitudes | `scatter` | vega-lite |
+| Densidad de una magnitud en dos dimensiones categoricas | `heatmap` | vega-lite |
+| Distribucion de una variable continua | `histogram` | vega-lite |
+| Mediana, dispersion y valores atipicos por grupo | `box-plot` | vega-lite |
+| Valor real frente a su objetivo | `bullet` | vega-lite |
+| Cambio entre dos momentos, elemento a elemento | `slope` | vega-lite |
+| Caida de volumen a lo largo de etapas sucesivas | `funnel` | vega-lite |
+| Reparto de un total entre pocas partes | `pie` | vega-lite |
+| Reparto de un total, con el centro libre para un dato o un titulo | `donut` | vega-lite |
+| Como se llega de un valor inicial a uno final, paso a paso | `waterfall` | vega-lite |
+
+#### Arquitectura — bloque `architecture`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| El sistema, sus usuarios y los sistemas con los que habla | `c4-context` | likec4 (o plantuml-c4) |
+| Las piezas desplegables del sistema y su tecnologia | `c4-container` | likec4 (o plantuml-c4) |
+| Componentes internos de un contenedor | `c4-component` | likec4 (o plantuml-c4) |
+
+No hace falta memorizar la tabla. Si dudas, describe en una frase lo que quieres
+explicar y llama a `docviz_suggest`: devuelve el tipo recomendado y el bloque
+listo para rellenar. `docviz types` lista el catálogo completo con el propósito
+y un ejemplo de cada tipo.
 
 ---
 
@@ -256,7 +308,8 @@ comandos:
 
 | Herramienta | Uso |
 |---|---|
-| `docviz_types` | Consultar tipos y temas disponibles |
+| `docviz_suggest` | Describir en una frase qué quieres explicar y recibir el tipo y el bloque |
+| `docviz_types` | Consultar el catálogo completo con propósito y ejemplos |
 | `docviz_validate_document` | Validar lo que acabas de escribir, antes de guardarlo |
 | `docviz_render_diagram` | Probar un diagrama suelto |
 | `docviz_build_document` | Compilar la documentación |

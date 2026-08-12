@@ -122,6 +122,8 @@ function buildTheme(args: {
       darkThemeID: args.d2DarkThemeID,
       sketch: false,
       pad: 40,
+      overrides: d2Overrides(p),
+      darkOverrides: d2Overrides(dark),
     },
     graphviz: {
       graph: {
@@ -190,6 +192,7 @@ function buildTheme(args: {
         point: { color: p.primary, filled: true, size: 60 },
         area: { color: p.primary, opacity: 0.75 },
         rect: { color: p.primary },
+        tick: { color: p.text, thickness: 3 },
         text: { color: p.text, fontSize: 11 },
       },
     },
@@ -198,6 +201,36 @@ function buildTheme(args: {
       palette: dark,
       likec4: likec4Palette(dark),
     },
+  };
+}
+
+/**
+ * Ranuras de color de D2 traducidas a la paleta del tema.
+ *
+ * `B*` son los azules estructurales (bordes y rellenos por nivel de anidamiento)
+ * y `N*` los neutros del texto y las lineas. Redefinirlas es la unica via que
+ * ofrece D2 para que sus diagramas no se vean de otra familia.
+ */
+function d2Overrides(p: ThemePalette): Record<string, string> {
+  return {
+    B1: p.primary,
+    B2: p.primary,
+    B3: p.surfaceAlt,
+    B4: p.surface,
+    B5: p.surface,
+    B6: p.background,
+    AA2: p.primary,
+    AA4: p.surfaceAlt,
+    AA5: p.surface,
+    AB4: p.surfaceAlt,
+    AB5: p.surface,
+    N1: p.text,
+    N2: p.text,
+    N3: p.textMuted,
+    N4: p.border,
+    N5: p.surfaceAlt,
+    N6: p.surface,
+    N7: p.background,
   };
 }
 

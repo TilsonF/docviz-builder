@@ -40,12 +40,14 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "mcp": "node bin/docviz-mcp.mjs"
+    "mcp": "node bin/docviz-mcp.mjs",
+    "catalog": "node scripts/generate-catalog-doc.mjs"
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1.28.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@terrastruct/d2": "^0.1.33",
+    "bpmn-js": "^18.24.0",
     "commander": "^14.0.2",
     "likec4": "^1.59.2",
     "mdast-util-to-string": "^4.0.0",
@@ -54,6 +56,7 @@
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
+    "svgbob-wasm": "^1.0.0",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0",
     "vega": "^6.3.1",

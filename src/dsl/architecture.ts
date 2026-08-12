@@ -82,6 +82,11 @@ interface Element {
 }
 
 export function compileArchitecture(doc: Record<string, unknown>): CompiledArchitecture {
+  return { rendererType: 'likec4', source: architectureLikeC4(doc) };
+}
+
+/** Genera la fuente LikeC4 del modelo declarado. */
+export function architectureLikeC4(doc: Record<string, unknown>): string {
   const type = (optionalString(doc, 'type') ?? 'c4-context').toLowerCase();
   if (!(ARCHITECTURE_TYPES as readonly string[]).includes(type)) {
     fail(
@@ -215,7 +220,7 @@ export function compileArchitecture(doc: Record<string, unknown>): CompiledArchi
   for (const fqn of containersWithChildren) lines.push(`    include ${fqn}.**`);
   lines.push('  }', '}');
 
-  return { rendererType: 'likec4', source: lines.join('\n') };
+  return lines.join('\n');
 }
 
 /** Normaliza cualquiera de las formas admitidas de relacion a `{from,to,label}`. */

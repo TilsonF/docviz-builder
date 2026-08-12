@@ -315,7 +315,9 @@ function resolveFormat(
 function scanBlocks(text: string, registry: RendererRegistry): DiagramBlock[] {
   return scanDocument(text, {
     resolveLanguage: (lang) => registry.resolve(lang),
-    compileDsl: (lang, source) => compileDsl(lang, source),
+    // El DSL necesita saber que motores hay registrados: si el preferido no
+    // esta, compila para el respaldo declarado en lugar de abortar.
+    compileDsl: (lang, source) => compileDsl(lang, source, (engine) => registry.has(engine)),
     dslLanguages: DSL_LANGUAGES,
   }).blocks;
 }

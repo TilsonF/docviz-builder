@@ -14,6 +14,8 @@ import { createLikeC4Renderer } from './likec4.js';
 import { createMermaidRenderer } from './mermaid.js';
 import { createPlantUmlRenderer } from './plantuml.js';
 import { createVegaLiteRenderer } from './vega-lite.js';
+import { createSvgbobRenderer } from './svgbob.js';
+import { createBpmnRenderer } from './bpmn.js';
 import type { DocVizConfig, RendererBackend } from '../config/types.js';
 import type { DiagramRenderer } from '../core/types.js';
 
@@ -27,6 +29,8 @@ const ALIASES: Readonly<Record<string, readonly string[]>> = {
   graphviz: ['dot'],
   'vega-lite': ['vegalite', 'vl'],
   likec4: ['c4'],
+  svgbob: ['ascii-art'],
+  bpmn: [],
 };
 
 export function buildRegistry(config: DocVizConfig): RendererRegistry {
@@ -95,6 +99,26 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
     registry.register('likec4', createLikeC4Renderer(), ALIASES['likec4']);
   }
 
+  // C4 dibujado con PlantUML: respaldo de LikeC4, sin dependencias adicionales.
+  if (r.plantuml.enabled) {
+    registry.register(
+      'plantuml-c4',
+      createPlantUmlRenderer({
+        jarPath: r.plantuml.jar !== undefined ? path.resolve(config.rootDir, r.plantuml.jar) : undefined,
+        javaPath: r.plantuml.java,
+        maxHeap: r.plantuml.maxHeap,
+      }),
+    );
+  }
+
+  if (r.svgbob.enabled) {
+    registry.register('svgbob', createSvgbobRenderer(), ALIASES['svgbob']);
+  }
+
+  if (r.bpmn.enabled) {
+    registry.register('bpmn', createBpmnRenderer({ browserPath: r.bpmn.browserPath }), ALIASES['bpmn']);
+  }
+
   return registry;
 }
 
@@ -105,3 +129,5 @@ export { createLikeC4Renderer } from './likec4.js';
 export { createMermaidRenderer } from './mermaid.js';
 export { createPlantUmlRenderer } from './plantuml.js';
 export { createVegaLiteRenderer } from './vega-lite.js';
+export { createSvgbobRenderer } from './svgbob.js';
+export { createBpmnRenderer } from './bpmn.js';

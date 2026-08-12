@@ -14,6 +14,7 @@ import type { DiagramRenderer, OutputFormat, RenderOptions, RenderResult } from 
 import { packageVersion } from '../core/package-version.js';
 import { assertFormat, asRenderError, svgResult } from './base.js';
 import { browserNotFoundHelp, findBrowser } from './browser.js';
+import { renderMermaidInPage } from './in-page.js';
 
 const TYPE = 'mermaid';
 const SUPPORTED: readonly OutputFormat[] = ['svg'];
@@ -133,43 +134,27 @@ export class MermaidRenderer implements DiagramRenderer {
 
       const result = await withPageTimeout(
         options.timeoutMs,
-        page.evaluate(
-          async (args: { code: string; id: string; config: unknown }) => {
-            const mermaid = (globalThis as unknown as { mermaid?: Record<string, never> }).mermaid;
-            if (mermaid === undefined) return { error: 'el bundle de Mermaid no se cargo en la pagina' };
-            try {
-              (mermaid as unknown as { initialize(c: unknown): void }).initialize(args.config);
-              const rendered = await (
-                mermaid as unknown as { render(id: string, code: string): Promise<{ svg: string }> }
-              ).render(args.id, args.code);
-              return { svg: rendered.svg };
-            } catch (e) {
-              const err = e as { message?: string; str?: string };
-              return { error: err.str ?? err.message ?? String(e) };
-            }
+        page.evaluate(renderMermaidInPage, {
+          code: source,
+          id,
+          config: {
+            startOnLoad: false,
+            // `strict` desactiva HTML arbitrario y manejadores `click` dentro
+            // del diagrama: el codigo viene de un documento, no de un humano.
+            securityLevel: 'strict',
+            theme: options.theme.mermaid.theme,
+            themeVariables: options.theme.mermaid.themeVariables,
+            fontFamily: options.theme.fontFamily,
+            flowchart: { htmlLabels: false, useMaxWidth: false, curve: 'basis' },
+            sequence: { useMaxWidth: false },
+            gantt: { useMaxWidth: false },
+            class: { useMaxWidth: false },
+            state: { useMaxWidth: false },
+            er: { useMaxWidth: false },
+            journey: { useMaxWidth: false },
+            pie: { useMaxWidth: false },
           },
-          {
-            code: source,
-            id,
-            config: {
-              startOnLoad: false,
-              // `strict` desactiva HTML arbitrario y manejadores `click` dentro
-              // del diagrama: el codigo viene de un documento, no de un humano.
-              securityLevel: 'strict',
-              theme: options.theme.mermaid.theme,
-              themeVariables: options.theme.mermaid.themeVariables,
-              fontFamily: options.theme.fontFamily,
-              flowchart: { htmlLabels: false, useMaxWidth: false, curve: 'basis' },
-              sequence: { useMaxWidth: false },
-              gantt: { useMaxWidth: false },
-              class: { useMaxWidth: false },
-              state: { useMaxWidth: false },
-              er: { useMaxWidth: false },
-              journey: { useMaxWidth: false },
-              pie: { useMaxWidth: false },
-            },
-          },
-        ),
+        }),
       );
 
       if ('error' in result && result.error !== undefined) {

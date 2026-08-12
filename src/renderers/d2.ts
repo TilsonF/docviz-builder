@@ -10,6 +10,7 @@ import { RenderError } from '../core/errors.js';
 import type { DiagramRenderer, OutputFormat, RenderOptions, RenderResult } from '../core/types.js';
 import { packageVersion } from '../core/package-version.js';
 import { assertFormat, asRenderError, svgResult } from './base.js';
+import type { Theme } from '../themes/types.js';
 
 const TYPE = 'd2';
 const SUPPORTED: readonly OutputFormat[] = ['svg'];
@@ -62,7 +63,7 @@ export class D2Renderer implements DiagramRenderer {
     let svg: string;
     try {
       const compiled = await d2.compile(
-        { fs: { index: source }, inputPath: 'index', options: { layout: this.layout } },
+        { fs: { index: withPalette(source, theme) }, inputPath: 'index', options: { layout: this.layout } },
         undefined,
       );
       svg = await d2.render(compiled.diagram, {
@@ -94,6 +95,39 @@ export class D2Renderer implements DiagramRenderer {
     disposable?.worker?.terminate?.();
     this.instancePromise = undefined;
   }
+}
+
+/**
+ * Antepone la paleta del proyecto a la fuente del diagrama.
+ *
+ * D2 no admite configurar el tema desde fuera: solo lee `vars.d2-config` del
+ * propio documento. Se antepone el bloque para que el autor pueda seguir
+ * sobrescribiendo cualquier color mas abajo, y D2 emite ademas su propio
+ * `@media (prefers-color-scheme: dark)` con la variante oscura.
+ */
+export function withPalette(source: string, theme: Theme): string {
+  const entries = (map: Readonly<Record<string, string>>): string =>
+    Object.entries(map)
+      .map(([slot, color]) => `      ${slot}: "${color}"`)
+      .join('\n');
+
+  // Un documento que ya trae su propia configuracion manda: no se toca.
+  if (/^\s*vars\s*:/m.test(source)) return source;
+
+  return [
+    'vars: {',
+    '  d2-config: {',
+    '    theme-overrides: {',
+    entries(theme.d2.overrides),
+    '    }',
+    '    dark-theme-overrides: {',
+    entries(theme.d2.darkOverrides),
+    '    }',
+    '  }',
+    '}',
+    '',
+    source,
+  ].join('\n');
 }
 
 export function createD2Renderer(options?: D2Options): DiagramRenderer {

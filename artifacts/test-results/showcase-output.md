@@ -35,7 +35,7 @@ moverse junto a su carpeta `assets/` sin perder ninguna imagen.
 Quién usa la plataforma y con qué sistemas habla. Escrito con el DSL
 `architecture`: el autor no elige tecnología.
 
-![Contexto de la plataforma de documentación](./assets/generated/contexto-de-la-plataforma-de-documentacion-d06ee433005d.svg)
+![Contexto de la plataforma de documentación](./assets/generated/contexto-de-la-plataforma-de-documentacion-daa8d8ce02d9.svg)
 
 ---
 
@@ -44,19 +44,19 @@ Quién usa la plataforma y con qué sistemas habla. Escrito con el DSL
 El mismo modelo un nivel más abajo, esta vez escrito directamente en LikeC4
 para mostrar que el lenguaje nativo sigue disponible.
 
-![Contenedores de DocViz](./assets/generated/contenedores-de-docviz-13d92b5cd0e6.svg)
+![Contenedores de DocViz](./assets/generated/contenedores-de-docviz-5efa6d04d096.svg)
 
 ---
 
 ## 3. UML Sequence — Autenticación
 
-![Autenticación de usuario](./assets/generated/autenticacion-de-usuario-bbd0087b5566.svg)
+![Autenticación de usuario](./assets/generated/autenticacion-de-usuario-7319772b57b0.svg)
 
 ---
 
 ## 4. UML Class — Modelo de dominio
 
-![Modelo de dominio de DocViz](./assets/generated/modelo-de-dominio-de-docviz-7e6712080483.svg)
+![Modelo de dominio de DocViz](./assets/generated/modelo-de-dominio-de-docviz-0c8990947dc3.svg)
 
 ---
 
@@ -64,49 +64,49 @@ para mostrar que el lenguaje nativo sigue disponible.
 
 Escrito en PlantUML nativo.
 
-![Ciclo de vida de un recurso](./assets/generated/ciclo-de-vida-de-un-recurso-775107db8eeb.svg)
+![Ciclo de vida de un recurso](./assets/generated/ciclo-de-vida-de-un-recurso-c48d11d1888f.svg)
 
 ---
 
 ## 6. Mermaid Flowchart — Publicación de documentación
 
-![Flujo de publicación de documentación](./assets/generated/flujo-de-publicacion-de-documentacion-76f63c11473e.svg)
+![Flujo de publicación de documentación](./assets/generated/flujo-de-publicacion-de-documentacion-09447454335a.svg)
 
 ---
 
 ## 7. Mermaid Gantt — Plan de entregas
 
-![Plan de adopción de DocViz](./assets/generated/plan-de-adopcion-de-docviz-3cd8764ffc9f.svg)
+![Plan de adopción de DocViz](./assets/generated/plan-de-adopcion-de-docviz-bf7acf314440.svg)
 
 ---
 
 ## 8. D2 Strategy Tree — Estrategia de calidad
 
-![Estrategia de reducción de defectos](./assets/generated/estrategia-de-reduccion-de-defectos-5cdcb2a760eb.svg)
+![Estrategia de reducción de defectos](./assets/generated/estrategia-de-reduccion-de-defectos-e18092846a3b.svg)
 
 ---
 
 ## 9. D2 Capability Map — Mapa de capacidades
 
-![Capacidades de la fábrica de software](./assets/generated/capacidades-de-la-fabrica-de-software-2a6adce2c5ed.svg)
+![Capacidades de la fábrica de software](./assets/generated/capacidades-de-la-fabrica-de-software-43ca2fd8f97c.svg)
 
 ---
 
 ## 10. Vega-Lite Bar Chart — Defectos por sprint
 
-![Defectos por sprint](./assets/generated/defectos-por-sprint-55bf4beb2cbc.svg)
+![Defectos por sprint](./assets/generated/defectos-por-sprint-6c7a10cc3ced.svg)
 
 ---
 
 ## 11. Vega-Lite Line Chart — Cobertura por disciplina
 
-![Evolución de la cobertura de pruebas](./assets/generated/evolucion-de-la-cobertura-de-pruebas-910f05aca9f3.svg)
+![Evolución de la cobertura de pruebas](./assets/generated/evolucion-de-la-cobertura-de-pruebas-74e948876854.svg)
 
 ---
 
 ## 12. Graphviz — Dependencias entre módulos
 
-![Dependencias internas de DocViz](./assets/generated/dependencias-internas-de-docviz-2a2a697e8eec.svg)
+![Dependencias internas de DocViz](./assets/generated/dependencias-internas-de-docviz-033485a73eaa.svg)
 
 ---
 

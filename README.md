@@ -51,11 +51,14 @@ Requisitos:
 | Requisito | Para qué | Obligatorio |
 |---|---|---|
 | Node.js ≥ 20.11 | Todo | Sí |
-| Java ≥ 8 | PlantUML | Solo si usas UML |
-| Chrome o Chromium ya instalado | Mermaid | Solo si usas Mermaid |
+| Java ≥ 8 | PlantUML (UML, ERD, C4 alternativo, wireframes) | Solo si usas esos tipos |
+| Chrome o Chromium ya instalado | Mermaid y BPMN | Solo si usas esos tipos |
 
-D2, Graphviz, Vega-Lite y LikeC4 no necesitan nada más: van embebidos como
-WebAssembly o JavaScript puro.
+D2, Graphviz, Vega-Lite, LikeC4 y svgbob no necesitan nada más: van embebidos
+como WebAssembly o JavaScript puro.
+
+Varios tipos declaran un motor alternativo, así que una máquina sin navegador o
+sin Java sigue compilando lo que pueda en lugar de fallar entera.
 
 ```bash
 npm install
@@ -86,6 +89,7 @@ docviz build <source> --output <target>
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
 | `docviz preview` | Sirve el resultado en un visor local |
 | `docviz types` | Lista los tipos del DSL y los temas |
+| `npm run catalog` | Regenera `examples/catalogo.md` con todos los tipos |
 
 Opciones de `build`:
 
@@ -179,16 +183,85 @@ relations:
 ```
 ````
 
-Tipos disponibles (`docviz types` los lista siempre actualizados):
+El catálogo cubre 57 tipos. `docviz types` los lista siempre
+actualizados, con su propósito y un ejemplo; `docviz_suggest` recomienda uno a
+partir de una frase.
 
-| Valla | Tipos | Motor |
+#### `diagram`
+
+| Necesidad | `type` | Motor |
 |---|---|---|
-| `diagram` | `sequence`, `class`, `state`, `activity` | PlantUML |
-| `diagram` | `flow`, `gantt` | Mermaid |
-| `diagram` | `strategy-tree`, `issue-tree`, `decision-tree`, `strategy-pillars`, `capability-map`, `operating-model`, `value-chain`, `before-after`, `matrix-2x2`, `timeline`, `roadmap` | D2 |
-| `diagram` | `dependency-map` | Graphviz |
-| `chart` | `bar`, `column`, `horizontal-bar`, `stacked-bar`, `grouped-bar`, `line`, `area`, `scatter`, `heatmap`, `pie`, `donut`, `waterfall` | Vega-Lite |
-| `architecture` | `c4-context`, `c4-container`, `c4-component` | LikeC4 |
+| Quien habla con quien y en que orden | `sequence` | plantuml |
+| Estructura de clases o entidades y sus relaciones | `class` | plantuml |
+| Estados de una entidad y las transiciones entre ellos | `state` | plantuml |
+| Proceso con decisiones y ramas paralelas | `activity` | plantuml |
+| Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
+| Que puede hacer cada actor con el sistema | `use-case` | plantuml |
+| Componentes de software agrupados y como se conectan | `component` | plantuml |
+| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml |
+| Boceto de una pantalla: campos, botones y disposicion | `wireframe` | plantuml |
+| Estructura de un JSON dibujada como arbol | `json` | plantuml |
+| Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
+| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml |
+| Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
+| Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
+| Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |
+| Historia de ramas, commits y fusiones | `git-graph` | mermaid |
+| Tarjetas repartidas por columna de estado | `kanban` | mermaid |
+| Elementos situados en dos ejes continuos | `quadrant` | mermaid |
+| Como se reparte una cantidad al pasar de un estado a otro | `sankey` | mermaid |
+| Composicion de un total por area proporcional | `treemap` | mermaid |
+| Perfil de varias dimensiones a la vez | `radar` | mermaid |
+| Exploracion de un tema en ramas libres | `mindmap` | mermaid (o plantuml) |
+| Bloques dispuestos en rejilla, sin semantica de flujo | `block` | mermaid |
+| Descomposicion de un objetivo en lineas de accion | `strategy-tree` | d2 |
+| Descomposicion de un problema en sus causas | `issue-tree` | d2 |
+| Alternativas de una decision y sus ramas | `decision-tree` | d2 |
+| Pilares que sostienen un objetivo, con su contenido | `strategy-pillars` | d2 |
+| Capacidades agrupadas por dominio | `capability-map` | d2 |
+| Capas de un modelo operativo, de negocio a infraestructura | `operating-model` | d2 |
+| Etapas encadenadas que generan valor | `value-chain` | d2 |
+| Comparacion de dos escenarios | `before-after` | d2 |
+| Cuatro cuadrantes con su contenido, sin coordenadas | `matrix-2x2` | d2 |
+| Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
+| Fases futuras con su contenido | `roadmap` | d2 |
+| Quien depende de quien | `dependency-map` | graphviz |
+| Proceso de negocio en notacion BPMN, con carriles por rol | `bpmn` | bpmn |
+| Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
+
+#### `chart`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| Comparacion entre categorias | `bar` | vega-lite |
+| Comparacion entre categorias con etiquetas largas | `horizontal-bar` | vega-lite |
+| Composicion de un total por categoria | `stacked-bar` | vega-lite |
+| Comparacion de varias series por categoria | `grouped-bar` | vega-lite |
+| Evolucion de una magnitud en el tiempo | `line` | vega-lite |
+| Evolucion con enfasis en el volumen acumulado | `area` | vega-lite |
+| Evolucion de la composicion de un total | `stacked-area` | vega-lite |
+| Relacion entre dos magnitudes | `scatter` | vega-lite |
+| Densidad de una magnitud en dos dimensiones categoricas | `heatmap` | vega-lite |
+| Distribucion de una variable continua | `histogram` | vega-lite |
+| Mediana, dispersion y valores atipicos por grupo | `box-plot` | vega-lite |
+| Valor real frente a su objetivo | `bullet` | vega-lite |
+| Cambio entre dos momentos, elemento a elemento | `slope` | vega-lite |
+| Caida de volumen a lo largo de etapas sucesivas | `funnel` | vega-lite |
+| Reparto de un total entre pocas partes | `pie` | vega-lite |
+| Reparto de un total, con el centro libre para un dato o un titulo | `donut` | vega-lite |
+| Como se llega de un valor inicial a uno final, paso a paso | `waterfall` | vega-lite |
+
+#### `architecture`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| El sistema, sus usuarios y los sistemas con los que habla | `c4-context` | likec4 (o plantuml-c4) |
+| Las piezas desplegables del sistema y su tecnologia | `c4-container` | likec4 (o plantuml-c4) |
+| Componentes internos de un contenedor | `c4-component` | likec4 (o plantuml-c4) |
+
+Cuando un tipo declara un motor alternativo, DocViz lo usa automáticamente si el
+preferido no está disponible: así se puede compilar en una máquina sin navegador
+o sin Java sin que el build se caiga.
 
 ### Sintaxis de las relaciones
 
@@ -216,6 +289,12 @@ Los seis lenguajes siguen disponibles como vía de escape:
 | `graphviz` | `dot` | Graphviz WebAssembly |
 | `vega-lite` | `vegalite`, `vl` | Vega-Lite + Vega en proceso |
 | `likec4` | `c4` | LikeC4 + emisor SVG propio |
+| `svgbob` | `ascii-art` | svgbob WebAssembly (arte ASCII) |
+| `bpmn` | — | bpmn-js en Chromium headless |
+
+PlantUML incluye su biblioteca estándar dentro del jar, así que `!include <C4/C4_Context>`
+y el resto de bibliotecas empaquetadas funcionan sin red. Cualquier otra forma
+de `!include` sigue bloqueada.
 
 Cualquier otro lenguaje (`typescript`, `bash`, `json`, vallas sin lenguaje) se
 deja intacto.
@@ -409,7 +488,8 @@ comandos:
 
 | Herramienta | Qué hace |
 |---|---|
-| `docviz_types` | Catálogo de tipos y temas |
+| `docviz_suggest` | Recomienda el tipo a partir de una frase y devuelve el bloque |
+| `docviz_types` | Catálogo de tipos con propósito, cuándo usarlos y ejemplo |
 | `docviz_validate_document` | Valida bloques sin renderizar |
 | `docviz_render_diagram` | Renderiza un diagrama suelto |
 | `docviz_build_document` | Compila y verifica la documentación |

@@ -17,6 +17,7 @@ import { z } from 'zod';
 import {
   buildDocuments,
   listTypes,
+  suggestType,
   previewDocument,
   renderDiagram,
   renderableTypes,
@@ -38,11 +39,31 @@ export function createServer(): McpServer {
     {
       title: 'Tipos de visualizacion disponibles',
       description:
-        'Lista los tipos que admite el DSL de DocViz (diagram, chart, architecture) y los temas del proyecto. ' +
-        'Consultalo antes de escribir un bloque si no recuerdas el nombre exacto de un tipo.',
-      inputSchema: {},
+        'Catalogo completo de tipos de visualizacion, con su proposito, cuando usarlos, cuando no y un ' +
+        'ejemplo minimo. Consultalo antes de escribir un bloque si no recuerdas el nombre exacto o dudas del tipo.',
+      inputSchema: {
+        detailed: z
+          .boolean()
+          .optional()
+          .describe('false devuelve solo los nombres; por defecto incluye los metadatos'),
+      },
     },
-    async () => asContent(listTypes()),
+    async (args) => asContent(listTypes(args)),
+  );
+
+  server.registerTool(
+    'docviz_suggest',
+    {
+      title: 'Recomendar un tipo de visualizacion',
+      description:
+        'Describe en una frase que quieres explicar y devuelve los tipos mas adecuados con el bloque ' +
+        'listo para rellenar. Usalo cuando dudes entre varias formas de representar algo.',
+      inputSchema: {
+        need: z.string().describe('que quieres explicar, en una frase'),
+        limit: z.number().optional().describe('numero maximo de sugerencias (1-8, por defecto 3)'),
+      },
+    },
+    async (args) => asContent(suggestType(args)),
   );
 
   server.registerTool(

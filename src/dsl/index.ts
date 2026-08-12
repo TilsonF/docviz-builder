@@ -13,34 +13,50 @@
 
 import { parse as parseYaml } from 'yaml';
 import { DslValidationError } from '../core/errors.js';
-import { compileArchitecture, ARCHITECTURE_TYPES } from './architecture.js';
-import { chartTypeNames, compileChart } from './chart.js';
-import { compileDiagram, diagramTypeNames } from './diagram.js';
+import { compileChartType, compileType } from './compile.js';
+import { findType, TYPE_CATALOG, typeNames, type TypeSpec } from './catalog.js';
 import { asRecord, optionalString } from './util.js';
 
 export const DSL_LANGUAGES = ['diagram', 'chart', 'architecture'] as const;
 export type DslLanguage = (typeof DSL_LANGUAGES)[number];
 
 export interface CompiledDsl {
+  /** Motor que finalmente dibuja el bloque. */
   rendererType: string;
   source: string;
   title?: string;
+  /** Ficha del tipo resuelto, util para diagnosticos. */
+  spec?: TypeSpec;
 }
+
+/** Predicado que indica si un motor esta disponible en el registro actual. */
+export type EngineAvailability = (engine: string) => boolean;
+
+const ALL_AVAILABLE: EngineAvailability = () => true;
 
 export function isDslLanguage(lang: string): lang is DslLanguage {
   return (DSL_LANGUAGES as readonly string[]).includes(lang);
 }
 
-/** Catalogo legible, usado por `docviz types` y por la herramienta MCP. */
+/** Catalogo legible, usado por `docviz types` y por las herramientas MCP. */
 export function dslCatalog(): Record<DslLanguage, string[]> {
   return {
-    diagram: diagramTypeNames(),
-    chart: chartTypeNames(),
-    architecture: [...ARCHITECTURE_TYPES],
+    diagram: typeNames('diagram'),
+    chart: typeNames('chart'),
+    architecture: typeNames('architecture'),
   };
 }
 
-export function compileDsl(lang: string, source: string): CompiledDsl {
+/** Catalogo completo con los metadatos de cada tipo. */
+export function dslCatalogDetailed(): readonly TypeSpec[] {
+  return TYPE_CATALOG;
+}
+
+export function compileDsl(
+  lang: string,
+  source: string,
+  isAvailable: EngineAvailability = ALL_AVAILABLE,
+): CompiledDsl {
   if (!isDslLanguage(lang)) {
     throw new DslValidationError(
       `"${lang}" no es un lenguaje de DSL de DocViz`,
@@ -63,67 +79,53 @@ export function compileDsl(lang: string, source: string): CompiledDsl {
 
   const doc = asRecord(parsed, lang);
   const title = optionalString(doc, 'title');
+  const declared = optionalString(doc, 'type');
 
-  let compiled: { rendererType: string; source: string };
-  switch (lang) {
-    case 'diagram':
-      compiled = compileDiagram(doc);
-      break;
-    case 'chart':
-      compiled = compileChart(doc);
-      break;
-    case 'architecture':
-      compiled = compileArchitecture(doc);
-      break;
+  if (declared === undefined && lang !== 'architecture') {
+    throw new DslValidationError(`el bloque ${lang} necesita un campo "type"`, exampleFor(lang));
+  }
+  const typeName = declared ?? 'c4-context';
+
+  // El tipo debe pertenecer a la valla en la que se declaro: escribir un
+  // `type: bar` dentro de un bloque `diagram` es un error del autor, no una
+  // conversion silenciosa.
+  const spec = findType(typeName);
+  if (spec !== undefined && spec.lang !== lang) {
+    throw new DslValidationError(
+      `el tipo "${typeName}" pertenece a la valla \`${spec.lang}\`, no a \`${lang}\``,
+      `escribe el bloque como \`\`\`${spec.lang} en lugar de \`\`\`${lang}`,
+    );
   }
 
-  const result: CompiledDsl = { rendererType: compiled.rendererType, source: compiled.source };
+  const compiled =
+    lang === 'chart' ? compileChartType(doc, typeName) : compileType(doc, typeName, isAvailable);
+
+  const result: CompiledDsl = {
+    rendererType: compiled.engine,
+    source: compiled.source,
+    spec: compiled.spec,
+  };
   if (title !== undefined) result.title = title;
   return result;
 }
 
 function exampleFor(lang: DslLanguage): string {
-  switch (lang) {
-    case 'diagram':
-      return [
-        'ejemplo:',
-        'type: sequence',
-        'title: Autenticacion',
-        'participants:',
-        '  - Usuario',
-        '  - API',
-        'flow:',
-        '  - Usuario -> API: Login',
-      ].join('\n');
-    case 'chart':
-      return [
-        'ejemplo:',
-        'type: bar',
-        'title: Defectos por sprint',
-        'data:',
-        '  - label: SP1',
-        '    value: 42',
-      ].join('\n');
-    case 'architecture':
-      return [
-        'ejemplo:',
-        'type: c4-context',
-        'title: Contexto',
-        'elements:',
-        '  - id: usuario',
-        '    kind: person',
-        '    name: Usuario',
-        '  - id: core',
-        '    kind: system',
-        '    name: Core',
-        'relations:',
-        '  - from: usuario',
-        '    to: core',
-        '    label: Utiliza',
-      ].join('\n');
-  }
+  const spec = findType(lang === 'diagram' ? 'sequence' : lang === 'chart' ? 'bar' : 'c4-context');
+  return spec !== undefined ? `ejemplo:\n${spec.example}` : '';
 }
 
-export { compileDiagram, diagramTypeNames } from './diagram.js';
-export { compileChart, chartTypeNames } from './chart.js';
-export { compileArchitecture } from './architecture.js';
+export { compileType, compileChartType, typesForEngine, compiledTypeNames, compilerEngines } from './compile.js';
+export { TYPE_CATALOG, findType, typeNames, typesFor, allTypeNames } from './catalog.js';
+export type { TypeSpec, DslLang } from './catalog.js';
+export { compileChartOfType } from './chart.js';
+export { compileArchitecture, architectureLikeC4 } from './architecture.js';
+
+/** Nombres de tipo de `diagram`, en orden alfabetico. */
+export function diagramTypeNames(): string[] {
+  return typeNames('diagram');
+}
+
+/** Nombres de tipo de `chart`, en orden alfabetico. */
+export function chartTypeNames(): string[] {
+  return typeNames('chart');
+}

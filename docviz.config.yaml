@@ -19,6 +19,9 @@ formats:
   graphviz: svg
   vega-lite: svg
   likec4: svg
+  plantuml-c4: svg
+  svgbob: svg
+  bpmn: svg
 
 cache:
   enabled: true
@@ -61,3 +64,16 @@ renderers:
 
   likec4:
     enabled: true
+
+  # C4 dibujado con PlantUML. Es el respaldo de LikeC4 y usa la biblioteca C4
+  # que viaja dentro del jar, asi que no necesita nada mas; se habilita y se
+  # deshabilita junto con `plantuml`.
+
+  # Arte ASCII a SVG (svgbob, WebAssembly). Sin dependencias externas.
+  svgbob:
+    enabled: true
+
+  # Procesos BPMN (bpmn-js). Comparte el Chromium de Mermaid.
+  bpmn:
+    enabled: true
+    # browserPath: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome

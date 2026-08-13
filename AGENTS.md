@@ -38,6 +38,7 @@ estas tres vallas:
 
 Busca por **lo que quieres explicar**, no por la tecnología.
 
+<!-- docviz:tipos-tablas-4 -->
 #### Diagramas — bloque `diagram`
 
 | Necesidad | `type` | Motor |
@@ -77,7 +78,7 @@ Busca por **lo que quieres explicar**, no por la tecnología.
 | Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
 | Fases futuras con su contenido | `roadmap` | d2 |
 | Quien depende de quien | `dependency-map` | graphviz |
-| Proceso de negocio en notacion BPMN, con carriles por rol | `bpmn` | bpmn |
+| Proceso de negocio en notacion BPMN estandar | `bpmn` | bpmn |
 | Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
 
 #### Gráficos — bloque `chart`
@@ -109,6 +110,7 @@ Busca por **lo que quieres explicar**, no por la tecnología.
 | El sistema, sus usuarios y los sistemas con los que habla | `c4-context` | likec4 (o plantuml-c4) |
 | Las piezas desplegables del sistema y su tecnologia | `c4-container` | likec4 (o plantuml-c4) |
 | Componentes internos de un contenedor | `c4-component` | likec4 (o plantuml-c4) |
+<!-- /docviz:tipos-tablas-4 -->
 
 No hace falta memorizar la tabla. Si dudas, describe en una frase lo que quieres
 explicar y llama a `docviz_suggest`: devuelve el tipo recomendado y el bloque

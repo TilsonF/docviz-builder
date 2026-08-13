@@ -15,7 +15,8 @@ import { startPreview } from './build/preview.js';
 import { verify } from './build/verify.js';
 import { loadConfig, resolveFromRoot } from './config/load.js';
 import { BuildFailedError, DocVizError } from './core/errors.js';
-import { dslCatalog } from './dsl/index.js';
+import { dslCatalog, findType, TYPE_CATALOG, type TypeSpec } from './dsl/index.js';
+import { suggestType } from './mcp/tools.js';
 import { themeNames } from './themes/index.js';
 import type { RendererBackend } from './config/types.js';
 
@@ -171,17 +172,116 @@ export function createProgram(): Command {
 
   program
     .command('types')
-    .description('lista los tipos disponibles del DSL de alto nivel')
-    .action(() => {
-      const catalog = dslCatalog();
-      for (const [lang, types] of Object.entries(catalog)) {
-        process.stdout.write(`\n\`\`\`${lang}\`\`\`\n`);
-        for (const type of types) process.stdout.write(`  - ${type}\n`);
+    .description('lista los tipos del DSL con su proposito y su ejemplo')
+    .argument('[type]', 'muestra la ficha completa de un tipo concreto')
+    .option('--short', 'solo los nombres, sin metadatos', false)
+    .option('--json', 'salida en JSON, para consumirla desde otro programa', false)
+    .action((type: string | undefined, opts: { short?: boolean; json?: boolean }) => {
+      if (type !== undefined) {
+        const spec = findType(type);
+        if (spec === undefined) {
+          process.stderr.write(
+            `el tipo "${type}" no existe\n\ntipos disponibles:\n  ${TYPE_CATALOG.map((s) => s.type).sort().join(', ')}\n`,
+          );
+          process.exitCode = 1;
+          return;
+        }
+        process.stdout.write(opts.json === true ? `${JSON.stringify(spec, null, 2)}\n` : ficha(spec));
+        return;
       }
-      process.stdout.write(`\ntemas: ${themeNames().join(', ')}\n`);
+
+      if (opts.json === true) {
+        process.stdout.write(`${JSON.stringify({ types: TYPE_CATALOG, themes: themeNames() }, null, 2)}\n`);
+        return;
+      }
+
+      if (opts.short === true) {
+        for (const [lang, types] of Object.entries(dslCatalog())) {
+          process.stdout.write(`\n\`\`\`${lang}\`\`\`\n`);
+          for (const t of types) process.stdout.write(`  - ${t}\n`);
+        }
+        process.stdout.write(`\ntemas: ${themeNames().join(', ')}\n`);
+        return;
+      }
+
+      // Por defecto se muestra el proposito de cada tipo: una lista de nombres
+      // obliga a adivinar, que es justo lo que el catalogo existe para evitar.
+      for (const lang of ['diagram', 'chart', 'architecture'] as const) {
+        const specs = TYPE_CATALOG.filter((s) => s.lang === lang);
+        process.stdout.write(`\n\`\`\`${lang}\`\`\`\n`);
+        const ancho = Math.max(...specs.map((s) => s.type.length));
+        for (const spec of specs) {
+          process.stdout.write(`  ${spec.type.padEnd(ancho)}  ${spec.purpose}\n`);
+        }
+      }
+      process.stdout.write(
+        `\ntemas: ${themeNames().join(', ')}\n` +
+          `\ndocviz types <tipo>   ficha completa con ejemplo\n` +
+          `docviz suggest "..."  recomendacion a partir de una frase\n`,
+      );
+    });
+
+  program
+    .command('suggest')
+    .description('recomienda un tipo a partir de lo que quieres explicar')
+    .argument('<necesidad...>', 'que quieres explicar, en una frase')
+    .option('-n, --limit <n>', 'numero de sugerencias', '3')
+    .option('--json', 'salida en JSON', false)
+    .action((palabras: string[], opts: { limit: string; json?: boolean }) => {
+      const need = palabras.join(' ');
+      const result = suggestType({ need, limit: Number.parseInt(opts.limit, 10) });
+
+      if (opts.json === true) {
+        process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+        if (result.ok !== true) process.exitCode = 1;
+        return;
+      }
+      if (result.ok !== true) {
+        process.stderr.write(`${String(result['error'])}\n`);
+        process.exitCode = 1;
+        return;
+      }
+
+      const matches = result['matches'] as Array<Record<string, string>>;
+      if (matches.length === 0) {
+        process.stdout.write(`${String(result['advice'])}\n`);
+        return;
+      }
+      for (const match of matches) {
+        process.stdout.write(
+          `\n${match['type']}  (${match['lang']}, ${match['engine']})\n` +
+            `  ${match['purpose']}\n` +
+            `  cuando: ${match['whenToUse']}\n` +
+            `  cuando no: ${match['whenNotToUse']}\n\n` +
+            `${match['block']!.split('\n').map((l) => `  ${l}`).join('\n')}\n`,
+        );
+      }
     });
 
   return program;
+}
+
+/** Ficha legible de un tipo, con su ejemplo listo para copiar. */
+function ficha(spec: TypeSpec): string {
+  const lineas = [
+    '',
+    `${spec.type}  (${spec.lang}, ${spec.engine})`,
+    '',
+    `  ${spec.purpose}`,
+    '',
+    `  cuando usarlo:  ${spec.whenToUse}`,
+    `  cuando no:      ${spec.whenNotToUse}`,
+  ];
+  if (spec.aliases !== undefined && spec.aliases.length > 0) {
+    lineas.push(`  alias:          ${spec.aliases.join(', ')}`);
+  }
+  if (spec.fallbacks !== undefined && spec.fallbacks.length > 0) {
+    lineas.push(`  respaldo:       ${spec.fallbacks.join(', ')}`);
+  }
+  lineas.push('', `  \`\`\`${spec.lang}`);
+  for (const l of spec.example.split('\n')) lineas.push(`  ${l}`);
+  lineas.push('  ```', '');
+  return `${lineas.join('\n')}\n`;
 }
 
 interface BuildCliOptions {

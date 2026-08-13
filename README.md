@@ -89,7 +89,9 @@ docviz build <source> --output <target>
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
 | `docviz preview` | Sirve el resultado en un visor local |
 | `docviz types` | Lista los tipos del DSL y los temas |
-| `npm run catalog` | Regenera `examples/catalogo.md` con todos los tipos |
+| `docviz suggest "..."` | Recomienda un tipo a partir de una frase |
+| `npm run docs:sync` | Regenera las tablas de tipos de la documentación |
+| `npm run check:github` | Comprueba cómo renderizaría GitHub la salida |
 
 Opciones de `build`:
 
@@ -107,7 +109,7 @@ docviz build ./docs-src \
 Flujo recomendado, ya cableado como scripts de npm:
 
 ```bash
-npm run docs:check     # ¿los bloques son interpretables?
+npm run docs:check     # ¿la documentación está al día y los bloques son válidos?
 npm run docs:build     # docs-src/ -> docs/
 npm run docs:test      # verifica la salida y corre las pruebas de integración
 npm run docs:preview   # revisión visual en el navegador
@@ -115,6 +117,27 @@ npm run docs:preview   # revisión visual en el navegador
 
 `docs:check` y `docs:build` terminan con código distinto de cero si algo falla,
 así que encajan directamente en un pipeline de CI.
+
+### La documentación no puede desfasarse
+
+Las tablas de tipos de este README, de `AGENTS.md` y de `docs-src/dsl.md` se
+generan desde el catálogo entre marcas `<!-- docviz:... -->`. `docs:check`
+verifica que estén al día y falla si no lo están, así que un tipo nuevo no puede
+publicarse con la documentación vieja. Para regenerarlas:
+
+```bash
+npm run docs:sync
+```
+
+### Cómo se verá en GitHub
+
+```bash
+npm run check:github
+```
+
+Pide a GitHub que renderice el Markdown compilado con su propia API y comprueba
+sobre el HTML resultante que cada imagen aparece, conserva su texto alternativo
+y sigue apuntando a una ruta relativa. No necesita publicar el repositorio.
 
 ---
 
@@ -183,11 +206,25 @@ relations:
 ```
 ````
 
-El catálogo cubre 57 tipos. `docviz types` los lista siempre
-actualizados, con su propósito y un ejemplo; `docviz_suggest` recomienda uno a
-partir de una frase.
+El catálogo cubre <!-- docviz:tipos-total -->57<!-- /docviz:tipos-total --> tipos.
+`docviz types` los lista siempre actualizados, con su propósito y un ejemplo;
+`docviz suggest` recomienda uno a partir de una frase.
 
-#### `diagram`
+<!-- docviz:tipos-resumen -->
+| Motor | Tipos |
+|---|---|
+| vega-lite | 17 |
+| plantuml | 12 |
+| d2 | 11 |
+| mermaid | 11 |
+| likec4 | 3 |
+| bpmn | 1 |
+| graphviz | 1 |
+| svgbob | 1 |
+<!-- /docviz:tipos-resumen -->
+
+<!-- docviz:tipos-tablas-4 -->
+#### Diagramas — bloque `diagram`
 
 | Necesidad | `type` | Motor |
 |---|---|---|
@@ -226,10 +263,10 @@ partir de una frase.
 | Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
 | Fases futuras con su contenido | `roadmap` | d2 |
 | Quien depende de quien | `dependency-map` | graphviz |
-| Proceso de negocio en notacion BPMN, con carriles por rol | `bpmn` | bpmn |
+| Proceso de negocio en notacion BPMN estandar | `bpmn` | bpmn |
 | Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
 
-#### `chart`
+#### Gráficos — bloque `chart`
 
 | Necesidad | `type` | Motor |
 |---|---|---|
@@ -251,13 +288,14 @@ partir de una frase.
 | Reparto de un total, con el centro libre para un dato o un titulo | `donut` | vega-lite |
 | Como se llega de un valor inicial a uno final, paso a paso | `waterfall` | vega-lite |
 
-#### `architecture`
+#### Arquitectura — bloque `architecture`
 
 | Necesidad | `type` | Motor |
 |---|---|---|
 | El sistema, sus usuarios y los sistemas con los que habla | `c4-context` | likec4 (o plantuml-c4) |
 | Las piezas desplegables del sistema y su tecnologia | `c4-container` | likec4 (o plantuml-c4) |
 | Componentes internos de un contenedor | `c4-component` | likec4 (o plantuml-c4) |
+<!-- /docviz:tipos-tablas-4 -->
 
 Cuando un tipo declara un motor alternativo, DocViz lo usa automáticamente si el
 preferido no está disponible: así se puede compilar en una máquina sin navegador

@@ -17,54 +17,106 @@ El autor declara **la intención**; DocViz elige el motor.
 
 ## Qué motor atiende cada intención
 
+<!-- docviz:tipos-reparto -->
 ```diagram
 type: flow
 title: Del tipo declarado al motor
 direction: lr
 
 flow:
-  - diagram -> sequence / class / state / activity: UML
-  - sequence / class / state / activity -> PlantUML
-  - diagram -> flow / gantt
-  - flow / gantt -> Mermaid
-  - diagram -> strategy-tree / capability-map / roadmap: ejecutivos
-  - strategy-tree / capability-map / roadmap -> D2
-  - diagram -> dependency-map
-  - dependency-map -> Graphviz
-  - chart -> bar / line / scatter / heatmap
-  - bar / line / scatter / heatmap -> Vega-Lite
-  - architecture -> c4-context / c4-container
-  - c4-context / c4-container -> LikeC4
+  - DSL -> vega-lite: bar, horizontal-bar, stacked-bar y 14 mas
+  - DSL -> plantuml: sequence, class, state y 9 mas
+  - DSL -> mermaid: flow, gantt, journey y 8 mas
+  - DSL -> d2: strategy-tree, issue-tree, decision-tree y 8 mas
+  - DSL -> likec4: c4-context, c4-container, c4-component
+  - DSL -> graphviz: dependency-map
+  - DSL -> bpmn: bpmn
+  - DSL -> svgbob: ascii
 ```
+<!-- /docviz:tipos-reparto -->
 
 ## Regla de elección
 
-No todo merece un diagrama. La tabla de abajo es el criterio; cuando una tabla
-Markdown comunica mejor, se usa la tabla.
+No todo merece un diagrama. Las tablas de abajo son el criterio; cuando una
+tabla Markdown o un párrafo comunican mejor, se usan ellos.
 
-| Necesidad | Tipo | Motor resultante |
+El catálogo cubre <!-- docviz:tipos-total -->57<!-- /docviz:tipos-total --> tipos.
+Esta sección se genera desde él con `npm run docs:sync`, así que no puede
+describir algo que el compilador no acepte.
+
+<!-- docviz:tipos-tablas-3 -->
+### Diagramas — bloque `diagram`
+
+| Necesidad | `type` | Motor |
 |---|---|---|
-| Quién habla con quién y en qué orden | `sequence` | PlantUML |
-| Estructura de clases o entidades | `class` | PlantUML |
-| Estados y transiciones | `state` | PlantUML |
-| Decisiones dentro de un proceso | `activity` | PlantUML |
-| Flujo sencillo de extremo a extremo | `flow` | Mermaid |
-| Cronograma | `gantt` | Mermaid |
-| Descomposición de un objetivo | `strategy-tree` | D2 |
-| Causas de un problema | `issue-tree` | D2 |
-| Capacidades por dominio | `capability-map` | D2 |
-| Capas de un modelo operativo | `operating-model` | D2 |
-| Cadena de valor | `value-chain` | D2 |
-| Comparación de dos escenarios | `before-after` | D2 |
-| Priorización en dos ejes | `matrix-2x2` | D2 |
-| Fases en el tiempo | `roadmap` | D2 |
-| Dependencias entre módulos | `dependency-map` | Graphviz |
-| Comparación entre categorías | `bar` | Vega-Lite |
-| Evolución temporal | `line` | Vega-Lite |
-| Correlación | `scatter` | Vega-Lite |
-| Densidad en dos dimensiones | `heatmap` | Vega-Lite |
-| Descomposición de una variación | `waterfall` | Vega-Lite |
-| Arquitectura C4 | `c4-context`, `c4-container` | LikeC4 |
+| Quien habla con quien y en que orden | `sequence` | plantuml |
+| Estructura de clases o entidades y sus relaciones | `class` | plantuml |
+| Estados de una entidad y las transiciones entre ellos | `state` | plantuml |
+| Proceso con decisiones y ramas paralelas | `activity` | plantuml |
+| Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
+| Que puede hacer cada actor con el sistema | `use-case` | plantuml |
+| Componentes de software agrupados y como se conectan | `component` | plantuml |
+| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml |
+| Boceto de una pantalla: campos, botones y disposicion | `wireframe` | plantuml |
+| Estructura de un JSON dibujada como arbol | `json` | plantuml |
+| Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
+| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml |
+| Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
+| Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
+| Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |
+| Historia de ramas, commits y fusiones | `git-graph` | mermaid |
+| Tarjetas repartidas por columna de estado | `kanban` | mermaid |
+| Elementos situados en dos ejes continuos | `quadrant` | mermaid |
+| Como se reparte una cantidad al pasar de un estado a otro | `sankey` | mermaid |
+| Composicion de un total por area proporcional | `treemap` | mermaid |
+| Perfil de varias dimensiones a la vez | `radar` | mermaid |
+| Exploracion de un tema en ramas libres | `mindmap` | mermaid (o plantuml) |
+| Bloques dispuestos en rejilla, sin semantica de flujo | `block` | mermaid |
+| Descomposicion de un objetivo en lineas de accion | `strategy-tree` | d2 |
+| Descomposicion de un problema en sus causas | `issue-tree` | d2 |
+| Alternativas de una decision y sus ramas | `decision-tree` | d2 |
+| Pilares que sostienen un objetivo, con su contenido | `strategy-pillars` | d2 |
+| Capacidades agrupadas por dominio | `capability-map` | d2 |
+| Capas de un modelo operativo, de negocio a infraestructura | `operating-model` | d2 |
+| Etapas encadenadas que generan valor | `value-chain` | d2 |
+| Comparacion de dos escenarios | `before-after` | d2 |
+| Cuatro cuadrantes con su contenido, sin coordenadas | `matrix-2x2` | d2 |
+| Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
+| Fases futuras con su contenido | `roadmap` | d2 |
+| Quien depende de quien | `dependency-map` | graphviz |
+| Proceso de negocio en notacion BPMN estandar | `bpmn` | bpmn |
+| Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
+
+### Gráficos — bloque `chart`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| Comparacion entre categorias | `bar` | vega-lite |
+| Comparacion entre categorias con etiquetas largas | `horizontal-bar` | vega-lite |
+| Composicion de un total por categoria | `stacked-bar` | vega-lite |
+| Comparacion de varias series por categoria | `grouped-bar` | vega-lite |
+| Evolucion de una magnitud en el tiempo | `line` | vega-lite |
+| Evolucion con enfasis en el volumen acumulado | `area` | vega-lite |
+| Evolucion de la composicion de un total | `stacked-area` | vega-lite |
+| Relacion entre dos magnitudes | `scatter` | vega-lite |
+| Densidad de una magnitud en dos dimensiones categoricas | `heatmap` | vega-lite |
+| Distribucion de una variable continua | `histogram` | vega-lite |
+| Mediana, dispersion y valores atipicos por grupo | `box-plot` | vega-lite |
+| Valor real frente a su objetivo | `bullet` | vega-lite |
+| Cambio entre dos momentos, elemento a elemento | `slope` | vega-lite |
+| Caida de volumen a lo largo de etapas sucesivas | `funnel` | vega-lite |
+| Reparto de un total entre pocas partes | `pie` | vega-lite |
+| Reparto de un total, con el centro libre para un dato o un titulo | `donut` | vega-lite |
+| Como se llega de un valor inicial a uno final, paso a paso | `waterfall` | vega-lite |
+
+### Arquitectura — bloque `architecture`
+
+| Necesidad | `type` | Motor |
+|---|---|---|
+| El sistema, sus usuarios y los sistemas con los que habla | `c4-context` | likec4 (o plantuml-c4) |
+| Las piezas desplegables del sistema y su tecnologia | `c4-container` | likec4 (o plantuml-c4) |
+| Componentes internos de un contenedor | `c4-component` | likec4 (o plantuml-c4) |
+<!-- /docviz:tipos-tablas-3 -->
 
 ## Ejemplo comentado
 

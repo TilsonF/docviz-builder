@@ -718,9 +718,9 @@ const SPECIAL: readonly TypeSpec[] = [
     lang: 'diagram',
     engine: 'bpmn',
     aliases: ['proceso-de-negocio'],
-    purpose: 'Proceso de negocio en notacion BPMN, con carriles por rol.',
+    purpose: 'Proceso de negocio en notacion BPMN estandar.',
     whenToUse: 'Cuando el documento va a manos de negocio o auditoria y la notacion estandar importa.',
-    whenNotToUse: 'Para un proceso tecnico interno: `activity` o `flow` son mas breves.',
+    whenNotToUse: 'Para un proceso tecnico interno: `activity` o `flow` son mas breves. Aun no admite carriles por rol.',
     keywords: ['bpmn', 'proceso de negocio', 'carriles', 'roles', 'aprobacion', 'auditoria', 'compuerta'],
     example: [
       'type: bpmn',

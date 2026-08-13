@@ -1,6 +1,6 @@
 # Manual Test Report — DocViz Builder
 
-Fecha: 2026-08-12
+Fecha: 2026-08-12 (segunda revision)
 
 ## Environment
 
@@ -91,7 +91,7 @@ Cada fila se verificó en los dos modos: `screenshots/claro/` y
 | Servidor de previsualización de DocViz (Chrome headless) | PASS | 12/12 imágenes con dimensiones reales |
 | Chrome (SVG abierto directamente) | PASS | Rasterizado de los 12 recursos |
 | VS Code Markdown Preview | PASS | Rutas relativas y SVG estándar; equivalente al caso anterior |
-| GitHub | No probado | Requiere publicar el repositorio; el Markdown generado es estándar y no depende de extensiones |
+| GitHub | PASS (parcial) | `npm run check:github` pide a GitHub que renderice el Markdown con su propia API: las 6 imágenes aparecen, conservan su texto alternativo y su ruta relativa. Ver `github-render.txt`. No cubre si su servidor de imágenes conserva el `<style>` del SVG, del que depende el modo oscuro: eso exige abrir el archivo con sesión iniciada |
 
 ## Defectos encontrados y corregidos durante la validación
 
@@ -116,6 +116,10 @@ Cada fila se verificó en los dos modos: `screenshots/claro/` y
 | 15 | `donut` perdió su agujero al pasar por el catálogo | Se declaró como alias de `pie`, y el compilador recibía el nombre canónico | `donut` es un tipo propio |
 | 16 | El objetivo del `bullet` usaba un color fijo | No adaptaba al modo oscuro | El color lo aporta el tema |
 | 17 | Tres tipos declaraban respaldos sin compilador | Se anunciaba una alternativa que no existía | Se retiraron; una prueba impide volver a prometerlas |
+
+| 18 | Las tablas de tipos de README, AGENTS y `docs-src/dsl.md` quedaron desfasadas | Se copiaron a mano desde el catálogo | Se generan entre marcas y `docs:check` falla si no están al día |
+| 19 | `docviz suggest` no existía en la CLI | Solo se expuso como herramienta MCP | Añadido, con `--json` |
+| 20 | `docviz types` mostraba solo nombres | La CLI no consumía los metadatos del catálogo | Muestra propósito, ficha por tipo y `--json` |
 
 Todos ellos se corrigieron y la regresión completa se volvió a ejecutar.
 

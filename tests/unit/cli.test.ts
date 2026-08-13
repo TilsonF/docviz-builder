@@ -185,3 +185,64 @@ describe('docviz build', () => {
     expect(err).toContain('local');
   });
 });
+
+describe('docviz types con metadatos', () => {
+  it('muestra el proposito de cada tipo, no solo su nombre', async () => {
+    expect(await cli('types')).toBe(0);
+    expect(out).toContain('sequence');
+    expect(out).toContain('Quien habla con quien y en que orden');
+    expect(out).toContain('docviz suggest');
+  });
+
+  it('--short vuelve al listado escueto', async () => {
+    await cli('types', '--short');
+    expect(out).toContain('- sequence');
+    expect(out).not.toContain('Quien habla con quien');
+  });
+
+  it('--json entrega el catalogo completo', async () => {
+    await cli('types', '--json');
+    const parsed = JSON.parse(out) as { types: Array<{ type: string; whenNotToUse: string }>; themes: string[] };
+    expect(parsed.types.length).toBeGreaterThan(40);
+    expect(parsed.themes).toContain('corporate');
+    expect(parsed.types[0]!.whenNotToUse).toBeTruthy();
+  });
+
+  it('muestra la ficha de un tipo concreto con su ejemplo', async () => {
+    expect(await cli('types', 'bpmn')).toBe(0);
+    expect(out).toContain('cuando usarlo:');
+    expect(out).toContain('cuando no:');
+    expect(out).toContain('type: bpmn');
+  });
+
+  it('resuelve un alias', async () => {
+    await cli('types', 'uml-sequence');
+    expect(out).toContain('sequence  (diagram, plantuml)');
+  });
+
+  it('falla con un tipo inexistente y lista los validos', async () => {
+    expect(await cli('types', 'mandala')).toBe(1);
+    expect(err).toContain('strategy-tree');
+  });
+});
+
+describe('docviz suggest', () => {
+  it('recomienda a partir de una frase y devuelve el bloque', async () => {
+    expect(await cli('suggest', 'el', 'proceso', 'de', 'aprobacion', 'para', 'auditoria', '-n', '1')).toBe(0);
+    expect(out).toContain('bpmn');
+    expect(out).toContain('```diagram');
+    expect(out).toContain('cuando no:');
+  });
+
+  it('--json entrega el resultado estructurado', async () => {
+    await cli('suggest', 'comparar', 'defectos', 'por', 'sprint', '--json');
+    const parsed = JSON.parse(out) as { ok: boolean; matches: Array<{ type: string }> };
+    expect(parsed.ok).toBe(true);
+    expect(parsed.matches.length).toBeGreaterThan(0);
+  });
+
+  it('aconseja no dibujar cuando nada encaja', async () => {
+    expect(await cli('suggest', 'zzzz', 'qqqq')).toBe(0);
+    expect(out).toContain('tabla');
+  });
+});

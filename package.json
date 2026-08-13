@@ -31,7 +31,7 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "docviz": "node --experimental-strip-types bin/docviz.mjs",
-    "docs:check": "node bin/docviz.mjs check docs-src",
+    "docs:check": "npm run docs:sync:check && node bin/docviz.mjs check docs-src",
     "docs:build": "node bin/docviz.mjs build docs-src --output docs",
     "docs:verify": "node bin/docviz.mjs verify docs",
     "docs:test": "npm run docs:verify && vitest run tests/integration",
@@ -41,7 +41,10 @@
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "mcp": "node bin/docviz-mcp.mjs",
-    "catalog": "node scripts/generate-catalog-doc.mjs"
+    "catalog": "node scripts/generate-catalog-doc.mjs",
+    "docs:sync": "node scripts/sync-docs.mjs && node scripts/generate-catalog-doc.mjs",
+    "docs:sync:check": "node scripts/sync-docs.mjs --check",
+    "check:github": "node scripts/check-github.mjs docs"
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1.28.0",

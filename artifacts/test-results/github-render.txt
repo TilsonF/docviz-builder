@@ -1,0 +1,20 @@
+
+arquitectura.md
+  imagenes en el fuente: 4
+  imagenes renderizadas: 4
+
+dsl.md
+  imagenes en el fuente: 1
+  imagenes renderizadas: 1
+
+seguridad.md
+  imagenes en el fuente: 1
+  imagenes renderizadas: 1
+
+3 documento(s), 6 imagen(es), 0 problema(s)
+
+Comprobado: GitHub renderiza cada imagen, conserva su texto alternativo y
+su ruta relativa, y mantiene los bloques de codigo ajenos.
+No comprobado: si su servidor de imagenes conserva el `<style>` interno del
+SVG, del que depende la variante oscura. Eso exige abrir el archivo en
+github.com con la sesion iniciada.

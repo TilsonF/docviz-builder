@@ -48,7 +48,7 @@ el compilador admite de verdad.
 | `timeline` | Hitos en orden cronologico. | d2 |
 | `roadmap` | Fases futuras con su contenido. | d2 |
 | `dependency-map` | Quien depende de quien. | graphviz |
-| `bpmn` | Proceso de negocio en notacion BPMN, con carriles por rol. | bpmn |
+| `bpmn` | Proceso de negocio en notacion BPMN estandar. | bpmn |
 | `ascii` | Dibujo hecho con caracteres, convertido a SVG limpio. | svgbob |
 | `bar` | Comparacion entre categorias. | vega-lite |
 | `horizontal-bar` | Comparacion entre categorias con etiquetas largas. | vega-lite |
@@ -1235,11 +1235,11 @@ dependencies:
 
 ### `bpmn`
 
-Proceso de negocio en notacion BPMN, con carriles por rol.
+Proceso de negocio en notacion BPMN estandar.
 
 **Cuando usarlo.** Cuando el documento va a manos de negocio o auditoria y la notacion estandar importa.
 
-**Cuando no.** Para un proceso tecnico interno: `activity` o `flow` son mas breves.
+**Cuando no.** Para un proceso tecnico interno: `activity` o `flow` son mas breves. Aun no admite carriles por rol.
 
 Alias: `proceso-de-negocio`.
 

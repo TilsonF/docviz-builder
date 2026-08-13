@@ -21,17 +21,30 @@ const SUPPORTED: readonly OutputFormat[] = ['svg'];
 
 const require_ = createRequire(import.meta.url);
 
+/**
+ * Lanzador del navegador.
+ *
+ * Se inyecta para poder probar los caminos de error —no hay navegador, no
+ * arranca, la pagina falla— sin depender de que la maquina que ejecuta las
+ * pruebas tenga o no un Chromium, y sin provocar fallos reales del sistema.
+ */
+export type LaunchBrowser = (executablePath: string) => Promise<Browser>;
+
 export interface MermaidOptions {
+  /** Sustituye el lanzador real. Solo se usa en pruebas. */
+  launch?: LaunchBrowser;
+  /** Sustituye la busqueda del ejecutable. Solo se usa en pruebas. */
+  findExecutable?: (explicit?: string) => string | undefined;
   /** Ruta explicita al ejecutable de Chromium. */
   browserPath?: string;
 }
 
-type Browser = {
+export type Browser = {
   newPage(): Promise<Page>;
   close(): Promise<void>;
   connected?: boolean;
 };
-type Page = {
+export type Page = {
   setContent(html: string, options?: unknown): Promise<void>;
   addScriptTag(options: { content: string }): Promise<unknown>;
   evaluate<T, A extends unknown[]>(fn: (...args: A) => T | Promise<T>, ...args: A): Promise<T>;
@@ -45,6 +58,8 @@ export class MermaidRenderer implements DiagramRenderer {
   readonly supportedFormats = SUPPORTED;
 
   private readonly browserPath?: string;
+  private readonly launch: LaunchBrowser = defaultLaunch;
+  private readonly findExecutable: (explicit?: string) => string | undefined = findBrowser;
   private browserPromise?: Promise<Browser>;
   private bundlePromise?: Promise<string>;
   private cachedVersion?: string;
@@ -52,6 +67,8 @@ export class MermaidRenderer implements DiagramRenderer {
 
   constructor(options: MermaidOptions = {}) {
     this.browserPath = options.browserPath;
+    if (options.launch !== undefined) this.launch = options.launch;
+    if (options.findExecutable !== undefined) this.findExecutable = options.findExecutable;
   }
 
   async version(): Promise<string> {
@@ -80,28 +97,12 @@ export class MermaidRenderer implements DiagramRenderer {
 
   private async browser(): Promise<Browser> {
     this.browserPromise ??= (async () => {
-      const executablePath = findBrowser(this.browserPath);
+      const executablePath = this.findExecutable(this.browserPath);
       if (executablePath === undefined) {
         throw new RenderError(TYPE, 'no se encontro un navegador Chromium', browserNotFoundHelp());
       }
-      const puppeteer = await import('puppeteer-core');
       try {
-        return (await puppeteer.default.launch({
-          executablePath,
-          headless: true,
-          args: [
-            '--no-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--hide-scrollbars',
-            '--mute-audio',
-            // Sin acceso a red: el contenido puede ser confidencial.
-            '--disable-background-networking',
-            '--disable-sync',
-            '--no-first-run',
-            '--no-default-browser-check',
-          ],
-        })) as unknown as Browser;
+        return await this.launch(executablePath);
       } catch (err) {
         throw asRenderError(TYPE, err, `no se pudo lanzar el navegador en ${executablePath}`);
       }
@@ -203,6 +204,26 @@ async function withPageTimeout<T>(timeoutMs: number, work: Promise<T>): Promise<
     if (timer !== undefined) clearTimeout(timer);
   }
 }
+
+/** Lanzador real: Chromium sin red, porque el contenido puede ser confidencial. */
+const defaultLaunch: LaunchBrowser = async (executablePath) => {
+  const puppeteer = await import('puppeteer-core');
+  return (await puppeteer.default.launch({
+    executablePath,
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-gpu',
+      '--hide-scrollbars',
+      '--mute-audio',
+      '--disable-background-networking',
+      '--disable-sync',
+      '--no-first-run',
+      '--no-default-browser-check',
+    ],
+  })) as unknown as Browser;
+};
 
 export function createMermaidRenderer(options?: MermaidOptions): DiagramRenderer {
   return new MermaidRenderer(options);

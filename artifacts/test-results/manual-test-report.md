@@ -120,6 +120,7 @@ Cada fila se verificó en los dos modos: `screenshots/claro/` y
 | 18 | Las tablas de tipos de README, AGENTS y `docs-src/dsl.md` quedaron desfasadas | Se copiaron a mano desde el catálogo | Se generan entre marcas y `docs:check` falla si no están al día |
 | 19 | `docviz suggest` no existía en la CLI | Solo se expuso como herramienta MCP | Añadido, con `--json` |
 | 20 | `docviz types` mostraba solo nombres | La CLI no consumía los metadatos del catálogo | Muestra propósito, ficha por tipo y `--json` |
+| 21 | La suite no detectaba una rotura de sintaxis de los motores | La prueba del catálogo solo compilaba los ejemplos, no los dibujaba | Prueba de integración que renderiza los 57 tipos con su motor real; verificada rompiendo `sankey-beta` a propósito: la unitaria seguía en verde y la nueva falló |
 
 Todos ellos se corrigieron y la regresión completa se volvió a ejecutar.
 

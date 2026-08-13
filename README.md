@@ -554,7 +554,7 @@ Registro en un cliente MCP:
 ```bash
 npm run build          # compila TypeScript
 npm run typecheck
-npm test               # 466 pruebas
+npm test               # 752 pruebas
 npm run test:unit
 npm run test:integration
 npx vitest run --coverage
@@ -578,6 +578,13 @@ src/
 
 La cobertura exigida es 90 % de líneas, sentencias y funciones, y 85 % de ramas;
 el umbral está configurado en `vitest.config.ts` y falla el build si baja.
+
+Las pruebas de integración **dibujan de verdad el ejemplo de cada tipo del
+catálogo** con su motor real. No basta con comprobar que el compilador genera el
+texto: varios tipos se apoyan en notaciones que sus motores marcan como beta, y
+si una cambia de sintaxis el compilador seguiría produciendo su texto sin
+enterarse. Renderizarlos es lo que convierte esa rotura en un fallo inmediato en
+lugar de en una sorpresa semanas después.
 
 ---
 

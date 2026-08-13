@@ -1,24 +1,88 @@
 
  RUN  v4.1.10 /Users/usuario1/Documents/Proyecticos/docviz-builder
 
- ✓ tests/integration/renderers.test.ts > Caso 1 — PlantUML (Sequence) > genera y valida un diagrama de secuencia 1194ms
- ✓ tests/integration/renderers.test.ts > Caso 2 — Mermaid (Flowchart) > genera y valida un flowchart 1931ms
- ✓ tests/integration/renderers.test.ts > Caso 3 — D2 (Strategy Tree) > genera y valida un arbol de estrategia 422ms
- ✓ tests/integration/renderers.test.ts > Caso 4 — Vega-Lite (Bar Chart) > genera y valida un grafico de barras 205ms
- ✓ tests/integration/renderers.test.ts > Caso 4 — Vega-Lite (Bar Chart) > rechaza la carga remota de datos 4ms
- ✓ tests/integration/renderers.test.ts > Caso 5 — Graphviz (grafo de dependencias) > genera y valida un grafo de dependencias 48ms
- ✓ tests/integration/renderers.test.ts > Caso 6 — Multiples diagramas en un mismo documento > renderiza PlantUML, D2, Vega-Lite, Mermaid y LikeC4 en el mismo Markdown 3013ms
- ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > falla el build y reporta archivo, linea, renderer y motivo 1191ms
- ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > con --continue-on-error conserva el bloque original y sigue 394ms
- ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > reporta un lenguaje de DSL mal escrito antes de renderizar 5ms
- ✓ tests/integration/cache.test.ts > cache de recursos > regenera todo la primera vez, nada la segunda y solo lo cambiado la tercera 557ms
- ✓ tests/integration/cache.test.ts > cache de recursos > el resultado es deterministico byte a byte entre ejecuciones 930ms
- ✓ tests/integration/cache.test.ts > cache de recursos > cambiar el tema invalida el cache 1329ms
- ✓ tests/integration/cache.test.ts > cache de recursos > --clean borra la salida pero conserva los aciertos de cache 536ms
- ✓ tests/integration/cache.test.ts > cache de recursos > el mismo diagrama repetido en dos documentos comparte recurso 513ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/sequence produce un SVG utilizable 653ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/class produce un SVG utilizable 773ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/state produce un SVG utilizable 715ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/activity produce un SVG utilizable 694ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/erd produce un SVG utilizable 714ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/use-case produce un SVG utilizable 715ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/component produce un SVG utilizable 703ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/deployment produce un SVG utilizable 710ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/wireframe produce un SVG utilizable 642ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/json produce un SVG utilizable 659ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/yaml produce un SVG utilizable 651ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/wbs produce un SVG utilizable 652ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/flow produce un SVG utilizable 1715ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/gantt produce un SVG utilizable 728ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/journey produce un SVG utilizable 757ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/git-graph produce un SVG utilizable 772ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/kanban produce un SVG utilizable 757ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/quadrant produce un SVG utilizable 740ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/sankey produce un SVG utilizable 777ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/treemap produce un SVG utilizable 783ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/radar produce un SVG utilizable 771ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/mindmap produce un SVG utilizable 774ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/block produce un SVG utilizable 759ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/strategy-tree produce un SVG utilizable 432ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/issue-tree produce un SVG utilizable 51ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/decision-tree produce un SVG utilizable 36ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/strategy-pillars produce un SVG utilizable 42ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/capability-map produce un SVG utilizable 40ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/operating-model produce un SVG utilizable 40ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/value-chain produce un SVG utilizable 32ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/before-after produce un SVG utilizable 41ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/matrix-2x2 produce un SVG utilizable 39ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/timeline produce un SVG utilizable 38ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/roadmap produce un SVG utilizable 38ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/dependency-map produce un SVG utilizable 47ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/bpmn produce un SVG utilizable 1353ms
+(node:39045) ExperimentalWarning: Importing WebAssembly module instances is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > diagram/ascii produce un SVG utilizable 19ms
+stderr | tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/funnel produce un SVG utilizable
+WARN Domains that should be unioned has conflicting sort properties. Sort will be set to true.
 
- Test Files  2 passed (2)
-      Tests  15 passed (15)
-   Start at  20:50:27
-   Duration  12.65s (transform 118ms, setup 0ms, import 237ms, tests 12.29s, environment 0ms)
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/bar produce un SVG utilizable 202ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/horizontal-bar produce un SVG utilizable 6ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/stacked-bar produce un SVG utilizable 10ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/grouped-bar produce un SVG utilizable 7ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/line produce un SVG utilizable 11ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/area produce un SVG utilizable 4ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/stacked-area produce un SVG utilizable 6ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/scatter produce un SVG utilizable 3ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/heatmap produce un SVG utilizable 4ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/histogram produce un SVG utilizable 5ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/box-plot produce un SVG utilizable 8ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/bullet produce un SVG utilizable 4ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/slope produce un SVG utilizable 5ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/funnel produce un SVG utilizable 6ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/pie produce un SVG utilizable 3ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/donut produce un SVG utilizable 2ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > chart/waterfall produce un SVG utilizable 4ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > architecture/c4-context produce un SVG utilizable 271ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > architecture/c4-container produce un SVG utilizable 101ms
+ ✓ tests/integration/catalogo.test.ts > cada tipo del catalogo se dibuja de verdad > architecture/c4-component produce un SVG utilizable 84ms
+ ✓ tests/integration/catalogo.test.ts > cobertura de la comprobacion > se comprueban todos los tipos que la maquina puede dibujar 0ms
+ ✓ tests/integration/catalogo.test.ts > cobertura de la comprobacion > el catalogo cubre los motores registrados 0ms
+ ✓ tests/integration/renderers.test.ts > Caso 1 — PlantUML (Sequence) > genera y valida un diagrama de secuencia 1288ms
+ ✓ tests/integration/renderers.test.ts > Caso 2 — Mermaid (Flowchart) > genera y valida un flowchart 2152ms
+ ✓ tests/integration/renderers.test.ts > Caso 3 — D2 (Strategy Tree) > genera y valida un arbol de estrategia 416ms
+ ✓ tests/integration/renderers.test.ts > Caso 4 — Vega-Lite (Bar Chart) > genera y valida un grafico de barras 113ms
+ ✓ tests/integration/renderers.test.ts > Caso 4 — Vega-Lite (Bar Chart) > rechaza la carga remota de datos 6ms
+ ✓ tests/integration/renderers.test.ts > Caso 5 — Graphviz (grafo de dependencias) > genera y valida un grafo de dependencias 47ms
+ ✓ tests/integration/renderers.test.ts > Caso 6 — Multiples diagramas en un mismo documento > renderiza PlantUML, D2, Vega-Lite, Mermaid y LikeC4 en el mismo Markdown 3590ms
+ ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > falla el build y reporta archivo, linea, renderer y motivo 1176ms
+ ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > con --continue-on-error conserva el bloque original y sigue 408ms
+ ✓ tests/integration/renderers.test.ts > Caso 7 — Error de sintaxis > reporta un lenguaje de DSL mal escrito antes de renderizar 6ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > regenera todo la primera vez, nada la segunda y solo lo cambiado la tercera 591ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > el resultado es deterministico byte a byte entre ejecuciones 971ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > cambiar el tema invalida el cache 1419ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > --clean borra la salida pero conserva los aciertos de cache 584ms
+ ✓ tests/integration/cache.test.ts > cache de recursos > el mismo diagrama repetido en dos documentos comparte recurso 586ms
+
+ Test Files  3 passed (3)
+      Tests  74 passed (74)
+   Start at  14:25:15
+   Duration  34.68s (transform 128ms, setup 0ms, import 350ms, tests 34.11s, environment 0ms)
 

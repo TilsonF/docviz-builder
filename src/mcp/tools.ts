@@ -9,6 +9,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { build, check } from '../build/builder.js';
+import { diff as diffTrees } from '../build/diff.js';
 import { verify } from '../build/verify.js';
 import { loadConfig, resolveFromRoot } from '../config/load.js';
 import { DocVizError, BuildFailedError } from '../core/errors.js';
@@ -29,15 +30,33 @@ export function renderableTypes(): string[] {
   return [...catalog.diagram, ...catalog.chart, ...catalog.architecture].sort();
 }
 
-function describeError(err: unknown): { ok: false; error: string; detail?: string } {
+function describeError(err: unknown): { ok: false; error: string; detail?: string; code?: string } {
   if (err instanceof BuildFailedError) return { ok: false, error: err.message, detail: err.format() };
   if (err instanceof DocVizError) {
-    const out: { ok: false; error: string; detail?: string } = { ok: false, error: err.message };
+    // El codigo va aparte del texto: permite al agente decidir la correccion
+    // sin analizar un mensaje escrito para personas.
+    const out: { ok: false; error: string; detail?: string; code?: string } = {
+      ok: false,
+      error: err.message,
+      code: err.code,
+    };
     const detail = err.format();
     if (detail !== '') out.detail = detail;
     return out;
   }
   return { ok: false, error: err instanceof Error ? err.message : String(err) };
+}
+
+/** Error estructurado: lo que un agente necesita para corregir sin leer texto. */
+function structuredError(err: DocVizError): Record<string, unknown> {
+  return {
+    code: err.code,
+    message: err.message,
+    ...(err.location.file !== undefined ? { file: err.location.file } : {}),
+    ...(err.location.line !== undefined ? { line: err.location.line } : {}),
+    ...(err.location.renderer !== undefined ? { engine: err.location.renderer } : {}),
+    ...(err.detail !== undefined ? { detail: err.detail } : {}),
+  };
 }
 
 /**
@@ -67,8 +86,10 @@ export async function validateDocument(args: {
         return {
           ok: result.errors.length === 0,
           blocks: result.blocks,
+          invalidBlocks: result.invalidBlocks,
           findings: result.findings.map((f) => ({ line: f.line, lang: f.lang, engine: f.rendererType, title: f.title })),
-          errors: result.errors.map((e) => e.format()),
+          warnings: result.warnings,
+          errors: result.errors.map(structuredError),
         };
       } finally {
         await rm(dir, { recursive: true, force: true });
@@ -84,8 +105,10 @@ export async function validateDocument(args: {
       ok: result.errors.length === 0,
       documents: result.documents,
       blocks: result.blocks,
+      invalidBlocks: result.invalidBlocks,
       findings: result.findings,
-      errors: result.errors.map((e) => e.format()),
+      warnings: result.warnings,
+      errors: result.errors.map(structuredError),
     };
   } catch (err) {
     return describeError(err);
@@ -121,7 +144,39 @@ export async function buildDocuments(args: {
       stats: result.stats,
       documents: result.documents,
       assets: result.assets.map((a) => ({ path: a.relativePath, format: a.format, fromCache: a.fromCache })),
+      warnings: result.warnings,
       verification: { images: report.images, issues: report.issues },
+    };
+  } catch (err) {
+    return describeError(err);
+  }
+}
+
+/**
+ * `docviz_diff`
+ *
+ * Compara los diagramas de dos versiones de la documentacion. El agente que
+ * acaba de reescribir un documento puede comprobar asi que no toco de mas.
+ */
+export async function diffDocuments(args: {
+  cwd?: string;
+  base: string;
+  head: string;
+}): Promise<ToolResult> {
+  try {
+    const config = await loadConfig(args.cwd !== undefined ? { cwd: args.cwd } : {});
+    const result = await diffTrees(
+      config,
+      path.resolve(config.rootDir, args.base),
+      path.resolve(config.rootDir, args.head),
+    );
+    return {
+      ok: true,
+      summary: result.summary,
+      // Los iguales no se devuelven: son la mayoria y no aportan nada a quien
+      // pregunta que cambio.
+      entries: result.entries.filter((e) => e.status !== 'unchanged'),
+      issues: result.issues,
     };
   } catch (err) {
     return describeError(err);
@@ -157,6 +212,8 @@ export async function renderDiagram(args: {
     let source: string;
     let title = args.title;
 
+    let warnings: ReadonlyArray<{ code: string; field: string; message: string }> = [];
+
     const directEngine = registry.resolve(args.type);
     if (directEngine !== undefined) {
       rendererType = directEngine;
@@ -174,6 +231,7 @@ export async function renderDiagram(args: {
       rendererType = compiled.rendererType;
       source = compiled.source;
       title ??= compiled.title;
+      warnings = compiled.warnings ?? [];
     }
 
     const renderer = registry.get(rendererType);
@@ -199,6 +257,7 @@ export async function renderDiagram(args: {
         format,
         path: toPosix(path.relative(config.rootDir, target)),
         bytes: rendered.content.byteLength,
+        ...(warnings.length > 0 ? { warnings } : {}),
       };
     }
 
@@ -209,6 +268,7 @@ export async function renderDiagram(args: {
       bytes: rendered.content.byteLength,
       content: format === 'svg' ? rendered.content.toString('utf8') : rendered.content.toString('base64'),
       encoding: format === 'svg' ? 'utf8' : 'base64',
+      ...(warnings.length > 0 ? { warnings } : {}),
     };
   } catch (err) {
     return describeError(err);

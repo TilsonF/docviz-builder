@@ -1,10 +1,33 @@
 {
-  "name": "docviz-builder",
+  "name": "@tilsonf/docviz-builder",
   "version": "0.1.0",
   "description": "Compila bloques declarativos de diagramas dentro de Markdown a imagenes SVG/PNG, produciendo Markdown estandar y portable.",
+  "keywords": [
+    "diagrams",
+    "diagrams-as-code",
+    "markdown",
+    "documentation",
+    "plantuml",
+    "mermaid",
+    "d2",
+    "graphviz",
+    "vega-lite",
+    "likec4",
+    "c4",
+    "uml",
+    "svg",
+    "mcp",
+    "ai-agents",
+    "llm",
+    "architecture"
+  ],
+  "homepage": "https://github.com/TilsonF/docviz-builder#readme",
+  "bugs": {
+    "url": "https://github.com/TilsonF/docviz-builder/issues"
+  },
+  "author": "Tilson Fernandez",
   "type": "module",
   "license": "MIT",
-  "private": true,
   "engines": {
     "node": ">=20.11"
   },
@@ -23,8 +46,12 @@
     "bin",
     "dist",
     "scripts",
+    "eval",
+    "skills",
+    "vendor/.gitkeep",
     "README.md",
-    "AGENTS.md"
+    "AGENTS.md",
+    "LICENSE"
   ],
   "scripts": {
     "setup": "node scripts/fetch-plantuml.mjs",
@@ -40,11 +67,15 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
+    "eval": "node scripts/eval.mjs",
+    "eval:modelo": "node scripts/eval.mjs --modelo",
     "mcp": "node bin/docviz-mcp.mjs",
     "catalog": "node scripts/generate-catalog-doc.mjs",
     "docs:sync": "node scripts/sync-docs.mjs && node scripts/generate-catalog-doc.mjs",
     "docs:sync:check": "node scripts/sync-docs.mjs --check",
-    "check:github": "node scripts/check-github.mjs docs"
+    "check:github": "node scripts/check-github.mjs docs",
+    "test:coverage": "vitest run --coverage",
+    "prepack": "npm run build"
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1.28.0",
@@ -68,11 +99,19 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
     "@fission-ai/openspec": "^1.8.0",
     "@types/node": "^24.0.0",
     "@vitest/coverage-v8": "^4.1.10",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",
     "vitest": "^4.1.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TilsonF/docviz-builder.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

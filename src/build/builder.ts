@@ -8,14 +8,21 @@
 import { copyFile, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { AssetCache } from '../core/cache.js';
-import { BuildFailedError, DocVizError, RenderError } from '../core/errors.js';
+import { BuildFailedError, DocVizError, ERROR_CODES, RenderError } from '../core/errors.js';
 import { fullHash, HashRegistry, shortHash } from '../core/hash.js';
-import { assertInside, ensureAssetsDir, relativeAssetPath, assetFileName, toPosix } from '../core/paths.js';
+import {
+  assertInside,
+  displayPath,
+  ensureAssetsDir,
+  relativeAssetPath,
+  assetFileName,
+  toPosix,
+} from '../core/paths.js';
 import type { BuildStats, DiagramBlock, OutputFormat, RenderedAsset } from '../core/types.js';
 import { buildRegistry } from '../renderers/index.js';
 import type { RendererRegistry } from '../core/registry.js';
 import { compileDsl, DSL_LANGUAGES } from '../dsl/index.js';
-import { scanDocument } from '../markdown/scan.js';
+import { scanDocument, type ScanResult } from '../markdown/scan.js';
 import { applyReplacements, type Replacement } from '../markdown/transform.js';
 import { getTheme, themeFingerprint } from '../themes/index.js';
 import { resolveFromRoot } from '../config/load.js';
@@ -31,17 +38,31 @@ export interface BuildOptions {
   onLog?: (message: string) => void;
 }
 
+/** Aviso localizado que no impide compilar. */
+export interface BuildWarning {
+  file: string;
+  line: number;
+  lang: string;
+  code: string;
+  field: string;
+  message: string;
+}
+
 export interface BuildResult {
   stats: BuildStats;
   documents: Array<{ source: string; output: string; blocks: number }>;
   assets: RenderedAsset[];
   errors: DocVizError[];
+  warnings: BuildWarning[];
 }
 
 export interface CheckResult {
   documents: number;
   blocks: number;
+  /** Bloques de DSL que no llegaron a compilar. */
+  invalidBlocks: number;
   errors: DocVizError[];
+  warnings: BuildWarning[];
   findings: Array<{ file: string; line: number; lang: string; rendererType: string; title: string }>;
 }
 
@@ -62,20 +83,29 @@ export async function check(config: DocVizConfig): Promise<CheckResult> {
   const registry = buildRegistry(config);
   const files = await collectMarkdown(sourceDir);
   const errors: DocVizError[] = [];
+  const warnings: BuildWarning[] = [];
   const findings: CheckResult['findings'] = [];
   let blocks = 0;
+  let invalidBlocks = 0;
 
   for (const file of files) {
-    const relative = toPosix(path.relative(config.rootDir, file));
+    const relative = displayPath(config.rootDir, file);
     const text = await readFile(file, 'utf8');
-    let scanned;
+    let scanned: ScanResult;
     try {
       scanned = scanBlocks(text, registry);
     } catch (err) {
       errors.push(toDocVizError(err, { file: relative }));
       continue;
     }
-    for (const block of scanned) {
+    // Cada bloque invalido se reporta con su linea: el escaneo ya no se detiene
+    // en el primero, asi que una sola pasada los enumera todos.
+    for (const issue of scanned.errors) {
+      invalidBlocks += 1;
+      errors.push(toDocVizError(issue.error, { file: relative, line: issue.line }));
+    }
+    warnings.push(...scanned.warnings.map((w) => ({ file: relative, ...w })));
+    for (const block of scanned.blocks) {
       blocks += 1;
       if (!registry.has(block.rendererType)) {
         errors.push(
@@ -83,6 +113,7 @@ export async function check(config: DocVizConfig): Promise<CheckResult> {
             `no hay renderer disponible para "${block.rendererType}"`,
             { file: relative, line: block.line, renderer: block.rendererType },
             `renderers habilitados: ${registry.types().join(', ')}`,
+            ERROR_CODES.RENDERER_UNAVAILABLE,
           ),
         );
         continue;
@@ -95,6 +126,7 @@ export async function check(config: DocVizConfig): Promise<CheckResult> {
             `el renderer ${block.rendererType} no puede producir ${format}`,
             { file: relative, line: block.line, renderer: block.rendererType },
             `formatos soportados: ${renderer.supportedFormats.join(', ')}`,
+            ERROR_CODES.FORMAT_UNSUPPORTED,
           ),
         );
         continue;
@@ -110,7 +142,7 @@ export async function check(config: DocVizConfig): Promise<CheckResult> {
   }
 
   await registry.disposeAll().catch(() => undefined);
-  return { documents: files.length, blocks, errors, findings };
+  return { documents: files.length, blocks, invalidBlocks, errors, warnings, findings };
 }
 
 // --------------------------------------------------------------------------
@@ -148,20 +180,29 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
     documents: [],
     assets: [],
     errors: [],
+    warnings: [],
   };
 
   try {
     for (const file of files) {
-      const relativeSource = toPosix(path.relative(config.rootDir, file));
+      const relativeSource = displayPath(config.rootDir, file);
       const text = await readFile(file, 'utf8');
 
-      let blocks: DiagramBlock[];
+      let scanned: ScanResult;
       try {
-        blocks = scanBlocks(text, registry);
+        scanned = scanBlocks(text, registry);
       } catch (err) {
         result.errors.push(toDocVizError(err, { file: relativeSource }));
         continue;
       }
+      const blocks: DiagramBlock[] = scanned.blocks;
+
+      // Un bloque que no compila no cancela el resto del documento: se reporta
+      // con su linea y los demas siguen dibujandose.
+      for (const issue of scanned.errors) {
+        result.errors.push(toDocVizError(issue.error, { file: relativeSource, line: issue.line }));
+      }
+      result.warnings.push(...scanned.warnings.map((w) => ({ file: relativeSource, ...w })));
 
       const outputPath = assertInside(outputDir, path.relative(sourceDir, file));
       const replacements: Replacement[] = [];
@@ -264,6 +305,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
       block.rendererType,
       `colision de hash truncado (${short})`,
       `dos diagramas distintos producen el mismo prefijo de ${config.hash.length} caracteres; sube hash.length en docviz.config.yaml`,
+      ERROR_CODES.HASH_COLLISION,
     );
   }
 
@@ -312,14 +354,14 @@ function resolveFormat(
   return block.requestedFormat ?? config.formats[block.rendererType] ?? fallback;
 }
 
-function scanBlocks(text: string, registry: RendererRegistry): DiagramBlock[] {
+function scanBlocks(text: string, registry: RendererRegistry): ScanResult {
   return scanDocument(text, {
     resolveLanguage: (lang) => registry.resolve(lang),
     // El DSL necesita saber que motores hay registrados: si el preferido no
     // esta, compila para el respaldo declarado en lugar de abortar.
     compileDsl: (lang, source) => compileDsl(lang, source, (engine) => registry.has(engine)),
     dslLanguages: DSL_LANGUAGES,
-  }).blocks;
+  });
 }
 
 function toDocVizError(err: unknown, location: { file?: string; line?: number; renderer?: string }): DocVizError {

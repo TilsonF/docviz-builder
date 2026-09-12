@@ -3,7 +3,8 @@ dist/
 coverage/
 
 # El jar de PlantUML pesa ~26 MB: se obtiene con `npm run setup`.
-vendor/
+vendor/*
+!vendor/.gitkeep
 
 # Cache de recursos generados; se reconstruye solo.
 .docviz-cache/

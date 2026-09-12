@@ -3,15 +3,25 @@
  *
  *   docviz build <source> --output <target> [--theme ...] [--clean] ...
  *   docviz check <source>
+ *   docviz diff <base> <head>
+ *   docviz setup
+ *   docviz skill
  *   docviz verify <output>
  *   docviz preview <output>
  *   docviz types
  */
 
+import { execFile } from 'node:child_process';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { Command } from 'commander';
-import { build, check } from './build/builder.js';
+import { build, check, type BuildWarning } from './build/builder.js';
+import { diff, formatDiff, hasChanges } from './build/diff.js';
+import { diagnosticar, formatearDiagnostico } from './build/doctor.js';
+import { init, formatearInit } from './build/init.js';
 import { startPreview } from './build/preview.js';
+import { installSkill, formatearSkill } from './build/skill.js';
 import { verify } from './build/verify.js';
 import { loadConfig, resolveFromRoot } from './config/load.js';
 import { BuildFailedError, DocVizError } from './core/errors.js';
@@ -21,6 +31,8 @@ import { themeNames } from './themes/index.js';
 import type { RendererBackend } from './config/types.js';
 
 const VERSION = '0.1.0';
+
+const ejecutar = promisify(execFile);
 
 export function createProgram(): Command {
   const program = new Command();
@@ -78,6 +90,8 @@ export function createProgram(): Command {
         ].join('\n'),
       );
 
+      escribirAvisos(result.warnings);
+
       if (result.errors.length > 0) {
         process.stderr.write(`\n${result.errors.map((e) => e.format()).join('\n\n')}\n`);
         process.stderr.write(`\n${result.errors.length} diagrama(s) fallaron (--continue-on-error activo)\n`);
@@ -103,15 +117,39 @@ export function createProgram(): Command {
           process.stdout.write(`  ${f.file}:${f.line}  ${f.lang} -> ${f.rendererType}  "${f.title}"\n`);
         }
       }
+      // El conteo distingue los bloques que compilan de los que no: decir
+      // "bloques: 0" cuando habia tres rotos oculta justo lo que hay que ver.
+      const invalidos = result.invalidBlocks > 0 ? `  (${result.invalidBlocks} invalido(s))` : '';
       process.stdout.write(
-        `\ndocumentos: ${result.documents}\nbloques:    ${result.blocks}\nerrores:    ${result.errors.length}\n`,
+        `\ndocumentos: ${result.documents}\nbloques:    ${result.blocks}${invalidos}\n` +
+          `avisos:     ${result.warnings.length}\nerrores:    ${result.errors.length}\n`,
       );
+      escribirAvisos(result.warnings);
       if (result.errors.length > 0) {
         process.stderr.write(`\n${result.errors.map((e) => e.format()).join('\n\n')}\n`);
         process.exitCode = 1;
         return;
       }
       process.stdout.write('\ncheck OK\n');
+    });
+
+  program
+    .command('diff')
+    .description('compara los diagramas de dos versiones de la documentacion')
+    .argument('<base>', 'directorio de la version anterior')
+    .argument('<head>', 'directorio de la version nueva')
+    .option('-c, --config <file>', 'archivo de configuracion')
+    .option('--all', 'incluye tambien los diagramas que no cambiaron', false)
+    .option('--json', 'salida en JSON', false)
+    .option('--exit-code', 'termina con codigo 1 si algo cambio, como git diff', false)
+    .action(async (base: string, head: string, opts: DiffCliOptions) => {
+      const config = await loadConfig(opts.config !== undefined ? { configPath: opts.config } : {});
+      const result = await diff(config, path.resolve(base), path.resolve(head));
+
+      process.stdout.write(
+        opts.json === true ? `${JSON.stringify(result, null, 2)}\n` : formatDiff(result, { all: opts.all }),
+      );
+      if (opts.exitCode === true && hasChanges(result)) process.exitCode = 1;
     });
 
   program
@@ -168,6 +206,83 @@ export function createProgram(): Command {
           void server.close().then(resolve);
         });
       });
+    });
+
+  program
+    .command('init')
+    .description('prepara este proyecto para usar DocViz')
+    .option('-t, --theme <name>', `tema inicial (${themeNames().join(', ')})`, 'default')
+    .option('--force', 'sobrescribe los archivos que ya existan', false)
+    .action(async (opts: { theme: string; force?: boolean }) => {
+      if (!themeNames().includes(opts.theme)) {
+        process.stderr.write(`el tema "${opts.theme}" no existe\ntemas: ${themeNames().join(', ')}\n`);
+        process.exitCode = 1;
+        return;
+      }
+      const result = await init({ cwd: process.cwd(), theme: opts.theme, force: opts.force === true });
+      process.stdout.write(formatearInit(result, opts.theme));
+    });
+
+  program
+    .command('setup')
+    .description('descarga plantuml.jar dentro del paquete (unica operacion de red)')
+    .argument('[version]', 'version de PlantUML a descargar')
+    .action(async (version: string | undefined) => {
+      // Instalado como dependencia, `npm run setup` no existe: los scripts del
+      // paquete no son los del proyecto. Sin este comando, los 12 tipos de
+      // PlantUML quedan muertos tras un `npm install` y nadie sabe por que.
+      const script = path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        '..',
+        'scripts',
+        'fetch-plantuml.mjs',
+      );
+      try {
+        const { stdout, stderr } = await ejecutar(
+          process.execPath,
+          version !== undefined ? [script, version] : [script],
+          { timeout: 300_000, maxBuffer: 4 * 1024 * 1024 },
+        );
+        process.stdout.write(stdout);
+        if (stderr !== '') process.stderr.write(stderr);
+      } catch (err) {
+        const salida = err as { stdout?: string; stderr?: string; message?: string };
+        if (salida.stdout) process.stdout.write(salida.stdout);
+        process.stderr.write(salida.stderr ?? `${salida.message ?? String(err)}\n`);
+        process.exitCode = 1;
+      }
+    });
+
+  program
+    .command('skill')
+    .description('instala el contrato de DocViz como skill de tu agente')
+    .option('-g, --global', 'instala en tu perfil en lugar de en el proyecto', false)
+    .option('-d, --dir <dir>', 'directorio de skills de otro agente')
+    .option('--force', 'sobrescribe una instalacion anterior', false)
+    .action(async (opts: { global?: boolean; dir?: string; force?: boolean }) => {
+      const result = await installSkill({
+        cwd: process.cwd(),
+        global: opts.global === true,
+        force: opts.force === true,
+        ...(opts.dir !== undefined ? { dir: opts.dir } : {}),
+      });
+      process.stdout.write(formatearSkill(result));
+    });
+
+  program
+    .command('doctor')
+    .description('comprueba el entorno y que tipos se pueden dibujar')
+    .option('-c, --config <file>', 'archivo de configuracion')
+    .option('--json', 'salida en JSON', false)
+    .action(async (opts: { config?: string; json?: boolean }) => {
+      const config = await loadConfig(opts.config !== undefined ? { configPath: opts.config } : {});
+      const diagnostico = await diagnosticar(config);
+      process.stdout.write(
+        opts.json === true ? `${JSON.stringify(diagnostico, null, 2)}\n` : formatearDiagnostico(diagnostico),
+      );
+      // Falta de entorno es un fallo: en un pipeline conviene enterarse antes de
+      // compilar, no a mitad del build.
+      if (!diagnostico.ok) process.exitCode = 1;
     });
 
   program
@@ -282,6 +397,26 @@ function ficha(spec: TypeSpec): string {
   for (const l of spec.example.split('\n')) lineas.push(`  ${l}`);
   lineas.push('  ```', '');
   return `${lineas.join('\n')}\n`;
+}
+
+/**
+ * Los avisos van a stderr y no cambian el codigo de salida.
+ *
+ * Un campo ignorado no rompe el documento, pero si se mezcla con la salida
+ * normal nadie lo lee; y si fallara el build, corregir una errata seria
+ * obligatorio antes de publicar cualquier cosa.
+ */
+function escribirAvisos(warnings: readonly BuildWarning[]): void {
+  for (const w of warnings) {
+    process.stderr.write(`AVISO ${w.file}:${w.line} [${w.code}] ${w.message}\n`);
+  }
+}
+
+interface DiffCliOptions {
+  config?: string;
+  all?: boolean;
+  json?: boolean;
+  exitCode?: boolean;
 }
 
 interface BuildCliOptions {

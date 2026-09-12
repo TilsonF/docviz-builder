@@ -12,9 +12,10 @@
  */
 
 import { parse as parseYaml } from 'yaml';
-import { DslValidationError } from '../core/errors.js';
+import { DocVizError, DslValidationError, ERROR_CODES } from '../core/errors.js';
 import { compileChartType, compileType } from './compile.js';
 import { findType, TYPE_CATALOG, typeNames, type TypeSpec } from './catalog.js';
+import { describeFieldWarnings, trackFieldAccess, unknownFields, type FieldWarning } from './fields.js';
 import { asRecord, optionalString } from './util.js';
 
 export const DSL_LANGUAGES = ['diagram', 'chart', 'architecture'] as const;
@@ -27,6 +28,12 @@ export interface CompiledDsl {
   title?: string;
   /** Ficha del tipo resuelto, util para diagnosticos. */
   spec?: TypeSpec;
+  /**
+   * Campos que el bloque declaraba y el dibujo ignoro.
+   *
+   * No impiden compilar: el documento sale, pero no dice lo que el autor creia.
+   */
+  warnings?: FieldWarning[];
 }
 
 /** Predicado que indica si un motor esta disponible en el registro actual. */
@@ -61,6 +68,7 @@ export function compileDsl(
     throw new DslValidationError(
       `"${lang}" no es un lenguaje de DSL de DocViz`,
       `lenguajes validos: ${DSL_LANGUAGES.join(', ')}`,
+      ERROR_CODES.DSL_TYPE,
     );
   }
 
@@ -71,10 +79,11 @@ export function compileDsl(
     throw new DslValidationError(
       `el bloque ${lang} no es YAML valido`,
       err instanceof Error ? err.message : String(err),
+      ERROR_CODES.DSL_YAML,
     );
   }
   if (parsed === null || parsed === undefined) {
-    throw new DslValidationError(`el bloque ${lang} esta vacio`, exampleFor(lang));
+    throw new DslValidationError(`el bloque ${lang} esta vacio`, exampleFor(lang), ERROR_CODES.DSL_FIELD_MISSING);
   }
 
   const doc = asRecord(parsed, lang);
@@ -82,7 +91,11 @@ export function compileDsl(
   const declared = optionalString(doc, 'type');
 
   if (declared === undefined && lang !== 'architecture') {
-    throw new DslValidationError(`el bloque ${lang} necesita un campo "type"`, exampleFor(lang));
+    throw new DslValidationError(
+      `el bloque ${lang} necesita un campo "type"`,
+      exampleFor(lang),
+      ERROR_CODES.DSL_FIELD_MISSING,
+    );
   }
   const typeName = declared ?? 'c4-context';
 
@@ -94,11 +107,27 @@ export function compileDsl(
     throw new DslValidationError(
       `el tipo "${typeName}" pertenece a la valla \`${spec.lang}\`, no a \`${lang}\``,
       `escribe el bloque como \`\`\`${spec.lang} en lugar de \`\`\`${lang}`,
+      ERROR_CODES.DSL_TYPE,
     );
   }
 
-  const compiled =
-    lang === 'chart' ? compileChartType(doc, typeName) : compileType(doc, typeName, isAvailable);
+  // El compilador recibe el documento observado, no el original: asi se sabe
+  // que campos leyo de verdad y cuales quedaron sin usar.
+  const tracker = trackFieldAccess(doc);
+  let compiled;
+  try {
+    compiled =
+      lang === 'chart'
+        ? compileChartType(tracker.doc, typeName)
+        : compileType(tracker.doc, typeName, isAvailable);
+  } catch (err) {
+    // Una errata suele ser la causa real del fallo: "falta participants" no le
+    // dice a nadie que el problema era haber escrito "particpants".
+    if (err instanceof DocVizError) {
+      throw err.withExtraDetail(describeFieldWarnings(unknownFields(doc, spec, tracker), spec));
+    }
+    throw err;
+  }
 
   const result: CompiledDsl = {
     rendererType: compiled.engine,
@@ -106,6 +135,9 @@ export function compileDsl(
     spec: compiled.spec,
   };
   if (title !== undefined) result.title = title;
+
+  const warnings = unknownFields(doc, compiled.spec, tracker);
+  if (warnings.length > 0) result.warnings = warnings;
   return result;
 }
 
@@ -118,6 +150,8 @@ export { compileType, compileChartType, typesForEngine, compiledTypeNames, compi
 export { TYPE_CATALOG, findType, typeNames, typesFor, allTypeNames } from './catalog.js';
 export type { TypeSpec, DslLang } from './catalog.js';
 export { compileChartOfType } from './chart.js';
+export { knownFields, unknownFields, describeFieldWarnings, editDistance } from './fields.js';
+export type { FieldWarning } from './fields.js';
 export { compileArchitecture, architectureLikeC4 } from './architecture.js';
 
 /** Nombres de tipo de `diagram`, en orden alfabetico. */

@@ -44,10 +44,23 @@ export interface PlantUmlOptions {
   maxHeap?: string;
 }
 
-function defaultJarPath(): string {
+/**
+ * Donde vive el jar cuando nadie dice lo contrario.
+ *
+ * Es el **directorio del paquete**, no el del proyecto que lo usa: instalado
+ * como dependencia, el jar viaja dentro de `node_modules`. Se exporta porque
+ * `docviz doctor` tiene que mirar exactamente aqui; si lo dedujera por su
+ * cuenta diria que falta un jar que el renderer encuentra sin problema.
+ */
+export function defaultJarPath(): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
   // dist/renderers/plantuml.js -> raiz del paquete
   return path.resolve(here, '..', '..', 'vendor', 'plantuml.jar');
+}
+
+/** Ruta efectiva del jar segun configuracion, entorno y valor por defecto. */
+export function resolveJarPath(explicit?: string): string {
+  return path.resolve(explicit ?? process.env['DOCVIZ_PLANTUML_JAR'] ?? defaultJarPath());
 }
 
 export class PlantUmlRenderer implements DiagramRenderer {
@@ -61,9 +74,7 @@ export class PlantUmlRenderer implements DiagramRenderer {
   private cachedVersion?: string;
 
   constructor(options: PlantUmlOptions = {}) {
-    this.jarPath = path.resolve(
-      options.jarPath ?? process.env['DOCVIZ_PLANTUML_JAR'] ?? defaultJarPath(),
-    );
+    this.jarPath = resolveJarPath(options.jarPath);
     this.javaPath = options.javaPath ?? process.env['DOCVIZ_JAVA'] ?? 'java';
     this.maxHeap = options.maxHeap ?? '1024m';
   }
@@ -147,7 +158,7 @@ export class PlantUmlRenderer implements DiagramRenderer {
       throw new RenderError(
         TYPE,
         `no se encuentra plantuml.jar en ${this.jarPath}`,
-        'ejecuta `npm run setup` para descargarlo, o define renderers.plantuml.jar en docviz.config.yaml',
+        'ejecuta `npx docviz setup` para descargarlo, o define renderers.plantuml.jar en docviz.config.yaml',
       );
     }
   }

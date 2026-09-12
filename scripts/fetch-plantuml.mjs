@@ -16,7 +16,43 @@ import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
 const DEFAULT_VERSION = '1.2026.0';
-const version = process.argv[2] ?? process.env['DOCVIZ_PLANTUML_VERSION'] ?? DEFAULT_VERSION;
+
+/**
+ * Digest esperado de cada version conocida.
+ *
+ * Sin esto, la unica garantia de que el jar es el que dice ser es el TLS de
+ * Maven Central. Es el unico punto de DocViz que trae bytes de fuera y los deja
+ * listos para ejecutarse en una JVM, asi que se comprueba contra un valor
+ * fijado en el repositorio y verificado a mano contra los checksums publicados
+ * (`plantuml-<version>.jar.sha256`).
+ *
+ * Para una version que no este aqui, pasa el digest con `--sha256 <hex>` o
+ * `DOCVIZ_PLANTUML_SHA256`. Descargar sin verificar exige decirlo en voz alta.
+ */
+const DIGESTS = {
+  '1.2026.0': 'b3da2f352a835615ecb63eb754930f8aab57363d5fe1a0660bf2a12827b6b553',
+};
+
+const args = process.argv.slice(2);
+const flag = (nombre) => {
+  const i = args.indexOf(nombre);
+  return i >= 0 && args[i + 1] !== undefined ? args[i + 1] : undefined;
+};
+const sinVerificar = args.includes('--sin-verificar');
+const version = args.find((a) => !a.startsWith('--') && args[args.indexOf(a) - 1] !== '--sha256')
+  ?? process.env['DOCVIZ_PLANTUML_VERSION']
+  ?? DEFAULT_VERSION;
+const esperado = (flag('--sha256') ?? process.env['DOCVIZ_PLANTUML_SHA256'] ?? DIGESTS[version])?.toLowerCase();
+
+if (esperado === undefined && !sinVerificar) {
+  process.stderr.write(
+    `no hay digest conocido para PlantUML ${version}.\n` +
+      'Consulta el checksum publicado:\n' +
+      `  curl -s https://repo1.maven.org/maven2/net/sourceforge/plantuml/plantuml/${version}/plantuml-${version}.jar.sha256\n` +
+      'y pasalo con --sha256 <hex>, o descarga sin verificar con --sin-verificar.\n',
+  );
+  process.exit(1);
+}
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const target = path.join(root, 'vendor', 'plantuml.jar');
@@ -63,10 +99,24 @@ if (bytes.subarray(0, 2).toString('latin1') !== 'PK') {
   process.exit(1);
 }
 
+const digest = createHash('sha256').update(bytes).digest('hex');
+
+// La comprobacion va ANTES de escribir: un jar que no es el esperado no debe
+// llegar al disco, porque el siguiente build lo daria por bueno.
+if (esperado !== undefined && digest !== esperado) {
+  process.stderr.write(
+    'el jar descargado no coincide con el digest esperado; no se ha escrito nada.\n' +
+      `  esperado: ${esperado}\n` +
+      `  obtenido: ${digest}\n` +
+      'Puede ser una version distinta, una descarga corrupta o un intermediario.\n',
+  );
+  process.exit(1);
+}
+
 await mkdir(path.dirname(target), { recursive: true });
 await writeFile(target, bytes);
 
-const digest = createHash('sha256').update(bytes).digest('hex');
 process.stdout.write(
-  `listo: ${target}\n  tamano: ${(bytes.byteLength / 1e6).toFixed(1)} MB\n  sha256: ${digest}\n`,
+  `listo: ${target}\n  tamano: ${(bytes.byteLength / 1e6).toFixed(1)} MB\n` +
+    `  sha256: ${digest}${esperado !== undefined ? ' (verificado)' : ' (SIN VERIFICAR)'}\n`,
 );

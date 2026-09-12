@@ -651,11 +651,52 @@ de las dos no hizo nada; eso es un hecho, no una heurística.
 1. Motores locales por defecto; ninguna petición de red durante el build.
 2. `kroki.io` bloqueado salvo autorización explícita.
 3. Límite de tiempo y de tamaño por diagrama.
-4. `!include`, `!includeurl` e `!import` de PlantUML deshabilitados.
+4. `!include`, `!includeurl`, `!import` y `!theme … from` de PlantUML
+   deshabilitados: son lectura de disco arbitraria y SSRF.
 5. `data.url` de Vega-Lite rechazado a cualquier profundidad.
-6. Todos los SVG se sanean: sin `<script>`, sin manejadores `on*`, sin `javascript:`.
-7. Toda ruta de escritura queda contenida en el directorio de salida.
-8. Ningún contenido del documento se usa como ruta ni se pasa a un shell.
+6. Toda ruta de escritura queda contenida en el directorio de salida, y el
+   servidor de previsualización resuelve los enlaces simbólicos antes de servir.
+7. Ningún contenido del documento se usa como ruta ni se pasa a un shell: los
+   motores se invocan con un array de argumentos, nunca con una cadena.
+8. El CI audita el árbol de dependencias de producción en cada commit y falla a
+   partir de severidad moderada. Dependabot abre los pull requests de
+   actualización sin que nadie tenga que acordarse.
+
+### El SVG que sale de aquí es inerte
+
+Vía `![](...)` el navegador carga el SVG como imagen y no ejecuta nada. Pero en
+cuanto alguien lo **incrusta dentro de un HTML** —que es lo natural para
+conservar el tema claro/oscuro— el SVG pasa a ser markup vivo. Por eso todo SVG
+se sanea con una **lista de permitidos**: 49 elementos y 104 atributos medidos
+sobre lo que emiten de verdad los seis motores en los 57 tipos del catálogo.
+
+Lo que no está en la lista se cae, incluido lo que no se nos haya ocurrido.
+Además se eliminan los comentarios XML, se escapan `<` y `>` dentro de los
+valores de atributo, se rechaza cualquier esquema de URL que no sea `http(s)` o
+un fragmento interno —resolviendo antes las entidades, porque
+`java&#115;cript:` se lee igual que `javascript:`— y el CSS pierde `@import`,
+`expression(` y las `url()` ejecutables.
+
+`tests/unit/svg-seguridad.test.ts` mantiene un banco de 23 vectores conocidos y
+comprueba, además, que sanear los 69 diagramas del catálogo no quita nada más
+que comentarios. La versión anterior del saneador era una lista de prohibidos y
+dejaba pasar nueve de esos vectores.
+
+### Chromium con sandbox
+
+Mermaid y BPMN dibujan dentro de un Chromium local, y el contenido del diagrama
+puede venir del documento de otra persona. El sandbox **está activo por
+defecto**: se desactiva solo como root —donde Chromium no arranca de otra
+forma—, o si se pide con `renderers.noSandbox: true` o `DOCVIZ_NO_SANDBOX=1`.
+Mermaid además se configura con `securityLevel: 'strict'` y sin etiquetas HTML.
+
+### El único descargable se verifica
+
+`docviz setup` es lo único que trae bytes de fuera. Se comprueba contra un
+digest SHA-256 fijado en el repositorio y verificado contra el checksum
+publicado en Maven Central; si no coincide, **no se escribe nada**. Para una
+versión de PlantUML sin digest conocido hay que pasarlo con `--sha256`, o pedir
+explícitamente `--sin-verificar`.
 
 ---
 

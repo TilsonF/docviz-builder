@@ -181,6 +181,7 @@ export function mergeConfig(base: DocVizConfig, raw: unknown): DocVizConfig {
     if (typeof renderers['backend'] === 'string') r.backend = backend(renderers['backend'], 'renderers.backend');
     if (typeof renderers['timeoutMs'] === 'number') r.timeoutMs = renderers['timeoutMs'];
     if (typeof renderers['maxOutputBytes'] === 'number') r.maxOutputBytes = renderers['maxOutputBytes'];
+    if (typeof renderers['noSandbox'] === 'boolean') r.noSandbox = renderers['noSandbox'];
 
     const kroki = obj(renderers['kroki'], 'renderers.kroki');
     if (kroki !== undefined) {

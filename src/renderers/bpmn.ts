@@ -13,7 +13,7 @@ import { RenderError } from '../core/errors.js';
 import type { DiagramRenderer, OutputFormat, RenderOptions, RenderResult } from '../core/types.js';
 import { packageVersion } from '../core/package-version.js';
 import { assertFormat, asRenderError, svgResult } from './base.js';
-import { browserNotFoundHelp, findBrowser } from './browser.js';
+import { browserNotFoundHelp, chromiumLaunchArgs, findBrowser, shouldDisableSandbox } from './browser.js';
 import { renderBpmnInPage } from './in-page.js';
 import type { Theme } from '../themes/types.js';
 
@@ -29,7 +29,10 @@ const require_ = createRequire(import.meta.url);
  * arranca, la pagina falla— sin depender de que la maquina que ejecuta las
  * pruebas tenga o no un Chromium, y sin provocar fallos reales del sistema.
  */
-export type LaunchBrowser = (executablePath: string) => Promise<Browser>;
+export type LaunchBrowser = (
+  executablePath: string,
+  opciones?: { noSandbox: boolean },
+) => Promise<Browser>;
 
 export interface BpmnOptions {
   /** Sustituye el lanzador real. Solo se usa en pruebas. */
@@ -37,6 +40,8 @@ export interface BpmnOptions {
   /** Sustituye la busqueda del ejecutable. Solo se usa en pruebas. */
   findExecutable?: (explicit?: string) => string | undefined;
   browserPath?: string;
+  /** Desactiva el sandbox de Chromium. Ver `shouldDisableSandbox`. */
+  noSandbox?: boolean;
 }
 
 export type Browser = { newPage(): Promise<Page>; close(): Promise<void> };
@@ -55,6 +60,7 @@ export class BpmnRenderer implements DiagramRenderer {
   readonly supportedFormats = SUPPORTED;
 
   private readonly browserPath?: string;
+  private readonly noSandbox: boolean;
   private readonly launch: LaunchBrowser = defaultLaunch;
   private readonly findExecutable: (explicit?: string) => string | undefined = findBrowser;
   private browserPromise?: Promise<Browser>;
@@ -63,6 +69,7 @@ export class BpmnRenderer implements DiagramRenderer {
 
   constructor(options: BpmnOptions = {}) {
     this.browserPath = options.browserPath;
+    this.noSandbox = shouldDisableSandbox(options.noSandbox);
     if (options.launch !== undefined) this.launch = options.launch;
     if (options.findExecutable !== undefined) this.findExecutable = options.findExecutable;
   }
@@ -96,7 +103,7 @@ export class BpmnRenderer implements DiagramRenderer {
         throw new RenderError(TYPE, 'no se encontro un navegador Chromium', browserNotFoundHelp());
       }
       try {
-        return await this.launch(executablePath);
+        return await this.launch(executablePath, { noSandbox: this.noSandbox });
       } catch (err) {
         throw asRenderError(TYPE, err, `no se pudo lanzar el navegador en ${executablePath}`);
       }
@@ -196,12 +203,12 @@ async function withTimeout<T>(timeoutMs: number, work: Promise<T>): Promise<T> {
 }
 
 /** Lanzador real: Chromium sin red. */
-const defaultLaunch: LaunchBrowser = async (executablePath) => {
+const defaultLaunch: LaunchBrowser = async (executablePath, opciones) => {
   const puppeteer = await import('puppeteer-core');
   return (await puppeteer.default.launch({
     executablePath,
     headless: true,
-    args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--disable-background-networking'],
+    args: chromiumLaunchArgs(opciones?.noSandbox === true),
   })) as unknown as Browser;
 };
 

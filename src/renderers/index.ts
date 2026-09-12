@@ -65,7 +65,10 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
   if (r.mermaid.enabled) {
     registry.register(
       'mermaid',
-      withKroki('mermaid', () => createMermaidRenderer({ browserPath: r.mermaid.browserPath }), r.mermaid),
+      withKroki('mermaid', () => createMermaidRenderer({
+            browserPath: r.mermaid.browserPath,
+            ...(r.noSandbox !== undefined ? { noSandbox: r.noSandbox } : {}),
+          }), r.mermaid),
       ALIASES['mermaid'],
     );
   }
@@ -116,7 +119,10 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
   }
 
   if (r.bpmn.enabled) {
-    registry.register('bpmn', createBpmnRenderer({ browserPath: r.bpmn.browserPath }), ALIASES['bpmn']);
+    registry.register('bpmn', createBpmnRenderer({
+        browserPath: r.bpmn.browserPath,
+        ...(r.noSandbox !== undefined ? { noSandbox: r.noSandbox } : {}),
+      }), ALIASES['bpmn']);
   }
 
   return registry;

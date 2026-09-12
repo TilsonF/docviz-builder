@@ -60,6 +60,10 @@ renderers:
   backend: local
   timeoutMs: 60000
 
+  # Mermaid y BPMN dibujan dentro de un Chromium local y el sandbox esta activo.
+  # Se desactiva solo como root, donde Chromium no arranca de otra forma.
+  # noSandbox: false
+
   # Ejecuta \`docviz doctor\` para ver que motores puede usar esta maquina y que
   # tipos quedarian afectados si falta alguno.
 `;

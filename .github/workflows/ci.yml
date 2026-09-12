@@ -69,6 +69,16 @@ jobs:
           key: docviz-${{ hashFiles('src/**/*.ts', 'examples/**/*.md', 'docs-src/**/*.md') }}
           restore-keys: docviz-
 
+      # El arbol de produccion es lo que viaja dentro del paquete: una
+      # vulnerabilidad ahi la hereda todo el que lo instale, aunque el codigo
+      # afectado no este en ningun camino que DocViz ejecute.
+      - name: Auditar dependencias de produccion
+        run: npm audit --omit=dev --audit-level=moderate
+
+      # Las de desarrollo se reportan y no bloquean: no salen de este repositorio.
+      - name: Auditar dependencias de desarrollo
+        run: npm audit --audit-level=moderate || true
+
       - name: Compilar
         run: npm run build
 

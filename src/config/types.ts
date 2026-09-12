@@ -29,6 +29,13 @@ export interface RenderersConfig {
   likec4: { enabled: boolean };
   svgbob: { enabled: boolean };
   bpmn: { enabled: boolean; browserPath?: string };
+  /**
+   * Desactiva el sandbox de Chromium (Mermaid y BPMN).
+   *
+   * Sin definir, se decide sola: activada como root —donde Chromium no arranca
+   * de otra forma— y desactivada en cualquier otro caso.
+   */
+  noSandbox?: boolean;
 }
 
 export interface DocVizConfig {

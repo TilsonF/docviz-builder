@@ -130,6 +130,7 @@ un banco de casos que mide si un modelo sabe usarlo.
 
 ## Documentación
 
+- [Catálogo completo](./catalogo.html) — los 57 tipos dibujados, cada uno con el bloque que lo produce
 - [Arquitectura](./arquitectura.html) — cómo está construido por dentro
 - [El DSL](./dsl.html) — los 57 tipos y su sintaxis
 - [Seguridad](./seguridad.html) — qué garantiza y cómo se comprueba

@@ -1,0 +1,98 @@
+name: Sitio
+
+# Publica la documentacion y el catalogo completo en GitHub Pages.
+#
+# El catalogo son 69 diagramas: se dibujan aqui en cada despliegue en lugar de
+# versionarlos, porque son salida generada y el repositorio no tiene por que
+# cargar con megabytes de SVG que se reconstruyen en segundos.
+#
+# La portada y las paginas de documentacion las compila el propio DocViz, asi
+# que si algun tipo dejara de dibujarse el sitio lo enseñaria de inmediato.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un despliegue a la vez; los que se acumulen mientras tanto se descartan salvo
+# el ultimo, que es el unico que refleja el estado real de `main`.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cachear plantuml.jar
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}
+
+      - name: Cachear Chromium
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Instalar Chromium
+        if: steps.cache-chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      - run: npm ci
+      - run: npm run setup
+      - run: npm run build
+
+      - name: Compilar la documentacion
+        run: node bin/docviz.mjs build docs-src --output sitio
+
+      # El catalogo se compila sobre el mismo directorio: los nombres de los
+      # recursos son hashes de contenido, asi que no pueden chocar.
+      - name: Compilar el catalogo
+        run: |
+          mkdir -p catalogo-src
+          cp examples/catalogo.md catalogo-src/
+          node bin/docviz.mjs build catalogo-src --output sitio
+
+      - name: Comprobar que no haya imagenes rotas
+        run: node bin/docviz.mjs verify sitio
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./sitio
+          destination: ./_site
+
+      - uses: actions/upload-pages-artifact@v3
+
+  desplegar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

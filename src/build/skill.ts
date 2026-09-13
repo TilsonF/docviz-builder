@@ -24,6 +24,8 @@ export interface SkillOptions {
   dir?: string;
   /** Sobrescribe una instalacion anterior. */
   force?: boolean;
+  /** Idioma del contrato: `es` (por defecto) o `en`. */
+  lang?: 'es' | 'en';
 }
 
 export interface SkillResult {
@@ -33,11 +35,17 @@ export interface SkillResult {
   motivo?: string;
 }
 
-/** Fuente del skill dentro del propio paquete. */
-export function skillSourcePath(): string {
+/**
+ * Fuente del skill dentro del propio paquete.
+ *
+ * Hay una version por idioma porque el skill es lo primero que lee un agente, y
+ * un contrato a medias traducido confunde mas que uno entero en el otro idioma.
+ */
+export function skillSourcePath(lang: 'es' | 'en' = 'es'): string {
   const here = path.dirname(fileURLToPath(import.meta.url));
   // dist/build/skill.js -> raiz del paquete
-  return path.resolve(here, '..', '..', 'skills', 'docviz', 'SKILL.md');
+  const carpeta = lang === 'en' ? 'docviz-en' : 'docviz';
+  return path.resolve(here, '..', '..', 'skills', carpeta, 'SKILL.md');
 }
 
 /**
@@ -54,7 +62,7 @@ export function skillTargetDir(options: SkillOptions): string {
 }
 
 export async function installSkill(options: SkillOptions): Promise<SkillResult> {
-  const origen = skillSourcePath();
+  const origen = skillSourcePath(options.lang ?? 'es');
   if (!existsSync(origen)) {
     throw new DocVizError(
       'el paquete no incluye el skill',
@@ -91,6 +99,6 @@ export function formatearSkill(result: SkillResult): string {
 }
 
 /** Contenido del skill, para comprobar que sigue siendo valido. */
-export async function readSkill(): Promise<string> {
-  return readFile(skillSourcePath(), 'utf8');
+export async function readSkill(lang: 'es' | 'en' = 'es'): Promise<string> {
+  return readFile(skillSourcePath(lang), 'utf8');
 }

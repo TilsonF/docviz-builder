@@ -52,6 +52,32 @@ describe('el skill que se distribuye', () => {
   });
 });
 
+describe('el contrato en ingles', () => {
+  it('existe y declara lo mismo que el español', async () => {
+    const en = await readSkill('en');
+    expect(en).toMatch(/^name: docviz$/m);
+    expect(en).toMatch(/^description: .{80,}/m);
+    for (const codigo of ['DV101', 'DV104', 'DV105', 'DV106']) expect(en).toContain(codigo);
+    for (const valla of ['`diagram`', '`chart`', '`architecture`']) expect(en).toContain(valla);
+  });
+
+  it('no es el español con otro nombre', async () => {
+    const [es, en] = [await readSkill('es'), await readSkill('en')];
+    expect(en).not.toBe(es);
+    expect(en).toContain('what you want to explain');
+    // Un contrato a medias traducido confunde mas que uno entero en el otro
+    // idioma: no deben quedar frases sueltas del original.
+    expect(en).not.toContain('cuando dudes');
+    expect(en).not.toContain('Reglas');
+  });
+
+  it('se instala el idioma que se pide', async () => {
+    const root = await proyecto();
+    const result = await installSkill({ cwd: root, lang: 'en' });
+    expect(await readFile(result.destino, 'utf8')).toBe(await readSkill('en'));
+  });
+});
+
 describe('donde se instala', () => {
   it('por defecto, en el proyecto', async () => {
     const root = await proyecto();

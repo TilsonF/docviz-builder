@@ -30,25 +30,45 @@ const check = process.argv.includes('--check');
 // Fragmentos generados
 // --------------------------------------------------------------------------
 
-const LANGS = [
-  ['diagram', 'Diagramas — bloque `diagram`'],
-  ['chart', 'Gráficos — bloque `chart`'],
-  ['architecture', 'Arquitectura — bloque `architecture`'],
-];
+const LANGS = {
+  es: [
+    ['diagram', 'Diagramas — bloque `diagram`'],
+    ['chart', 'Gráficos — bloque `chart`'],
+    ['architecture', 'Arquitectura — bloque `architecture`'],
+  ],
+  en: [
+    ['diagram', 'Diagrams — `diagram` block'],
+    ['chart', 'Charts — `chart` block'],
+    ['architecture', 'Architecture — `architecture` block'],
+  ],
+};
 
-/** Tabla "necesidad -> tipo -> motor" de una valla. */
-function tablaPorValla(lang) {
+const CABECERAS = {
+  es: ['| Necesidad | `type` | Motor |', '|---|---|---|'],
+  en: ['| What you need | `type` | Engine |', '|---|---|---|'],
+};
+
+/** Tabla "necesidad -> tipo -> motor" de una valla, en el idioma pedido. */
+function tablaPorValla(lang, idioma) {
   const filas = TYPE_CATALOG.filter((s) => s.lang === lang).map((s) => {
-    const respaldo = s.fallbacks !== undefined && s.fallbacks.length > 0 ? ` (o ${s.fallbacks.join(' / ')})` : '';
-    return `| ${s.purpose.replace(/\.$/, '')} | \`${s.type}\` | ${s.engine}${respaldo} |`;
+    const respaldo =
+      s.fallbacks !== undefined && s.fallbacks.length > 0
+        ? ` (${idioma === 'en' ? 'or' : 'o'} ${s.fallbacks.join(' / ')})`
+        : '';
+    // El proposito en ingles sale del catalogo, no de una traduccion aparte:
+    // asi la tabla no puede desfasarse de lo que responde `docviz types`.
+    const proposito = idioma === 'en' && s.en !== undefined ? s.en.purpose : s.purpose;
+    return `| ${proposito.replace(/\.$/, '')} | \`${s.type}\` | ${s.engine}${respaldo} |`;
   });
-  return ['| Necesidad | `type` | Motor |', '|---|---|---|', ...filas].join('\n');
+  return [...CABECERAS[idioma], ...filas].join('\n');
 }
 
 /** Las tres tablas, con su encabezado. */
-function tablasCompletas(nivel) {
+function tablasCompletas(nivel, idioma = 'es') {
   const h = '#'.repeat(nivel);
-  return LANGS.map(([lang, titulo]) => `${h} ${titulo}\n\n${tablaPorValla(lang)}`).join('\n\n');
+  return LANGS[idioma]
+    .map(([lang, titulo]) => `${h} ${titulo}\n\n${tablaPorValla(lang, idioma)}`)
+    .join('\n\n');
 }
 
 /** Recuento por motor, para el resumen del README. */
@@ -85,6 +105,8 @@ function diagramaDeReparto() {
 const FRAGMENTOS = {
   'tipos-tablas-3': () => tablasCompletas(3),
   'tipos-tablas-4': () => tablasCompletas(4),
+  'tipos-tablas-4-en': () => tablasCompletas(4, 'en'),
+  'tipos-tablas-3-en': () => tablasCompletas(3, 'en'),
   'tipos-resumen': () => resumenPorMotor(),
   'tipos-reparto': () => diagramaDeReparto(),
   'tipos-total': () => String(TYPE_CATALOG.length),
@@ -129,7 +151,7 @@ function aplicar(texto, archivo) {
   return salida;
 }
 
-const ARCHIVOS = ['README.md', 'AGENTS.md', 'docs-src/dsl.md'];
+const ARCHIVOS = ['README.md', 'README.en.md', 'AGENTS.md', 'AGENTS.en.md', 'docs-src/dsl.md'];
 
 let desfasados = [];
 for (const relativo of ARCHIVOS) {

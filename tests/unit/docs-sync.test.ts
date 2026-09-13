@@ -11,6 +11,7 @@
 import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { TYPE_CATALOG } from '../../src/dsl/catalog.js';
 
@@ -67,5 +68,42 @@ describe('sincronia con el catalogo', () => {
       const cierres = [...texto.matchAll(/<!--\s*\/docviz:([\w-]+)\s*-->/g)].map((m) => m[1]);
       expect(cierres.sort(), `marcas descuadradas en ${documento}`).toEqual(aperturas.sort());
     }
+  });
+});
+
+describe('la documentacion existe en los dos idiomas', () => {
+  const raizProyecto = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+
+  const pares: ReadonlyArray<[string, string]> = [
+    ['README.md', 'README.en.md'],
+    ['AGENTS.md', 'AGENTS.en.md'],
+    [path.join('skills', 'docviz', 'SKILL.md'), path.join('skills', 'docviz-en', 'SKILL.md')],
+  ];
+
+  it.each(pares)('%s tiene su version inglesa', async (es, en) => {
+    const [textoEs, textoEn] = await Promise.all([
+      readFile(path.join(raizProyecto, es), 'utf8'),
+      readFile(path.join(raizProyecto, en), 'utf8'),
+    ]);
+    expect(textoEn.length).toBeGreaterThan(1000);
+    expect(textoEn).not.toBe(textoEs);
+  });
+
+  it('las dos versiones se enlazan entre si', async () => {
+    const [es, en] = await Promise.all([
+      readFile(path.join(raizProyecto, 'README.md'), 'utf8'),
+      readFile(path.join(raizProyecto, 'README.en.md'), 'utf8'),
+    ]);
+    expect(es).toContain('README.en.md');
+    expect(en).toContain('README.md');
+  });
+
+  it('las tablas inglesas salen del catalogo, no de una copia', async () => {
+    const en = await readFile(path.join(raizProyecto, 'AGENTS.en.md'), 'utf8');
+    // Si estuvieran escritas a mano, no llevarian la marca y `docs:sync` no
+    // podria mantenerlas al dia.
+    expect(en).toContain('<!-- docviz:tipos-tablas-4-en -->');
+    expect(en).toContain('| What you need | `type` | Engine |');
+    expect(en).toContain('Who talks to whom, and in what order');
   });
 });

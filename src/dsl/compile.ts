@@ -51,11 +51,15 @@ import {
   treemap,
 } from './diagram-product.js';
 import { asciiArt, bpmn } from './diagram-bpmn.js';
-import { architectureC4, d2Flow, mermaidErd, mermaidTimeline } from './fallbacks.js';
+import { architectureC4, d2Flow, mermaidErd, mermaidTimeline, vegaQuadrant } from './fallbacks.js';
 import {
+  d2Activity,
+  d2Block,
   d2Class,
   d2Component,
   d2Deployment,
+  d2Journey,
+  d2Kanban,
   d2Sequence,
   d2State,
   d2UseCase,
@@ -77,7 +81,7 @@ const COMPILERS: Readonly<Record<string, Readonly<Record<string, Compiler>>>> = 
   sequence: { plantuml: sequence, d2: d2Sequence },
   class: { plantuml: classDiagram, d2: d2Class },
   state: { plantuml: stateDiagram, d2: d2State },
-  activity: { plantuml: activityDiagram },
+  activity: { plantuml: activityDiagram, d2: d2Activity },
   erd: { plantuml: entityRelationship, mermaid: mermaidErd },
   'use-case': { plantuml: useCase, d2: d2UseCase },
   component: { plantuml: componentDiagram, d2: d2Component },
@@ -90,15 +94,15 @@ const COMPILERS: Readonly<Record<string, Readonly<Record<string, Compiler>>>> = 
   // Flujos, tiempo y producto
   flow: { mermaid: flowchart, d2: d2Flow },
   gantt: { mermaid: gantt, plantuml: plantUmlGantt },
-  journey: { mermaid: journey },
+  journey: { mermaid: journey, d2: d2Journey },
   'git-graph': { mermaid: gitGraph },
-  kanban: { mermaid: kanban },
-  quadrant: { mermaid: quadrant },
+  kanban: { mermaid: kanban, d2: d2Kanban },
+  quadrant: { mermaid: quadrant, 'vega-lite': vegaQuadrant },
   sankey: { mermaid: sankey },
   treemap: { mermaid: treemap },
   radar: { mermaid: radar },
   mindmap: { mermaid: mindmap, plantuml: plantUmlMindmap },
-  block: { mermaid: block },
+  block: { mermaid: block, d2: d2Block },
 
   // Ejecutivos y dependencias
   'strategy-tree': { d2: tree },

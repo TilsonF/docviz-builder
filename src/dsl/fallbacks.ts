@@ -318,3 +318,67 @@ function c4Id(raw: string, existing: Map<string, unknown>): string {
   return `${id}_${n}`;
 }
 
+
+/**
+ * `quadrant` con Vega-Lite, cuando no hay navegador para Mermaid.
+ *
+ * Es el respaldo mas natural del catalogo: un cuadrante **ya es** un grafico de
+ * dispersion con dos lineas de referencia en el centro. Cada elemento trae su
+ * `x` y su `y`, asi que no hay que aproximar nada; lo unico que se pierde son
+ * los nombres de los cuatro cuadrantes, que pasan a los ejes.
+ */
+export function vegaQuadrant(doc: Record<string, unknown>): string {
+  const items = requireArray(doc['items'] ?? doc['points'], 'diagram.items');
+  const title = optionalString(doc, 'title');
+  const ejeX = optionalArray(doc['xAxis'], 'diagram.xAxis').map((v) => String(v));
+  const ejeY = optionalArray(doc['yAxis'], 'diagram.yAxis').map((v) => String(v));
+
+  const valores = items.map((raw) => {
+    const record = asNamedRecord(raw, 'diagram.items');
+    return {
+      nombre: requireString(record, 'name', 'diagram.items'),
+      x: numeroDe(record['x'], 'diagram.items.x'),
+      y: numeroDe(record['y'], 'diagram.items.y'),
+    };
+  });
+
+  // El titulo de cada eje recoge sus dos extremos, que es donde Mermaid los
+  // dibuja: "Bajo esfuerzo -> Alto esfuerzo".
+  const tituloEje = (extremos: string[], porDefecto: string): string =>
+    extremos.length >= 2 ? `${extremos[0]} → ${extremos[1]}` : (extremos[0] ?? porDefecto);
+
+  const spec: Record<string, unknown> = {
+    $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
+    data: { values: valores },
+    layer: [
+      {
+        mark: { type: 'point', filled: true, size: 120 },
+        encoding: {
+          x: { field: 'x', type: 'quantitative', scale: { domain: [0, 1] }, title: tituloEje(ejeX, 'x') },
+          y: { field: 'y', type: 'quantitative', scale: { domain: [0, 1] }, title: tituloEje(ejeY, 'y') },
+          tooltip: { field: 'nombre', type: 'nominal' },
+        },
+      },
+      {
+        mark: { type: 'text', align: 'left', dx: 8, dy: -8 },
+        encoding: {
+          x: { field: 'x', type: 'quantitative' },
+          y: { field: 'y', type: 'quantitative' },
+          text: { field: 'nombre', type: 'nominal' },
+        },
+      },
+      // Las dos lineas que parten el plano en cuatro.
+      { mark: { type: 'rule', strokeDash: [4, 4] }, encoding: { x: { datum: 0.5 } } },
+      { mark: { type: 'rule', strokeDash: [4, 4] }, encoding: { y: { datum: 0.5 } } },
+    ],
+  };
+  if (title !== undefined) spec['title'] = title;
+  return JSON.stringify(spec, null, 2);
+}
+
+/** Un numero obligatorio dentro de un elemento del cuadrante. */
+function numeroDe(valor: unknown, field: string): number {
+  const n = typeof valor === 'number' ? valor : Number(valor);
+  if (!Number.isFinite(n)) fail(`${field} debe ser numerico`, `valor recibido: ${String(valor)}`);
+  return n;
+}

@@ -296,11 +296,13 @@ export function createProgram(): Command {
     .option('-g, --global', 'instala en tu perfil en lugar de en el proyecto', false)
     .option('-d, --dir <dir>', 'directorio de skills de otro agente')
     .option('--force', 'sobrescribe una instalacion anterior', false)
-    .action(async (opts: { global?: boolean; dir?: string; force?: boolean }) => {
+    .option('-l, --lang <idioma>', 'idioma del contrato: es | en', 'es')
+    .action(async (opts: { global?: boolean; dir?: string; force?: boolean; lang?: string }) => {
       const result = await installSkill({
         cwd: process.cwd(),
         global: opts.global === true,
         force: opts.force === true,
+        lang: opts.lang === 'en' ? 'en' : 'es',
         ...(opts.dir !== undefined ? { dir: opts.dir } : {}),
       });
       process.stdout.write(formatearSkill(result));

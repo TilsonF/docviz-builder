@@ -191,7 +191,7 @@ Proceso con decisiones y ramas paralelas.
 
 **Cuando no.** Si el proceso es lineal y sencillo: `flow` queda mas limpio. Si es un proceso de negocio con roles: `bpmn`.
 
-Alias: `uml-activity`.
+Alias: `uml-activity`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -589,7 +589,7 @@ Recorrido de una persona por un proceso, con su nivel de satisfaccion.
 
 **Cuando no.** Si el interes es tecnico y no la experiencia: usa `flow` o `sequence`.
 
-Alias: `user-journey`, `recorrido`.
+Alias: `user-journey`, `recorrido`. Si falta mermaid, se dibuja con d2.
 
 ````md
 ```diagram
@@ -679,7 +679,7 @@ Tarjetas repartidas por columna de estado.
 
 **Cuando no.** Si el tablero cambia a diario: enlaza la herramienta en vez de congelarlo.
 
-Alias: `tablero`.
+Alias: `tablero`. Si falta mermaid, se dibuja con d2.
 
 ````md
 ```diagram
@@ -711,7 +711,7 @@ Elementos situados en dos ejes continuos.
 
 **Cuando no.** Si solo quieres nombrar los cuatro cuadrantes sin situar nada: usa `matrix-2x2`.
 
-Alias: `quadrant-chart`.
+Alias: `quadrant-chart`. Si falta mermaid, se dibuja con vega-lite.
 
 ````md
 ```diagram
@@ -879,7 +879,7 @@ Bloques dispuestos en rejilla, sin semantica de flujo.
 
 **Cuando no.** Si hay relaciones que explicar: usa `flow` o `component`.
 
-Alias: `bloques`.
+Alias: `bloques`. Si falta mermaid, se dibuja con d2.
 
 ````md
 ```diagram

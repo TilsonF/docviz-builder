@@ -18,6 +18,7 @@ import {
   IdFactory,
   nameOf,
   optionalArray,
+  optionalNumber,
   optionalString,
   requireArray,
   requireString,
@@ -287,6 +288,197 @@ function d2Sueltos(relations: readonly unknown[], field: string): string {
     }
     const label = edge.label !== undefined ? `: ${d2Label(edge.label)}` : '';
     lines.push(`${ids.get(edge.from)} -> ${ids.get(edge.to)}${label}`);
+  }
+  return lines.join('\n');
+}
+
+/**
+ * `activity` con D2: el flujo se aplana en un grafo dirigido.
+ *
+ * D2 no tiene la notacion de actividad de PlantUML —ni `fork`, ni `if/endif`—
+ * asi que las decisiones se dibujan como un rombo con dos salidas etiquetadas y
+ * las ramas paralelas como caminos que se abren y se vuelven a juntar. Es la
+ * misma informacion con otra forma, que es lo que se espera de un respaldo.
+ */
+export function d2Activity(doc: Record<string, unknown>): string {
+  const flow = requireArray(doc['flow'], 'diagram.flow');
+  const ids = new IdFactory('a');
+  const lines = ['direction: down', '', 'inicio: "" {shape: circle; style.fill: "#000"; width: 20; height: 20}'];
+
+  const fin = emitir(flow, 'inicio', lines, ids, 'diagram.flow');
+  lines.push('final: "" {shape: circle; style.double-border: true; width: 20; height: 20}');
+  for (const anterior of fin) lines.push(`${anterior} -> final`);
+  return lines.join('\n');
+}
+
+/**
+ * Emite los pasos y devuelve los nodos que quedan colgando al final.
+ *
+ * Son varios cuando el ultimo paso fue una decision o un bloque paralelo: las
+ * dos ramas tienen que reconectarse con lo que venga despues, y quien lo sabe
+ * es el llamante.
+ */
+function emitir(
+  pasos: readonly unknown[],
+  desde: string | readonly string[],
+  lines: string[],
+  ids: IdFactory,
+  field: string,
+): string[] {
+  let anteriores = typeof desde === 'string' ? [desde] : [...desde];
+
+  for (const raw of pasos) {
+    if (typeof raw === 'string') {
+      anteriores = [conectar(raw.trim(), anteriores, lines, ids)];
+      continue;
+    }
+    const record = asRecord(raw, field);
+
+    if (record['decision'] !== undefined) {
+      const pregunta = requireString(record, 'decision', `${field}[].decision`);
+      const nodo = ids.id(`decision:${pregunta}`);
+      lines.push(`${nodo}: ${d2Label(pregunta)} {shape: diamond}`);
+      for (const anterior of anteriores) lines.push(`${anterior} -> ${nodo}`);
+
+      const rama = (pasosRama: unknown[], etiqueta: string): string[] => {
+        if (pasosRama.length === 0) return [nodo];
+        const primeros = lines.length;
+        const salida = emitir(pasosRama, nodo, lines, ids, `${field}[].${etiqueta}`);
+        // La primera arista de la rama lleva la etiqueta de la condicion.
+        for (let i = primeros; i < lines.length; i += 1) {
+          const linea = lines[i]!;
+          if (linea.startsWith(`${nodo} -> `) && !linea.includes(': ')) {
+            lines[i] = `${linea}: ${d2Label(etiqueta)}`;
+            break;
+          }
+        }
+        return salida;
+      };
+
+      const si = rama(optionalArray(record['yes'] ?? record['si'], `${field}[].yes`), 'si');
+      const no = rama(optionalArray(record['no'], `${field}[].no`), 'no');
+      anteriores = [...new Set([...si, ...no])];
+      continue;
+    }
+
+    if (record['parallel'] !== undefined) {
+      const ramas = requireArray(record['parallel'], `${field}[].parallel`);
+      const salidas: string[] = [];
+      for (const branch of ramas) {
+        salidas.push(...emitir(optionalArray(branch, `${field}[].parallel[]`), anteriores, lines, ids, field));
+      }
+      anteriores = salidas.length > 0 ? [...new Set(salidas)] : anteriores;
+      continue;
+    }
+
+    // Una nota no es un paso del flujo: se dibuja al margen y no encadena.
+    if (record['note'] !== undefined) {
+      const nota = ids.id(`nota:${String(record['note'])}`);
+      lines.push(`${nota}: ${d2Label(String(record['note']))} {shape: page; style.stroke-dash: 3}`);
+      continue;
+    }
+
+    anteriores = [conectar(nameOf(record, field), anteriores, lines, ids)];
+  }
+
+  return anteriores;
+}
+
+/** Declara el paso si hace falta y lo engancha a todo lo que venia antes. */
+function conectar(texto: string, anteriores: readonly string[], lines: string[], ids: IdFactory): string {
+  const nodo = ids.id(`paso:${texto}`);
+  if (!lines.some((l) => l.startsWith(`${nodo}:`))) lines.push(`${nodo}: ${d2Label(texto)}`);
+  for (const anterior of anteriores) lines.push(`${anterior} -> ${nodo}`);
+  return nodo;
+}
+
+/** `kanban` con D2: cada columna es un contenedor con sus tarjetas dentro. */
+export function d2Kanban(doc: Record<string, unknown>): string {
+  const columns = requireArray(doc['columns'], 'diagram.columns');
+  const ids = new IdFactory('k');
+  const lines = ['direction: right', ''];
+
+  for (const raw of columns) {
+    const record = asNamedRecord(raw, 'diagram.columns');
+    const name = requireString(record, 'name', 'diagram.columns');
+    lines.push(`${ids.id(`col:${name}`)}: ${d2Label(name)} {`, '  grid-columns: 1');
+    for (const item of optionalArray(record['items'], 'diagram.columns.items')) {
+      const texto = nameOf(item, 'diagram.columns.items');
+      lines.push(`  ${ids.id(`tarjeta:${texto}`)}: ${d2Label(texto)}`);
+    }
+    lines.push('}');
+  }
+  return lines.join('\n');
+}
+
+/** `block` con D2: una fila por nivel, usando su rejilla nativa. */
+export function d2Block(doc: Record<string, unknown>): string {
+  const rows = requireArray(doc['rows'] ?? doc['blocks'], 'diagram.rows');
+  const ids = new IdFactory('b');
+  const lines = ['direction: down', ''];
+
+  rows.forEach((raw, indice) => {
+    const celdas = Array.isArray(raw) ? raw : [raw];
+    const fila = `fila${indice + 1}`;
+    // Una fila con una sola celda no necesita contenedor: seria una caja
+    // alrededor de otra caja, sin aportar nada.
+    if (celdas.length === 1) {
+      const texto = nameOf(celdas[0], 'diagram.rows');
+      lines.push(`${ids.id(texto)}: ${d2Label(texto)}`);
+      return;
+    }
+    lines.push(`${fila}: "" {`, `  grid-columns: ${celdas.length}`, '  style.stroke-width: 0');
+    for (const celda of celdas) {
+      const texto = nameOf(celda, 'diagram.rows');
+      lines.push(`  ${ids.id(texto)}: ${d2Label(texto)}`);
+    }
+    lines.push('}');
+  });
+  return lines.join('\n');
+}
+
+/**
+ * `journey` con D2: las secciones son contenedores y la satisfaccion se dibuja
+ * en la etiqueta del paso.
+ *
+ * Mermaid dibuja la curva de satisfaccion como una linea; D2 no puede, asi que
+ * el numero se escribe al lado. Se pierde la forma de un vistazo y se conserva
+ * el dato, que es lo que no se puede perder.
+ */
+export function d2Journey(doc: Record<string, unknown>): string {
+  const sections = requireArray(doc['sections'], 'diagram.sections');
+  const ids = new IdFactory('j');
+  const lines = ['direction: right', ''];
+  let anterior: string | undefined;
+
+  for (const rawSection of sections) {
+    const section = asNamedRecord(rawSection, 'diagram.sections');
+    const nombre = requireString(section, 'name', 'diagram.sections');
+    const contenedor = ids.id(`seccion:${nombre}`);
+    lines.push(`${contenedor}: ${d2Label(nombre)} {`);
+
+    const pasosDeSeccion: string[] = [];
+    for (const rawStep of requireArray(section['steps'], 'diagram.sections.steps')) {
+      const step = asNamedRecord(rawStep, 'diagram.sections.steps');
+      const texto = requireString(step, 'name', 'diagram.sections.steps');
+      const score = optionalNumber(step, 'score', 'diagram.sections.steps');
+      const actores = optionalArray(step['actors'], 'diagram.sections.steps.actors')
+        .map((a) => nameOf(a, 'diagram.sections.steps.actors'))
+        .join(', ');
+      const detalle = [score !== undefined ? `${score}/5` : undefined, actores === '' ? undefined : actores]
+        .filter((x) => x !== undefined)
+        .join(' · ');
+      const id = ids.id(`paso:${texto}`);
+      pasosDeSeccion.push(id);
+      lines.push(`  ${id}: ${d2Label(detalle === '' ? texto : `${texto}\n${detalle}`)}`);
+    }
+
+    lines.push('}');
+    for (const id of pasosDeSeccion) {
+      const ruta = `${contenedor}.${id}`;
+      if (anterior !== undefined) lines.push(`${anterior} -> ${ruta}`);
+      anterior = ruta;
+    }
   }
   return lines.join('\n');
 }

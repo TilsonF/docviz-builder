@@ -38,7 +38,7 @@ describir algo que el compilador no acepte.
 | Quien habla con quien y en que orden | `sequence` | plantuml (o d2) |
 | Estructura de clases o entidades y sus relaciones | `class` | plantuml (o d2) |
 | Estados de una entidad y las transiciones entre ellos | `state` | plantuml (o d2) |
-| Proceso con decisiones y ramas paralelas | `activity` | plantuml |
+| Proceso con decisiones y ramas paralelas | `activity` | plantuml (o d2) |
 | Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
 | Que puede hacer cada actor con el sistema | `use-case` | plantuml (o d2) |
 | Componentes de software agrupados y como se conectan | `component` | plantuml (o d2) |
@@ -49,15 +49,15 @@ describir algo que el compilador no acepte.
 | Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml (o d2) |
 | Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
 | Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
-| Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |
+| Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid (o d2) |
 | Historia de ramas, commits y fusiones | `git-graph` | mermaid |
-| Tarjetas repartidas por columna de estado | `kanban` | mermaid |
-| Elementos situados en dos ejes continuos | `quadrant` | mermaid |
+| Tarjetas repartidas por columna de estado | `kanban` | mermaid (o d2) |
+| Elementos situados en dos ejes continuos | `quadrant` | mermaid (o vega-lite) |
 | Como se reparte una cantidad al pasar de un estado a otro | `sankey` | mermaid |
 | Composicion de un total por area proporcional | `treemap` | mermaid |
 | Perfil de varias dimensiones a la vez | `radar` | mermaid |
 | Exploracion de un tema en ramas libres | `mindmap` | mermaid (o plantuml) |
-| Bloques dispuestos en rejilla, sin semantica de flujo | `block` | mermaid |
+| Bloques dispuestos en rejilla, sin semantica de flujo | `block` | mermaid (o d2) |
 | Descomposicion de un objetivo en lineas de accion | `strategy-tree` | d2 |
 | Descomposicion de un problema en sus causas | `issue-tree` | d2 |
 | Alternativas de una decision y sus ramas | `decision-tree` | d2 |

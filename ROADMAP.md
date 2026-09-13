@@ -31,6 +31,10 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 - **Determinismo**: `git-graph` producía bytes distintos en cada render. Estaba
   roto desde el principio y no tenía prueba; ahora la tiene, para los 57 tipos.
 - **Sitio** con el catálogo completo, y **COMPATIBILIDAD.md** con el contrato.
+- **Documentación bilingüe**: `README.en.md`, `AGENTS.en.md`, el skill en inglés
+  y `docviz types --lang en`, con las tablas generadas desde el catálogo.
+- **Más respaldos**: en una máquina con solo Node —sin Java y sin Chromium—
+  funcionan 46 de los 57 tipos. Antes eran 34.
 
 ---
 
@@ -47,12 +51,16 @@ sin medir.
 La parte determinista (`npm run eval`) sí corre en CI y hoy da **80,0 %** de
 acierto en la primera propuesta y **88,9 %** entre las tres primeras.
 
-### 2. La documentación en inglés
+### 2. Los mensajes de error en inglés
 
-El catálogo ya es bilingüe, pero el README, `AGENTS.md`, el skill y los mensajes
-de error siguen siendo solo en español. Es lo que queda del trabajo de idioma, y
-conviene cerrarlo antes de que haya usuarios citando la documentación actual —o
-analizando la salida, que es peor.
+La documentación ya existe en los dos idiomas —`README.en.md`, `AGENTS.en.md`,
+el skill y `docviz types --lang en`—, con las tablas generadas desde el catálogo
+para que no puedan desfasarse. Lo que sigue en español son **los mensajes de
+error y la salida de la CLI**, que es lo que un agente lee cuando algo falla.
+
+Va junto con la decisión sobre el idioma por defecto, que
+[COMPATIBILIDAD.md](./COMPATIBILIDAD.md) marca como condición para la 1.0:
+cambiarlo después sería incompatible para quien analice la salida.
 
 ### 3. Seguir subiendo el acierto de `suggest`
 
@@ -68,24 +76,21 @@ Así que el siguiente intento no debería ser otro ajuste de la puntuación, sin
 más vocabulario real —o más casos, que también revelan huecos—. Y medido donde
 toca.
 
-### 4. Los cuatro tipos sin respaldo
+### 4. Los ocho tipos que aún dependen de su motor
 
-`wireframe`, `json`, `yaml` y `activity` se caen sin Java. Los tres primeros no
-admiten un respaldo con sentido; `activity` necesitaría ramas con condición en
-D2, que es viable. Decidir cuáles se resuelven y cuáles se documentan como
-dependientes de PlantUML.
+Sin Java caen `wireframe`, `json` y `yaml`: los tres son árboles o bocetos que
+PlantUML dibuja de una forma que no tiene equivalente razonable. Sin Chromium
+caen `git-graph`, `sankey`, `treemap`, `radar` y `bpmn`.
+
+De esos, dos parecen viables: `git-graph` sobre D2 —ramas como contenedores— y
+`treemap`, que Vega (no Vega-Lite) sabe dibujar. El resto probablemente haya que
+documentarlos como dependientes de su motor y dejarlo dicho.
 
 ---
 
 ## Medio plazo
 
-### 5. Sin Chromium siguen cayendo nueve
-
-`journey`, `git-graph`, `kanban`, `quadrant`, `sankey`, `treemap`, `radar`,
-`block` y `bpmn`. Varios son viables sobre D2 o Vega-Lite —`quadrant` es un
-scatter, `kanban` son columnas— y el resto probablemente no.
-
-### 6. Mantenimiento del allowlist de SVG
+### 5. Mantenimiento del allowlist de SVG
 
 Cuando un motor cambie lo que emite, la prueba de "sanear el catálogo no quita
 nada más que comentarios" lo detecta, y Dependabot agrupa los motores para que

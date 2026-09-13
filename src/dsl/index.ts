@@ -15,7 +15,14 @@ import { parse as parseYaml } from 'yaml';
 import { DocVizError, DslValidationError, ERROR_CODES } from '../core/errors.js';
 import { compileChartType, compileType } from './compile.js';
 import { findType, TYPE_CATALOG, typeNames, type TypeSpec } from './catalog.js';
-import { describeFieldWarnings, trackFieldAccess, unknownFields, type FieldWarning } from './fields.js';
+import {
+  describeFieldWarnings,
+  stopTracking,
+  trackFieldAccess,
+  unknownFields,
+  unknownNestedFields,
+  type FieldWarning,
+} from './fields.js';
 import { asRecord, optionalString } from './util.js';
 
 export const DSL_LANGUAGES = ['diagram', 'chart', 'architecture'] as const;
@@ -127,6 +134,8 @@ export function compileDsl(
       throw err.withExtraDetail(describeFieldWarnings(unknownFields(doc, spec, tracker), spec));
     }
     throw err;
+  } finally {
+    stopTracking();
   }
 
   const result: CompiledDsl = {
@@ -136,7 +145,7 @@ export function compileDsl(
   };
   if (title !== undefined) result.title = title;
 
-  const warnings = unknownFields(doc, compiled.spec, tracker);
+  const warnings = [...unknownFields(doc, compiled.spec, tracker), ...unknownNestedFields(tracker)];
   if (warnings.length > 0) result.warnings = warnings;
   return result;
 }

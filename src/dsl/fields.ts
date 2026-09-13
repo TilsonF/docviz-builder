@@ -35,6 +35,14 @@ export interface FieldWarning {
   readonly suggestion?: string;
 }
 
+/** Un mapa observado: el original, lo que se leyo de el y de donde viene. */
+interface RegistroObservado {
+  ruta: string;
+  objetivo: Record<string, unknown>;
+  accessed: Set<string>;
+  enumerated: boolean;
+}
+
 export interface FieldAccessTracker<T extends object> {
   /** El documento envuelto: pasalo al compilador en lugar del original. */
   readonly doc: T;
@@ -46,6 +54,22 @@ export interface FieldAccessTracker<T extends object> {
    * usaron de verdad y el analisis se abstiene.
    */
   enumerated(): boolean;
+  /** Mapas anidados observados durante la compilacion. */
+  readonly anidados: readonly RegistroObservado[];
+}
+
+/**
+ * Observador activo durante una compilacion.
+ *
+ * Los mapas anidados no se pueden envolver desde fuera: aparecen a medida que
+ * el compilador desciende por el documento, y quien los desenvuelve es
+ * `asRecord`. Esta variable es como `asRecord` sabe que hay alguien mirando.
+ */
+let observadorActivo: { registrar(valor: Record<string, unknown>, ruta: string): Record<string, unknown> } | undefined;
+
+/** Envuelve un mapa anidado si hay una compilacion observada en curso. */
+export function observarAnidado(valor: Record<string, unknown>, ruta: string): Record<string, unknown> {
+  return observadorActivo === undefined ? valor : observadorActivo.registrar(valor, ruta);
 }
 
 /**
@@ -55,25 +79,54 @@ export interface FieldAccessTracker<T extends object> {
  * exactamente igual con el Proxy que sin el.
  */
 export function trackFieldAccess<T extends object>(doc: T): FieldAccessTracker<T> {
-  const accessed = new Set<string>();
-  let enumeratedAll = false;
+  const anidados: RegistroObservado[] = [];
 
-  const proxy = new Proxy(doc, {
-    get(target, prop, receiver) {
-      if (typeof prop === 'string') accessed.add(prop);
-      return Reflect.get(target, prop, receiver);
-    },
-    has(target, prop) {
-      if (typeof prop === 'string') accessed.add(prop);
-      return Reflect.has(target, prop);
-    },
-    ownKeys(target) {
-      enumeratedAll = true;
-      return Reflect.ownKeys(target);
-    },
-  }) as T;
+  const envolver = <O extends object>(objetivo: O, registro: RegistroObservado | undefined): O =>
+    new Proxy(objetivo, {
+      get(t, prop, receiver) {
+        if (typeof prop === 'string' && registro !== undefined) registro.accessed.add(prop);
+        return Reflect.get(t, prop, receiver);
+      },
+      has(t, prop) {
+        if (typeof prop === 'string' && registro !== undefined) registro.accessed.add(prop);
+        return Reflect.has(t, prop);
+      },
+      ownKeys(t) {
+        if (registro !== undefined) registro.enumerated = true;
+        return Reflect.ownKeys(t);
+      },
+    }) as O;
 
-  return { doc: proxy, accessed, enumerated: () => enumeratedAll };
+  const raiz: RegistroObservado = {
+    ruta: '',
+    objetivo: doc as Record<string, unknown>,
+    accessed: new Set(),
+    enumerated: false,
+  };
+
+  const observador = {
+    registrar(valor: Record<string, unknown>, ruta: string): Record<string, unknown> {
+      // El mismo objeto puede llegar dos veces: se observa una sola.
+      const previo = anidados.find((r) => r.objetivo === valor);
+      if (previo !== undefined) return envolver(valor, previo);
+      const registro: RegistroObservado = { ruta, objetivo: valor, accessed: new Set(), enumerated: false };
+      anidados.push(registro);
+      return envolver(valor, registro);
+    },
+  };
+
+  observadorActivo = observador;
+  return {
+    doc: envolver(doc, raiz),
+    accessed: raiz.accessed,
+    enumerated: () => raiz.enumerated,
+    anidados,
+  };
+}
+
+/** Cierra la observacion. Siempre en un `finally`: si no, se filtra a la siguiente. */
+export function stopTracking(): void {
+  observadorActivo = undefined;
 }
 
 const knownCache = new Map<string, ReadonlySet<string>>();
@@ -140,6 +193,36 @@ export function unknownFields(
     warnings.push(warning);
   }
 
+  return warnings;
+}
+
+/**
+ * Campos sin usar en los mapas anidados del documento.
+ *
+ * Aqui no hay ejemplo canonico contra el que comparar —no se sabe que posicion
+ * del ejemplo corresponde a cada mapa—, asi que el criterio es solo uno: si el
+ * compilador no leyo la clave, esa clave no hizo nada. Sigue siendo un hecho.
+ */
+export function unknownNestedFields(tracker: FieldAccessTracker<object>): FieldWarning[] {
+  const warnings: FieldWarning[] = [];
+  for (const registro of tracker.anidados) {
+    if (registro.enumerated) continue;
+    for (const field of Object.keys(registro.objetivo)) {
+      if (registro.accessed.has(field)) continue;
+      const hermanas = [...registro.accessed].filter((k) => k in registro.objetivo);
+      const suggestion = nearestField(field, new Set(hermanas));
+      const donde = registro.ruta === '' ? '' : ` en ${registro.ruta}`;
+      warnings.push({
+        code: ERROR_CODES.DSL_FIELD_UNKNOWN,
+        field,
+        message:
+          suggestion !== undefined
+            ? `el campo "${field}"${donde} no se usa; quiza querias "${suggestion}"`
+            : `el campo "${field}"${donde} no se usa y se ha ignorado`,
+        ...(suggestion !== undefined ? { suggestion } : {}),
+      });
+    }
+  }
   return warnings;
 }
 

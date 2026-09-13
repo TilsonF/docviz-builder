@@ -13,7 +13,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { check } from '../../src/build/builder.js';
 import { defaultConfig } from '../../src/config/load.js';
 import { DocVizError, DslValidationError, ERROR_CODES } from '../../src/core/errors.js';
-import { compileDsl, findType } from '../../src/dsl/index.js';
+import { compileDsl, findType, TYPE_CATALOG } from '../../src/dsl/index.js';
 import { editDistance, knownFields, trackFieldAccess, unknownFields } from '../../src/dsl/fields.js';
 import { scanDocument } from '../../src/markdown/scan.js';
 import type { DocVizConfig } from '../../src/config/types.js';
@@ -245,5 +245,50 @@ describe('el escaneo no se detiene en el primer bloque roto', () => {
         message: expect.stringContaining('"notas"') as unknown as string,
       },
     ]);
+  });
+});
+
+describe('campos sin usar dentro de un mapa anidado', () => {
+  it('detecta la errata dentro de un elemento de una lista', () => {
+    const compiled = compileDsl(
+      'diagram',
+      [
+        'type: erd',
+        'entities:',
+        '  - name: Pedido',
+        '    fieldz:',
+        '      - name: id',
+        '        type: uuid',
+      ].join('\n'),
+    );
+    const aviso = compiled.warnings?.find((w) => w.field === 'fieldz');
+    expect(aviso).toBeDefined();
+    expect(aviso!.message).toContain('en diagram.entities');
+    expect(aviso!.code).toBe(ERROR_CODES.DSL_FIELD_UNKNOWN);
+  });
+
+  it('propone el campo hermano cuando la errata se le parece', () => {
+    const compiled = compileDsl(
+      'diagram',
+      ['type: erd', 'entities:', '  - nombre: Pedido', '    name: Pedido'].join('\n'),
+    );
+    // `nombre` no se lee; `name` si. La sugerencia sale de lo que el compilador
+    // leyo en ese mismo mapa, no de una lista escrita a mano.
+    expect(compiled.warnings?.some((w) => w.field === 'nombre')).toBe(true);
+  });
+
+  it('el catalogo entero no produce ni un aviso', () => {
+    // Es la prueba que decide si esto se puede activar: 57 ejemplos escritos
+    // sin pensar en este analisis. Un falso positivo aqui lo invalidaria.
+    for (const spec of TYPE_CATALOG) {
+      const compiled = compileDsl(spec.lang, spec.example);
+      expect(compiled.warnings ?? [], `${spec.type} genero avisos`).toEqual([]);
+    }
+  });
+
+  it('la observacion no se filtra entre compilaciones', () => {
+    compileDsl('diagram', ['type: erd', 'entities:', '  - name: A', '    sobra: 1'].join('\n'));
+    const limpio = compileDsl('diagram', ['type: erd', 'entities:', '  - name: B'].join('\n'));
+    expect(limpio.warnings).toBeUndefined();
   });
 });

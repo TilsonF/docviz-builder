@@ -6,6 +6,7 @@
  */
 
 import { DslValidationError, ERROR_CODES, type ErrorCode } from '../core/errors.js';
+import { observarAnidado } from './fields.js';
 
 /**
  * Aborta la compilacion del bloque.
@@ -21,7 +22,9 @@ export function asRecord(value: unknown, field: string): Record<string, unknown>
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
     fail(`${field} debe ser un mapa`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
   }
-  return value as Record<string, unknown>;
+  // Todo mapa anidado se entrega observado: es la unica forma de saber si el
+  // compilador llego a leer sus claves o si el autor escribio en el vacio.
+  return observarAnidado(value as Record<string, unknown>, field);
 }
 
 /**

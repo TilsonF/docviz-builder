@@ -34,7 +34,23 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
 
+      # Las pruebas dibujan con PlantUML de verdad, asi que este job necesita el
+      # mismo entorno que el de CI. Sin la JVM y sin el jar no fallan por un
+      # error del codigo: fallan por no tener con que dibujar, que es peor,
+      # porque parece lo mismo.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Cachear plantuml.jar
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}
+
       - run: npm ci
+      - run: npm run setup
 
       # No se publica algo que no compila ni pasa sus propias comprobaciones.
       - run: npm run build

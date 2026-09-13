@@ -57,7 +57,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Quien habla con quien y en que orden.',
     whenToUse: 'Para explicar una interaccion entre componentes a lo largo del tiempo: un login, un pago, una llamada entre servicios.',
     whenNotToUse: 'Si el orden temporal no importa; entonces es un diagrama de componentes o de dependencias.',
-    keywords: ['interaccion', 'interactuan', 'mensajes', 'llamadas', 'protocolo', 'login', 'api', 'temporal', 'orden', 'frontend', 'backend', 'servicio'],
+    keywords: ['interaccion', 'interactuan', 'mensajes', 'llamadas', 'protocolo', 'login', 'api', 'temporal', 'orden', 'frontend', 'backend', 'servicio', 'interaction', 'messages', 'calls', 'protocol', 'login', 'api', 'over time', 'order', 'who calls whom', 'request flow'],
     example: [
       'type: sequence',
       'title: Autenticacion',
@@ -77,7 +77,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Estructura de clases o entidades y sus relaciones.',
     whenToUse: 'Para el modelo de dominio de un sistema orientado a objetos, con atributos, metodos y herencia.',
     whenNotToUse: 'Si lo que describes son tablas y claves foraneas: usa `erd`.',
-    keywords: ['clases', 'dominio', 'herencia', 'objetos', 'modelo', 'atributos', 'metodos'],
+    keywords: ['clases', 'dominio', 'herencia', 'objetos', 'modelo', 'atributos', 'metodos', 'classes', 'domain', 'inheritance', 'objects', 'attributes', 'methods', 'oop'],
     example: [
       'type: class',
       'title: Modelo de dominio',
@@ -100,7 +100,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Estados de una entidad y las transiciones entre ellos.',
     whenToUse: 'Cuando algo tiene un ciclo de vida: un pedido, una solicitud, un despliegue.',
     whenNotToUse: 'Si el proceso es una secuencia de tareas sin estados propios: usa `activity` o `flow`.',
-    keywords: ['estados', 'ciclo de vida', 'transiciones', 'maquina de estados', 'flujo de estado'],
+    keywords: ['estados', 'ciclo de vida', 'transiciones', 'maquina de estados', 'flujo de estado', 'states', 'lifecycle', 'transitions', 'state machine', 'status changes'],
     example: [
       'type: state',
       'title: Ciclo de vida',
@@ -119,7 +119,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Proceso con decisiones y ramas paralelas.',
     whenToUse: 'Cuando hay condiciones que bifurcan el camino: validaciones, aprobaciones, reintentos.',
     whenNotToUse: 'Si el proceso es lineal y sencillo: `flow` queda mas limpio. Si es un proceso de negocio con roles: `bpmn`.',
-    keywords: ['proceso', 'decision', 'condicion', 'if', 'bifurcacion', 'paralelo', 'algoritmo'],
+    keywords: ['proceso', 'decision', 'condicion', 'if', 'bifurcacion', 'paralelo', 'algoritmo', 'process', 'decisions', 'branches', 'parallel', 'swimlane', 'approval', 'workflow'],
     example: [
       'type: activity',
       'title: Validacion',
@@ -141,7 +141,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Entidades de datos, sus campos y su cardinalidad.',
     whenToUse: 'Para documentar un modelo de datos relacional: tablas, claves y cardinalidades.',
     whenNotToUse: 'Si el foco es el comportamiento y no los datos: usa `class`.',
-    keywords: ['datos', 'tablas', 'entidades', 'base de datos', 'cardinalidad', 'clave', 'sql', 'modelo de datos'],
+    keywords: ['datos', 'tablas', 'entidades', 'base de datos', 'cardinalidad', 'clave', 'sql', 'modelo de datos', 'entities', 'database', 'tables', 'fields', 'cardinality', 'data model', 'relational'],
     example: [
       'type: erd',
       'title: Modelo de datos',
@@ -173,7 +173,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Que puede hacer cada actor con el sistema.',
     whenToUse: 'Para delimitar el alcance funcional frente a usuarios y sistemas externos.',
     whenNotToUse: 'Si necesitas detallar como ocurre cada caso: eso es `sequence` o `activity`.',
-    keywords: ['casos de uso', 'actores', 'alcance', 'funcionalidad', 'requisitos'],
+    keywords: ['casos de uso', 'actores', 'alcance', 'funcionalidad', 'requisitos', 'actors', 'roles', 'what each user can do', 'capabilities', 'use cases'],
     example: [
       'type: use-case',
       'title: Alcance del portal',
@@ -196,7 +196,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Componentes de software agrupados y como se conectan.',
     whenToUse: 'Para la estructura interna de una aplicacion cuando C4 resulta excesivo.',
     whenNotToUse: 'Si describes el sistema completo y su entorno: usa `c4-context` o `c4-container`.',
-    keywords: ['componentes', 'modulos', 'paquetes', 'estructura', 'interfaces'],
+    keywords: ['componentes', 'modulos', 'paquetes', 'estructura', 'interfaces', 'software components', 'modules', 'internal structure', 'wiring', 'packages'],
     example: [
       'type: component',
       'title: Componentes',
@@ -218,7 +218,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Donde se ejecuta cada pieza y sobre que infraestructura.',
     whenToUse: 'Para documentar nodos, contenedores, artefactos y las bases de datos de un entorno.',
     whenNotToUse: 'Si el interes es la responsabilidad logica y no la maquina: usa `component` o C4.',
-    keywords: ['despliegue', 'infraestructura', 'servidores', 'nodos', 'entorno', 'produccion', 'contenedores'],
+    keywords: ['despliegue', 'infraestructura', 'servidores', 'nodos', 'entorno', 'produccion', 'contenedores', 'infrastructure', 'servers', 'nodes', 'runtime', 'where it runs', 'topology'],
     example: [
       'type: deployment',
       'title: Entorno de produccion',
@@ -240,7 +240,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Boceto de una pantalla: campos, botones y disposicion.',
     whenToUse: 'Para acordar una interfaz sin abrir una herramienta de diseno, dentro del propio documento.',
     whenNotToUse: 'Si necesitas fidelidad visual real; esto es un boceto, no un diseno.',
-    keywords: ['pantalla', 'formulario', 'interfaz', 'mockup', 'boceto', 'ui', 'campos', 'boton'],
+    keywords: ['pantalla', 'formulario', 'interfaz', 'mockup', 'boceto', 'ui', 'campos', 'boton', 'screen', 'mockup', 'ui sketch', 'form', 'buttons', 'layout'],
     example: [
       'type: wireframe',
       'title: Inicio de sesion',
@@ -261,7 +261,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Estructura de un JSON dibujada como arbol.',
     whenToUse: 'Para documentar el cuerpo de una peticion o respuesta de API de un vistazo.',
     whenNotToUse: 'Si el JSON es corto: un bloque de codigo se lee mejor y se puede copiar.',
-    keywords: ['json', 'payload', 'respuesta', 'peticion', 'estructura', 'contrato', 'cuerpo'],
+    keywords: ['json', 'payload', 'respuesta', 'peticion', 'estructura', 'contrato', 'cuerpo', 'json structure', 'payload', 'response shape', 'tree of json'],
     example: ['type: json', 'title: Respuesta de /pedidos', 'data:', '  id: 1', '  estado: confirmado'].join('\n'),
   }),
   t({
@@ -271,7 +271,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Estructura de un YAML dibujada como arbol.',
     whenToUse: 'Para explicar un manifiesto o una configuracion extensa por su forma.',
     whenNotToUse: 'Si el archivo es corto o el lector va a copiarlo: usa un bloque de codigo.',
-    keywords: ['yaml', 'configuracion', 'manifiesto', 'kubernetes', 'helm', 'valores'],
+    keywords: ['yaml', 'configuracion', 'manifiesto', 'kubernetes', 'helm', 'valores', 'yaml structure', 'config tree', 'manifest'],
     example: ['type: yaml', 'title: Configuracion', 'data:', '  replicas: 3', '  puertos:', '    - 8080'].join('\n'),
   }),
   t({
@@ -282,7 +282,7 @@ const UML: readonly TypeSpec[] = [
     purpose: 'Descomposicion jerarquica del trabajo de un proyecto.',
     whenToUse: 'Para desglosar un alcance en entregables y paquetes de trabajo.',
     whenNotToUse: 'Si lo que importa son las fechas: usa `gantt`. Si es un analisis causal: `issue-tree`.',
-    keywords: ['wbs', 'edt', 'alcance', 'entregables', 'descomposicion', 'proyecto', 'paquetes'],
+    keywords: ['wbs', 'edt', 'alcance', 'entregables', 'descomposicion', 'proyecto', 'paquetes', 'work breakdown', 'project decomposition', 'tasks', 'deliverables'],
     example: [
       'type: wbs',
       'title: Alcance del proyecto',
@@ -309,7 +309,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Flujo sencillo de extremo a extremo.',
     whenToUse: 'Para encadenar pasos o componentes cuando basta con ver por donde pasa la cosa.',
     whenNotToUse: 'Si hay muchas condiciones: `activity`. Si es una interaccion temporal: `sequence`.',
-    keywords: ['flujo', 'pasos', 'pipeline', 'proceso simple', 'cadena', 'etapas'],
+    keywords: ['flujo', 'pasos', 'pipeline', 'proceso simple', 'cadena', 'etapas', 'flowchart', 'end to end', 'steps', 'simple process', 'pipeline'],
     example: ['type: flow', 'title: Publicacion', 'direction: lr', 'flow:', '  - Autor -> Revision', '  - Revision -> Portal'].join('\n'),
   }),
   t({
@@ -321,7 +321,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Tareas situadas en el calendario.',
     whenToUse: 'Para un plan con fechas y dependencias entre tareas.',
     whenNotToUse: 'Si no hay fechas concretas: usa `roadmap` o `timeline`.',
-    keywords: ['cronograma', 'plan', 'fechas', 'calendario', 'tareas', 'hitos', 'planificacion'],
+    keywords: ['cronograma', 'plan', 'fechas', 'calendario', 'tareas', 'hitos', 'planificacion', 'schedule', 'calendar', 'dates', 'timeline of tasks', 'project plan'],
     example: [
       'type: gantt',
       'title: Plan',
@@ -341,7 +341,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Recorrido de una persona por un proceso, con su nivel de satisfaccion.',
     whenToUse: 'Para mostrar donde sufre el usuario y quien interviene en cada paso.',
     whenNotToUse: 'Si el interes es tecnico y no la experiencia: usa `flow` o `sequence`.',
-    keywords: ['experiencia', 'usuario', 'recorrido', 'satisfaccion', 'ux', 'viaje', 'cliente'],
+    keywords: ['experiencia', 'usuario', 'recorrido', 'satisfaccion', 'ux', 'viaje', 'cliente', 'customer journey', 'user journey', 'satisfaction', 'experience', 'touchpoints'],
     example: [
       'type: journey',
       'title: Alta de cliente',
@@ -372,7 +372,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Historia de ramas, commits y fusiones.',
     whenToUse: 'Para explicar la estrategia de ramificacion del equipo.',
     whenNotToUse: 'Si lo que documentas es el proceso de revision, no la topologia: usa `flow`.',
-    keywords: ['git', 'ramas', 'branch', 'merge', 'commits', 'gitflow', 'versionado'],
+    keywords: ['git', 'ramas', 'branch', 'merge', 'commits', 'gitflow', 'versionado', 'branches', 'commits', 'merges', 'git history', 'release branches'],
     example: [
       'type: git-graph',
       'title: Estrategia de ramas',
@@ -392,7 +392,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Tarjetas repartidas por columna de estado.',
     whenToUse: 'Para fotografiar el estado de un tablero en un informe.',
     whenNotToUse: 'Si el tablero cambia a diario: enlaza la herramienta en vez de congelarlo.',
-    keywords: ['tablero', 'kanban', 'columnas', 'sprint', 'estado', 'tarjetas', 'board'],
+    keywords: ['tablero', 'kanban', 'columnas', 'sprint', 'estado', 'tarjetas', 'board', 'board', 'columns', 'cards', 'work in progress', 'backlog'],
     example: [
       'type: kanban',
       'title: Sprint 12',
@@ -411,7 +411,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Elementos situados en dos ejes continuos.',
     whenToUse: 'Para priorizar con datos: cada elemento tiene una posicion concreta, no solo un cuadrante.',
     whenNotToUse: 'Si solo quieres nombrar los cuatro cuadrantes sin situar nada: usa `matrix-2x2`.',
-    keywords: ['priorizacion', 'esfuerzo', 'impacto', 'cuadrantes', 'matriz', 'valor', 'riesgo'],
+    keywords: ['priorizacion', 'esfuerzo', 'impacto', 'cuadrantes', 'matriz', 'valor', 'riesgo', 'two axes', 'effort impact', 'prioritization', 'positioning', 'scatter of options'],
     example: [
       'type: quadrant',
       'title: Priorizacion',
@@ -431,7 +431,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Como se reparte una cantidad al pasar de un estado a otro.',
     whenToUse: 'Para mostrar volumenes que se dividen: origen de los defectos, embudo de conversion con fugas.',
     whenNotToUse: 'Si solo comparas totales sin flujo entre ellos: usa `bar`.',
-    keywords: ['flujo', 'volumen', 'reparto', 'origen', 'destino', 'sankey', 'derivacion'],
+    keywords: ['flujo', 'volumen', 'reparto', 'origen', 'destino', 'sankey', 'derivacion', 'flow of quantity', 'allocation', 'how budget splits', 'energy flow', 'transfers'],
     example: [
       'type: sankey',
       'title: Origen de los defectos',
@@ -451,7 +451,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Composicion de un total por area proporcional.',
     whenToUse: 'Para ver de un vistazo quien pesa mas dentro de un conjunto jerarquico.',
     whenNotToUse: 'Si comparas pocas categorias sin jerarquia: `bar` es mas preciso de leer.',
-    keywords: ['composicion', 'proporcion', 'peso', 'reparto', 'jerarquia', 'tamano', 'esfuerzo'],
+    keywords: ['composicion', 'proporcion', 'peso', 'reparto', 'jerarquia', 'tamano', 'esfuerzo', 'proportional area', 'composition by area', 'nested rectangles', 'share of total'],
     example: [
       'type: treemap',
       'title: Esfuerzo por modulo',
@@ -472,7 +472,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Perfil de varias dimensiones a la vez.',
     whenToUse: 'Para evaluaciones de madurez o capacidad, y para comparar dos perfiles.',
     whenNotToUse: 'Con mas de siete ejes o si las dimensiones no son comparables entre si.',
-    keywords: ['madurez', 'capacidad', 'evaluacion', 'perfil', 'dimensiones', 'radar', 'assessment'],
+    keywords: ['madurez', 'capacidad', 'evaluacion', 'perfil', 'dimensiones', 'radar', 'assessment', 'spider', 'multiple dimensions', 'profile', 'skills', 'competency'],
     example: [
       'type: radar',
       'title: Madurez del equipo',
@@ -492,7 +492,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Exploracion de un tema en ramas libres.',
     whenToUse: 'Para abrir un alcance o recoger ideas antes de estructurarlas.',
     whenNotToUse: 'Si la jerarquia ya es firme y dirigida: `strategy-tree` comunica mejor la intencion.',
-    keywords: ['ideas', 'lluvia', 'alcance', 'exploracion', 'mapa mental', 'brainstorm'],
+    keywords: ['ideas', 'lluvia', 'alcance', 'exploracion', 'mapa mental', 'brainstorm', 'brainstorm', 'ideas', 'free branches', 'exploration', 'notes'],
     example: [
       'type: mindmap',
       'title: Alcance',
@@ -511,7 +511,7 @@ const FLOW_AND_PRODUCT: readonly TypeSpec[] = [
     purpose: 'Bloques dispuestos en rejilla, sin semantica de flujo.',
     whenToUse: 'Para capas, bandas o una vista esquematica donde la posicion importa mas que las flechas.',
     whenNotToUse: 'Si hay relaciones que explicar: usa `flow` o `component`.',
-    keywords: ['bloques', 'capas', 'rejilla', 'esquema', 'stack', 'disposicion'],
+    keywords: ['bloques', 'capas', 'rejilla', 'esquema', 'stack', 'disposicion', 'grid', 'blocks', 'layout without flow', 'arrangement'],
     example: [
       'type: block',
       'title: Capas',
@@ -535,7 +535,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Descomposicion de un objetivo en lineas de accion.',
     whenToUse: 'Para bajar un objetivo a iniciativas concretas ante direccion.',
     whenNotToUse: 'Si exploras causas de un problema: `issue-tree` nombra mejor la intencion.',
-    keywords: ['estrategia', 'objetivo', 'iniciativas', 'descomposicion', 'plan', 'lineas de accion'],
+    keywords: ['estrategia', 'objetivo', 'iniciativas', 'descomposicion', 'plan', 'lineas de accion', 'objective breakdown', 'goals', 'initiatives', 'okr', 'strategy'],
     example: [
       'type: strategy-tree',
       'title: Estrategia de calidad',
@@ -553,7 +553,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Descomposicion de un problema en sus causas.',
     whenToUse: 'Para analisis de causa raiz o para estructurar un diagnostico.',
     whenNotToUse: 'Si ya sabes que hacer y solo quieres presentarlo: `strategy-tree`.',
-    keywords: ['causa raiz', 'problema', 'analisis', 'diagnostico', 'porque', 'causas'],
+    keywords: ['causa raiz', 'problema', 'analisis', 'diagnostico', 'porque', 'causas', 'root cause', 'problem breakdown', 'why', 'causes', 'mece'],
     example: ['type: issue-tree', 'title: Analisis', 'root: Defectos en produccion', 'branches: [Requisitos, Pruebas]'].join('\n'),
   }),
   t({
@@ -563,7 +563,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Alternativas de una decision y sus ramas.',
     whenToUse: 'Para presentar opciones excluyentes y a que lleva cada una.',
     whenNotToUse: 'Si la decision ocurre dentro de un proceso: usa `activity`.',
-    keywords: ['decision', 'alternativas', 'opciones', 'escenarios', 'eleccion'],
+    keywords: ['decision', 'alternativas', 'opciones', 'escenarios', 'eleccion', 'options', 'alternatives', 'decision branches', 'choices'],
     example: ['type: decision-tree', 'title: Decision', 'root: Comprar o construir', 'branches: [Comprar, Construir]'].join('\n'),
   }),
   t({
@@ -573,7 +573,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Pilares que sostienen un objetivo, con su contenido.',
     whenToUse: 'Para una lamina de direccion con tres o cuatro ejes y sus iniciativas.',
     whenNotToUse: 'Si la jerarquia tiene mas de dos niveles: usa `strategy-tree`.',
-    keywords: ['pilares', 'ejes', 'estrategia', 'direccion', 'lamina'],
+    keywords: ['pilares', 'ejes', 'estrategia', 'direccion', 'lamina', 'pillars', 'foundations', 'supporting themes'],
     example: [
       'type: strategy-pillars',
       'title: Plan anual',
@@ -591,7 +591,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Capacidades agrupadas por dominio.',
     whenToUse: 'Para mostrar que sabe hacer una organizacion o un producto, sin hablar de tecnologia.',
     whenNotToUse: 'Si describes componentes de software: usa `component` o C4.',
-    keywords: ['capacidades', 'dominios', 'organizacion', 'mapa', 'negocio', 'funciones'],
+    keywords: ['capacidades', 'dominios', 'organizacion', 'mapa', 'negocio', 'funciones', 'business capabilities', 'domains', 'capability model'],
     example: [
       'type: capability-map',
       'title: Capacidades',
@@ -607,7 +607,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Capas de un modelo operativo, de negocio a infraestructura.',
     whenToUse: 'Para relacionar niveles: negocio, procesos, aplicaciones, tecnologia.',
     whenNotToUse: 'Si solo hay una capa con elementos sueltos: usa `capability-map`.',
-    keywords: ['modelo operativo', 'capas', 'niveles', 'gobierno', 'operacion'],
+    keywords: ['modelo operativo', 'capas', 'niveles', 'gobierno', 'operacion', 'layers', 'business to infrastructure', 'operating layers', 'stack of the organization'],
     example: [
       'type: operating-model',
       'title: Modelo operativo',
@@ -625,7 +625,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Etapas encadenadas que generan valor.',
     whenToUse: 'Para el recorrido de una actividad de principio a fin, en pasos amplios.',
     whenNotToUse: 'Si hay condiciones o vueltas atras: usa `flow` o `activity`.',
-    keywords: ['cadena de valor', 'etapas', 'proceso de negocio', 'extremo a extremo'],
+    keywords: ['cadena de valor', 'etapas', 'proceso de negocio', 'extremo a extremo', 'value chain', 'stages', 'end to end value', 'porter'],
     example: ['type: value-chain', 'title: Cadena de valor', 'stages: [Captar, Vender, Entregar, Soportar]'].join('\n'),
   }),
   t({
@@ -636,7 +636,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Comparacion de dos escenarios.',
     whenToUse: 'Para justificar un cambio mostrando la situacion actual frente a la propuesta.',
     whenNotToUse: 'Si la comparacion es numerica: usa `bar` o `slope`.',
-    keywords: ['antes', 'despues', 'comparacion', 'cambio', 'propuesta', 'situacion actual'],
+    keywords: ['antes', 'despues', 'comparacion', 'cambio', 'propuesta', 'situacion actual', 'before and after', 'comparison of two scenarios', 'current vs future', 'as is to be'],
     example: ['type: before-after', 'title: Cambio propuesto', 'before: [Despliegue manual]', 'after: [Pipeline automatico]'].join('\n'),
   }),
   t({
@@ -646,7 +646,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Cuatro cuadrantes con su contenido, sin coordenadas.',
     whenToUse: 'Para clasificar en cuatro grupos cualitativos.',
     whenNotToUse: 'Si cada elemento tiene una posicion medida: usa `quadrant`.',
-    keywords: ['matriz', 'cuadrantes', 'clasificacion', 'dos ejes'],
+    keywords: ['matriz', 'cuadrantes', 'clasificacion', 'dos ejes', 'four quadrants', '2x2', 'matrix', 'without coordinates'],
     example: [
       'type: matrix-2x2',
       'title: Clasificacion',
@@ -665,7 +665,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Hitos en orden cronologico.',
     whenToUse: 'Para una historia o una sucesion de hitos sin duraciones.',
     whenNotToUse: 'Si hay fechas de inicio y fin por tarea: usa `gantt`.',
-    keywords: ['cronologia', 'hitos', 'historia', 'evolucion', 'linea de tiempo'],
+    keywords: ['cronologia', 'hitos', 'historia', 'evolucion', 'linea de tiempo', 'milestones', 'chronological', 'history', 'key dates'],
     example: [
       'type: timeline',
       'title: Evolucion',
@@ -684,7 +684,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Fases futuras con su contenido.',
     whenToUse: 'Para comunicar el plan por trimestres o fases sin comprometer fechas exactas.',
     whenNotToUse: 'Si hay compromisos de fecha: usa `gantt`.',
-    keywords: ['hoja de ruta', 'roadmap', 'fases', 'trimestres', 'plan', 'futuro'],
+    keywords: ['hoja de ruta', 'roadmap', 'fases', 'trimestres', 'plan', 'futuro', 'phases', 'upcoming', 'plan by phase', 'releases'],
     example: [
       'type: roadmap',
       'title: Hoja de ruta',
@@ -703,7 +703,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Quien depende de quien.',
     whenToUse: 'Para grafos de dependencia entre modulos, servicios o equipos, incluso con ciclos.',
     whenNotToUse: 'Si el orden temporal importa: usa `sequence`.',
-    keywords: ['dependencias', 'acoplamiento', 'grafo', 'modulos', 'servicios', 'impacto'],
+    keywords: ['dependencias', 'acoplamiento', 'grafo', 'modulos', 'servicios', 'impacto', 'dependencies', 'who depends on whom', 'blast radius', 'coupling', 'services graph'],
     example: ['type: dependency-map', 'title: Dependencias', 'dependencies:', '  - api -> base de datos', '  - web -> api'].join('\n'),
   }),
 ];
@@ -721,7 +721,7 @@ const SPECIAL: readonly TypeSpec[] = [
     purpose: 'Proceso de negocio en notacion BPMN estandar.',
     whenToUse: 'Cuando el documento va a manos de negocio o auditoria y la notacion estandar importa.',
     whenNotToUse: 'Para un proceso tecnico interno: `activity` o `flow` son mas breves. Aun no admite carriles por rol.',
-    keywords: ['bpmn', 'proceso de negocio', 'carriles', 'roles', 'aprobacion', 'auditoria', 'compuerta'],
+    keywords: ['bpmn', 'proceso de negocio', 'carriles', 'roles', 'aprobacion', 'auditoria', 'compuerta', 'business process', 'bpmn notation', 'lanes', 'standard notation'],
     example: [
       'type: bpmn',
       'title: Aprobacion de solicitud',
@@ -744,7 +744,7 @@ const SPECIAL: readonly TypeSpec[] = [
     purpose: 'Dibujo hecho con caracteres, convertido a SVG limpio.',
     whenToUse: 'Cuando ya tienes un esquema en arte ASCII —de un RFC, de un README— y quieres publicarlo legible.',
     whenNotToUse: 'Para un diagrama nuevo: cualquier tipo declarativo se mantiene mejor.',
-    keywords: ['ascii', 'arte', 'esquema', 'rfc', 'texto', 'boceto', 'goat', 'svgbob'],
+    keywords: ['ascii', 'arte', 'esquema', 'rfc', 'texto', 'boceto', 'goat', 'svgbob', 'ascii art', 'text drawing', 'characters', 'sketch in text'],
     example: [
       'type: ascii',
       'title: Esquema',
@@ -769,7 +769,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Comparacion entre categorias.',
     whenToUse: 'Cuando cada barra es una categoria y quieres compararlas.',
     whenNotToUse: 'Si el eje es el tiempo y hay muchos puntos: usa `line`.',
-    keywords: ['comparar', 'categorias', 'barras', 'cantidad', 'ranking', 'defectos', 'total'],
+    keywords: ['comparar', 'categorias', 'barras', 'cantidad', 'ranking', 'defectos', 'total', 'compare categories', 'bar chart', 'column chart', 'ranking by value'],
     example: ['type: bar', 'title: Defectos por sprint', 'data:', '  - label: SP1', '    value: 42'].join('\n'),
   }),
   t({
@@ -779,7 +779,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Comparacion entre categorias con etiquetas largas.',
     whenToUse: 'Cuando los nombres no caben bajo barras verticales.',
     whenNotToUse: 'Si son pocas categorias con nombres cortos: `bar` ocupa menos.',
-    keywords: ['barras horizontales', 'ranking', 'etiquetas largas'],
+    keywords: ['barras horizontales', 'ranking', 'etiquetas largas', 'long labels', 'horizontal bars', 'ranking with names', 'wide category names'],
     example: ['type: horizontal-bar', 'data:', '  - label: Gestion de defectos', '    value: 12'].join('\n'),
   }),
   t({
@@ -789,7 +789,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Composicion de un total por categoria.',
     whenToUse: 'Para ver el total y su reparto interno a la vez.',
     whenNotToUse: 'Si quieres comparar las partes entre si: usa `grouped-bar`.',
-    keywords: ['apilado', 'composicion', 'total', 'reparto', 'series'],
+    keywords: ['apilado', 'composicion', 'total', 'reparto', 'series', 'composition', 'stacked', 'breakdown of total', 'parts of each bar', 'share by category'],
     example: [
       'type: stacked-bar',
       'series:',
@@ -806,7 +806,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Comparacion de varias series por categoria.',
     whenToUse: 'Cuando comparas dos o tres series dentro de cada categoria.',
     whenNotToUse: 'Si el interes es el total: usa `stacked-bar`.',
-    keywords: ['agrupado', 'comparar series', 'barras'],
+    keywords: ['agrupado', 'comparar series', 'barras', 'several series', 'side by side', 'grouped columns', 'compare series'],
     example: [
       'type: grouped-bar',
       'series:',
@@ -823,7 +823,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Evolucion de una magnitud en el tiempo.',
     whenToUse: 'Para tendencias con varios puntos: cobertura por sprint, defectos por mes.',
     whenNotToUse: 'Con dos o tres puntos sin continuidad: usa `bar`.',
-    keywords: ['tendencia', 'evolucion', 'tiempo', 'serie', 'historico', 'progreso', 'sprint', 'sprints', 'cobertura', 'mensual'],
+    keywords: ['tendencia', 'evolucion', 'tiempo', 'serie', 'historico', 'progreso', 'sprint', 'sprints', 'cobertura', 'mensual', 'trend', 'over time', 'evolution', 'time series', 'monthly'],
     example: ['type: line', 'title: Cobertura', 'data:', '  - label: SP1', '    value: 41'].join('\n'),
   }),
   t({
@@ -833,7 +833,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Evolucion con enfasis en el volumen acumulado.',
     whenToUse: 'Cuando importa la magnitud bajo la curva, no solo la forma.',
     whenNotToUse: 'Si comparas varias series que se cruzan: `line` se lee mejor.',
-    keywords: ['area', 'volumen', 'acumulado', 'tendencia'],
+    keywords: ['area', 'volumen', 'acumulado', 'tendencia', 'cumulative volume', 'filled trend', 'area under the curve'],
     example: ['type: area', 'data:', '  - label: Ene', '    value: 10'].join('\n'),
   }),
   t({
@@ -843,7 +843,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Evolucion de la composicion de un total.',
     whenToUse: 'Para ver como cambia el reparto entre series a lo largo del tiempo.',
     whenNotToUse: 'Si las series no suman un total con sentido: usa `line`.',
-    keywords: ['area apilada', 'composicion', 'evolucion', 'reparto temporal'],
+    keywords: ['area apilada', 'composicion', 'evolucion', 'reparto temporal', 'composition over time', 'stacked trend', 'mix evolution'],
     example: [
       'type: stacked-area',
       'series:',
@@ -860,7 +860,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Relacion entre dos magnitudes.',
     whenToUse: 'Para buscar correlacion: tamano frente a defectos, esfuerzo frente a valor.',
     whenNotToUse: 'Si una de las dos es categorica: usa `bar`.',
-    keywords: ['correlacion', 'dispersion', 'relacion', 'nube de puntos', 'dos variables'],
+    keywords: ['correlacion', 'dispersion', 'relacion', 'nube de puntos', 'dos variables', 'correlation', 'relationship between two', 'points', 'x vs y'],
     example: ['type: scatter', 'data:', '  - x: 120', '    y: 8'].join('\n'),
   }),
   t({
@@ -871,7 +871,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Densidad de una magnitud en dos dimensiones categoricas.',
     whenToUse: 'Para cruces: defectos por modulo y por sprint, actividad por dia y hora.',
     whenNotToUse: 'Si una dimension tiene un solo valor: usa `bar`.',
-    keywords: ['mapa de calor', 'cruce', 'matriz', 'densidad', 'concentracion'],
+    keywords: ['mapa de calor', 'cruce', 'matriz', 'densidad', 'concentracion', 'density', 'by day and hour', 'intensity', 'matrix of values', 'calendar heat'],
     example: ['type: heatmap', 'data:', '  - x: SP1', '    y: Backend', '    value: 12'].join('\n'),
   }),
   t({
@@ -881,7 +881,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Distribucion de una variable continua.',
     whenToUse: 'Para ver como se reparten los valores: duracion de las builds, tamano de las HU.',
     whenNotToUse: 'Si los valores ya vienen agrupados en categorias: usa `bar`.',
-    keywords: ['distribucion', 'histograma', 'frecuencia', 'reparto', 'rangos'],
+    keywords: ['distribucion', 'histograma', 'frecuencia', 'reparto', 'rangos', 'distribution', 'how values spread', 'buckets', 'bins', 'frequency', 'spread of times'],
     example: ['type: histogram', 'title: Duracion de builds', 'bins: 10', 'values: [4, 6, 6, 7, 9, 12]'].join('\n'),
   }),
   t({
@@ -892,7 +892,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Mediana, dispersion y valores atipicos por grupo.',
     whenToUse: 'Para comparar la variabilidad entre grupos, no solo su promedio.',
     whenNotToUse: 'Con muy pocas observaciones por grupo: la caja enganaria.',
-    keywords: ['dispersion', 'mediana', 'variabilidad', 'atipicos', 'percentiles', 'caja'],
+    keywords: ['dispersion', 'mediana', 'variabilidad', 'atipicos', 'percentiles', 'caja', 'median', 'dispersion', 'outliers', 'quartiles', 'variability by group'],
     example: [
       'type: box-plot',
       'title: Duracion por equipo',
@@ -909,7 +909,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Valor real frente a su objetivo.',
     whenToUse: 'Para indicadores con meta: cobertura frente al 80 %, disponibilidad frente al SLA.',
     whenNotToUse: 'Si no hay objetivo definido: usa `bar`.',
-    keywords: ['kpi', 'objetivo', 'meta', 'indicador', 'sla', 'cumplimiento', 'avance'],
+    keywords: ['kpi', 'objetivo', 'meta', 'indicador', 'sla', 'cumplimiento', 'avance', 'target', 'actual vs goal', 'kpi', 'progress to target'],
     example: [
       'type: bullet',
       'title: Indicadores',
@@ -927,7 +927,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Cambio entre dos momentos, elemento a elemento.',
     whenToUse: 'Para mostrar quien mejoro y quien empeoro entre dos mediciones.',
     whenNotToUse: 'Con mas de dos momentos: usa `line`.',
-    keywords: ['antes y despues', 'cambio', 'mejora', 'comparacion', 'dos momentos', 'pendiente'],
+    keywords: ['antes y despues', 'cambio', 'mejora', 'comparacion', 'dos momentos', 'pendiente', 'change between two moments', 'before after by item', 'rank shift'],
     example: [
       'type: slope',
       'title: Cobertura antes y despues',
@@ -947,7 +947,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Caida de volumen a lo largo de etapas sucesivas.',
     whenToUse: 'Para conversiones o filtros: candidatos por fase, incidencias por estado.',
     whenNotToUse: 'Si las etapas no son sucesivas: usa `bar`.',
-    keywords: ['embudo', 'conversion', 'etapas', 'caida', 'filtro', 'abandono'],
+    keywords: ['embudo', 'conversion', 'etapas', 'caida', 'filtro', 'abandono', 'conversion', 'drop off', 'stages of signup', 'how many survive each step', 'attrition'],
     example: [
       'type: funnel',
       'title: Conversion',
@@ -965,7 +965,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Reparto de un total entre pocas partes.',
     whenToUse: 'Con tres o cuatro partes y diferencias grandes entre ellas.',
     whenNotToUse: 'Con muchas partes o valores parecidos: `bar` se compara mejor.',
-    keywords: ['reparto', 'porcentaje', 'proporcion', 'tarta', 'cuota'],
+    keywords: ['reparto', 'porcentaje', 'proporcion', 'tarta', 'cuota', 'share of total', 'percentage split', 'proportions', 'few slices'],
     example: ['type: pie', 'data:', '  - label: Backend', '    value: 60'].join('\n'),
   }),
   t({
@@ -976,7 +976,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Reparto de un total, con el centro libre para un dato o un titulo.',
     whenToUse: 'Igual que `pie`, cuando el hueco central aligera visualmente la lamina.',
     whenNotToUse: 'Con muchas partes o valores parecidos: `bar` se compara mejor.',
-    keywords: ['reparto', 'porcentaje', 'proporcion', 'anillo', 'donut', 'cuota'],
+    keywords: ['reparto', 'porcentaje', 'proporcion', 'anillo', 'donut', 'cuota', 'share of total with center', 'ring chart', 'proportions with a figure'],
     example: ['type: donut', 'data:', '  - label: Backend', '    value: 60'].join('\n'),
   }),
   t({
@@ -987,7 +987,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Como se llega de un valor inicial a uno final, paso a paso.',
     whenToUse: 'Para descomponer una variacion en sus aportes positivos y negativos.',
     whenNotToUse: 'Si solo tienes el inicio y el final: usa `bar`.',
-    keywords: ['cascada', 'variacion', 'aportes', 'descomposicion', 'presupuesto', 'delta'],
+    keywords: ['cascada', 'variacion', 'aportes', 'descomposicion', 'presupuesto', 'delta', 'bridge', 'from one value to another', 'contributions', 'walk from start to end', 'variance bridge'],
     example: [
       'type: waterfall',
       'title: Variacion de defectos',
@@ -1014,7 +1014,7 @@ const ARCHITECTURE: readonly TypeSpec[] = [
     purpose: 'El sistema, sus usuarios y los sistemas con los que habla.',
     whenToUse: 'Como primera vista de una arquitectura, para publico que no conoce el sistema.',
     whenNotToUse: 'Si necesitas ver piezas internas: usa `c4-container`.',
-    keywords: ['contexto', 'c4', 'arquitectura', 'sistemas externos', 'vision general', 'actores'],
+    keywords: ['contexto', 'c4', 'arquitectura', 'sistemas externos', 'vision general', 'actores', 'system context', 'users and external systems', 'big picture', 'landscape'],
     example: [
       'type: c4-context',
       'title: Contexto',
@@ -1040,7 +1040,7 @@ const ARCHITECTURE: readonly TypeSpec[] = [
     purpose: 'Las piezas desplegables del sistema y su tecnologia.',
     whenToUse: 'Para explicar de que partes consta el sistema y como se comunican.',
     whenNotToUse: 'Si el detalle es de clases o modulos internos: usa `c4-component` o `component`.',
-    keywords: ['contenedores', 'c4', 'aplicaciones', 'servicios', 'bases de datos', 'tecnologia'],
+    keywords: ['contenedores', 'c4', 'aplicaciones', 'servicios', 'bases de datos', 'tecnologia', 'deployable pieces', 'apps and databases', 'technology per piece', 'containers'],
     example: [
       'type: c4-container',
       'title: Contenedores',
@@ -1064,7 +1064,7 @@ const ARCHITECTURE: readonly TypeSpec[] = [
     purpose: 'Componentes internos de un contenedor.',
     whenToUse: 'Para el interior de una aplicacion concreta, cuando aporta al lector.',
     whenNotToUse: 'Casi siempre: este nivel envejece rapido. Comprueba que alguien lo vaya a leer.',
-    keywords: ['componentes', 'c4', 'interior', 'modulos'],
+    keywords: ['componentes', 'c4', 'interior', 'modulos', 'internal components', 'inside a container', 'responsibilities'],
     example: [
       'type: c4-component',
       'title: Componentes de la API',

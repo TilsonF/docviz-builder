@@ -65,6 +65,7 @@ async function evaluarCatalogo() {
     const validos = aceptados(caso);
     return {
       id: caso.id,
+      idioma: caso.idioma ?? 'es',
       esperado: caso.tipo,
       propuestos,
       top1: propuestos.length > 0 && validos.includes(propuestos[0]),
@@ -72,11 +73,20 @@ async function evaluarCatalogo() {
     };
   });
 
+  const porIdioma = {};
+  for (const f of filas) {
+    const i = (porIdioma[f.idioma] ??= { casos: 0, top1: 0, top3: 0 });
+    i.casos += 1;
+    if (f.top1) i.top1 += 1;
+    if (f.top3) i.top3 += 1;
+  }
+
   return {
     modo: 'catalogo',
     casos: filas.length,
     top1: filas.filter((f) => f.top1).length,
     top3: filas.filter((f) => f.top3).length,
+    porIdioma,
     filas,
   };
 }
@@ -217,12 +227,20 @@ if (opciones.json) {
       `  ${(f.top3 ? 'top3' : 'FALLA').padEnd(5)} ${f.id.padEnd(16)} esperaba ${f.esperado.padEnd(16)} propuso ${f.propuestos.join(', ') || '(nada)'}\n`,
     );
   }
-  const pct = (n) => ((n / resultado.casos) * 100).toFixed(1);
+  const pct = (n, total) => ((n / total) * 100).toFixed(1);
   process.stdout.write(
     `\ncatalogo: ${resultado.casos} casos\n` +
-      `  acierto en la primera propuesta: ${resultado.top1}/${resultado.casos}  (${pct(resultado.top1)} %)\n` +
-      `  acierto entre las tres primeras: ${resultado.top3}/${resultado.casos}  (${pct(resultado.top3)} %)\n`,
+      `  acierto en la primera propuesta: ${resultado.top1}/${resultado.casos}  (${pct(resultado.top1, resultado.casos)} %)\n` +
+      `  acierto entre las tres primeras: ${resultado.top3}/${resultado.casos}  (${pct(resultado.top3, resultado.casos)} %)\n`,
   );
+  // El desglose por idioma no es decorativo: el catalogo se escribio en
+  // español y las palabras en ingles se anadieron despues, asi que la unica
+  // forma de saber si sirven de algo es medirlas por separado.
+  for (const [idioma, d] of Object.entries(resultado.porIdioma).sort()) {
+    process.stdout.write(
+      `    ${idioma}: ${d.casos} casos  ->  ${pct(d.top1, d.casos)} % / ${pct(d.top3, d.casos)} %\n`,
+    );
+  }
 } else {
   const pct = (n) => ((n / resultado.casos) * 100).toFixed(1);
   process.stdout.write(

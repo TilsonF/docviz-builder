@@ -41,7 +41,7 @@ jobs:
       # El jar pesa 27 MB y no se versiona: se descarga una vez y se cachea por
       # version, de modo que solo se vuelve a bajar al subirla.
       - name: Cachear plantuml.jar
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}
@@ -53,7 +53,7 @@ jobs:
       # navegadores: se le proporciona uno y lo encuentra en la cache.
       - name: Cachear Chromium
         id: cache-chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -65,7 +65,7 @@ jobs:
       # Un build en frio son 33 segundos dibujando; con cache, medio. Se guarda
       # por contenido de los documentos y del codigo que los compila.
       - name: Cachear los recursos generados
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .docviz-cache
           key: docviz-${{ hashFiles('src/**/*.ts', 'examples/**/*.md', 'docs-src/**/*.md') }}

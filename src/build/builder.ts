@@ -184,6 +184,19 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
   };
 
   try {
+    // Primero se escanea todo y despues se dibuja. Separar las dos fases es lo
+    // que permite repartir el trabajo entre motores: mientras la JVM arranca
+    // para un PlantUML, D2 y Vega-Lite pueden estar dibujando lo suyo.
+    interface Documento {
+      file: string;
+      relativeSource: string;
+      outputPath: string;
+      text: string;
+      blocks: DiagramBlock[];
+      replacements: Replacement[];
+    }
+
+    const documentos: Documento[] = [];
     for (const file of files) {
       const relativeSource = displayPath(config.rootDir, file);
       const text = await readFile(file, 'utf8');
@@ -195,7 +208,6 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
         result.errors.push(toDocVizError(err, { file: relativeSource }));
         continue;
       }
-      const blocks: DiagramBlock[] = scanned.blocks;
 
       // Un bloque que no compila no cancela el resto del documento: se reporta
       // con su linea y los demas siguen dibujandose.
@@ -204,53 +216,91 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
       }
       result.warnings.push(...scanned.warnings.map((w) => ({ file: relativeSource, ...w })));
 
-      const outputPath = assertInside(outputDir, path.relative(sourceDir, file));
-      const replacements: Replacement[] = [];
+      documentos.push({
+        file,
+        relativeSource,
+        outputPath: assertInside(outputDir, path.relative(sourceDir, file)),
+        text,
+        blocks: scanned.blocks,
+        replacements: [],
+      });
+      result.stats.blocks += scanned.blocks.length;
+    }
 
-      for (const block of blocks) {
-        result.stats.blocks += 1;
-        try {
-          const asset = await renderBlock({
-            block,
-            config,
-            registry,
-            cache,
-            hashes,
-            assetsDir,
-            themeName: config.theme.name,
-            themeFingerprintValue: fingerprintValue,
-            theme,
-          });
-          result.assets.push(asset);
-          if (asset.fromCache) result.stats.cacheHits += 1;
-          else result.stats.generated += 1;
-          replacements.push({
-            block,
-            assetPath: relativeAssetPath(path.dirname(outputPath), asset.absolutePath),
-          });
-          if (options.verbose === true) {
-            log(`  ${asset.fromCache ? 'cache' : 'render'}  ${block.rendererType.padEnd(10)} ${asset.relativePath}`);
-          }
-        } catch (err) {
-          const error = toDocVizError(err, {
-            file: relativeSource,
-            line: block.line,
-            renderer: block.rendererType,
-          });
-          result.errors.push(error);
-          if (options.continueOnError !== true) continue;
-          log(`  aviso: se conserva el bloque original por error de render (${relativeSource}:${block.line})`);
-        }
+    // Cada motor atiende sus diagramas de uno en uno: una JVM por render, una
+    // instancia WebAssembly y un navegador compartido no admiten reentrada. Lo
+    // que se solapa son motores distintos entre si.
+    const porMotor = new Map<string, Array<{ doc: Documento; block: DiagramBlock }>>();
+    for (const doc of documentos) {
+      for (const block of doc.blocks) {
+        const cola = porMotor.get(block.rendererType) ?? [];
+        cola.push({ doc, block });
+        porMotor.set(block.rendererType, cola);
       }
+    }
 
-      // Los documentos solo se escriben si el build va a considerarse valido.
-      if (result.errors.length === 0 || options.continueOnError === true) {
-        await mkdir(path.dirname(outputPath), { recursive: true });
-        await writeFile(outputPath, applyReplacements(text, replacements), 'utf8');
+    const fallos: Array<{ doc: Documento; block: DiagramBlock; error: unknown }> = [];
+    await Promise.all(
+      [...porMotor.values()].map(async (cola) => {
+        for (const { doc, block } of cola) {
+          try {
+            const asset = await renderBlock({
+              block,
+              config,
+              registry,
+              cache,
+              hashes,
+              assetsDir,
+              themeName: config.theme.name,
+              themeFingerprintValue: fingerprintValue,
+              theme,
+            });
+            result.assets.push(asset);
+            if (asset.fromCache) result.stats.cacheHits += 1;
+            else result.stats.generated += 1;
+            doc.replacements.push({
+              block,
+              assetPath: relativeAssetPath(path.dirname(doc.outputPath), asset.absolutePath),
+            });
+            if (options.verbose === true) {
+              log(`  ${asset.fromCache ? 'cache' : 'render'}  ${block.rendererType.padEnd(10)} ${asset.relativePath}`);
+            }
+          } catch (err) {
+            fallos.push({ doc, block, error: err });
+          }
+        }
+      }),
+    );
+
+    // El orden de llegada depende de que motor termine antes, y eso no puede
+    // filtrarse al resultado: se reordena por documento y por linea para que
+    // dos builds del mismo proyecto reporten exactamente lo mismo.
+    fallos.sort((a, b) =>
+      a.doc.relativeSource === b.doc.relativeSource
+        ? a.block.line - b.block.line
+        : a.doc.relativeSource < b.doc.relativeSource
+          ? -1
+          : 1,
+    );
+    for (const { doc, block, error } of fallos) {
+      result.errors.push(
+        toDocVizError(error, { file: doc.relativeSource, line: block.line, renderer: block.rendererType }),
+      );
+      if (options.continueOnError === true) {
+        log(`  aviso: se conserva el bloque original por error de render (${doc.relativeSource}:${block.line})`);
+      }
+    }
+    result.assets.sort((a, b) => (a.relativePath < b.relativePath ? -1 : a.relativePath > b.relativePath ? 1 : 0));
+
+    // Los documentos solo se escriben si el build va a considerarse valido.
+    if (result.errors.length === 0 || options.continueOnError === true) {
+      for (const doc of documentos) {
+        await mkdir(path.dirname(doc.outputPath), { recursive: true });
+        await writeFile(doc.outputPath, applyReplacements(doc.text, doc.replacements), 'utf8');
         result.documents.push({
-          source: relativeSource,
-          output: toPosix(path.relative(config.rootDir, outputPath)),
-          blocks: blocks.length,
+          source: doc.relativeSource,
+          output: toPosix(path.relative(config.rootDir, doc.outputPath)),
+          blocks: doc.blocks.length,
         });
         result.stats.documents += 1;
       }

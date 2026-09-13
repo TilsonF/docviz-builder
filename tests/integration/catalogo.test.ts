@@ -106,6 +106,32 @@ describe('cada respaldo declarado dibuja de verdad', () => {
   }
 });
 
+/**
+ * El mismo bloque, dos veces, los mismos bytes.
+ *
+ * Es la promesa de la que dependen el cache, la reproducibilidad y que un
+ * `git diff` no muestre ruido. No tenia prueba, y no la tenia justo donde
+ * fallaba: Mermaid inventaba un hash aleatorio por commit en `git-graph`, asi
+ * que el archivo se llamaba igual —el nombre sale de la fuente— y cambiaba por
+ * dentro en cada build.
+ */
+describe('el render es determinista', () => {
+  for (const spec of TYPE_CATALOG) {
+    const motorAusente = sinNavegador.includes(spec.engine);
+
+    it.skipIf(motorAusente)(`${spec.type} produce los mismos bytes dos veces`, async () => {
+      const compiled = compileDsl(spec.lang, spec.example, available);
+      const renderer = registry.get(compiled.rendererType);
+      const opciones = { ...options, title: spec.type };
+
+      const primero = await renderer.render(compiled.source, opciones);
+      const segundo = await renderer.render(compiled.source, opciones);
+
+      expect(segundo.content.equals(primero.content), `${spec.type} cambia entre renders`).toBe(true);
+    });
+  }
+});
+
 describe('cobertura de la comprobacion', () => {
   it('se comprueban todos los tipos que la maquina puede dibujar', () => {
     const comprobables = TYPE_CATALOG.filter((s) => !sinNavegador.includes(s.engine));

@@ -191,7 +191,34 @@ export class MermaidRenderer implements DiagramRenderer {
  * bytes identicos (requisito de determinismo del hash).
  */
 function stripMermaidIds(svg: string, id: string): string {
-  return svg.split(id).join('docviz-diagram');
+  return estabilizarCommits(svg.split(id).join('docviz-diagram'));
+}
+
+/**
+ * Identificadores de commit deterministas en `git-graph`.
+ *
+ * Mermaid inventa un hash aleatorio de siete caracteres para cada commit que no
+ * lleva `id`, y lo escribe en las clases del SVG. El resultado es que **el mismo
+ * bloque produce bytes distintos en cada render**, lo que rompe la promesa
+ * central del proyecto: el nombre del recurso se deriva de la fuente, asi que el
+ * archivo se llama igual y cambia por dentro. Un `git diff` con ruido en cada
+ * build, y un cache que sirve una imagen distinta de la que se acaba de dibujar.
+ *
+ * Se sustituyen por un contador en orden de aparicion. Sigue habiendo un
+ * identificador distinto por commit —que es para lo que Mermaid los usa— pero
+ * ahora es el mismo en cada ejecucion.
+ */
+function estabilizarCommits(svg: string): string {
+  const aleatorio = /\b(\d+)-([0-9a-f]{7})\b/g;
+  const vistos = new Map<string, string>();
+  return svg.replace(aleatorio, (completo, indice: string, hash: string) => {
+    const clave = `${indice}-${hash}`;
+    const existente = vistos.get(clave);
+    if (existente !== undefined) return existente;
+    const estable = `${indice}-c${vistos.size + 1}`;
+    vistos.set(clave, estable);
+    return estable;
+  });
 }
 
 async function withPageTimeout<T>(timeoutMs: number, work: Promise<T>): Promise<T> {

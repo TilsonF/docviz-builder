@@ -15,6 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # La compuerta completa —documentacion, cobertura, los 57 tipos dibujados de
+  # verdad y el renderizado en GitHub— solo tiene sentido ejecutarla una vez.
   verificar:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -127,3 +129,49 @@ jobs:
             coverage/
             artifacts/showcase/
           retention-days: 14
+
+  # Windows y macOS no comprueban el catalogo entero: comprueban lo unico que
+  # de verdad cambia entre sistemas —donde estan Java y Chromium, como se
+  # resuelven las rutas y si el jar se descarga y se verifica—. Con eso basta
+  # para que un `npm install` en otro sistema deje de ser un acto de fe.
+  otros-sistemas:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+        node: ['20', '22']
+        exclude:
+          # macOS es caro en minutos; con la version que se publica basta.
+          - os: macos-latest
+            node: '20'
+
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - run: npm ci
+
+      # Comprueba de paso la verificacion del digest en otro sistema.
+      - run: npm run setup
+
+      - run: npm run build
+      - run: npm run typecheck
+
+      # Las pruebas unitarias incluyen las que dibujan con PlantUML y con los
+      # motores WebAssembly. Mermaid y BPMN se omiten solos si no hay navegador.
+      - run: npm run test:unit
+
+      - name: Comprobar que la CLI arranca y ve su entorno
+        run: node bin/docviz.mjs doctor

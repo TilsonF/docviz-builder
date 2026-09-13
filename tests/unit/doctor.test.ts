@@ -33,8 +33,19 @@ async function raiz(): Promise<string> {
   return dir;
 }
 
-/** Ejecutable que responde a `-version` como lo hace Java: por stderr. */
+/**
+ * Ejecutable que responde a `-version` como lo hace Java: por stderr.
+ *
+ * En Windows no hay shebang, asi que el guion tiene que ser un `.cmd`. Es la
+ * clase de detalle que solo aparece cuando el CI se ejecuta de verdad en los
+ * tres sistemas, y no cuando se supone que funcionan igual.
+ */
 async function javaDeMentira(dir: string): Promise<string> {
+  if (process.platform === 'win32') {
+    const ruta = path.join(dir, 'java-falso.cmd');
+    await writeFile(ruta, '@echo off\r\necho openjdk version "21.0.1" 1>&2\r\n', 'utf8');
+    return ruta;
+  }
   const ruta = path.join(dir, 'java-falso');
   await writeFile(ruta, '#!/bin/sh\necho \'openjdk version "21.0.1"\' >&2\n', 'utf8');
   await chmod(ruta, 0o755);

@@ -90,7 +90,18 @@ documentarlos como dependientes de su motor y dejarlo dicho.
 
 ## Medio plazo
 
-### 5. Mantenimiento del allowlist de SVG
+### 5. Caracterizar el bloqueo en macOS
+
+La matriz de CI se ejecutó por primera vez y encontró dos cosas. La de Windows
+—un `java` de mentira escrito como guion de shell, que allí no tiene shebang—
+está arreglada. La de macOS no: una prueba de la CLI que aquí tarda menos de un
+segundo agota los 180 s en el runner, y no se reproduce en local pese a que esta
+máquina también es macOS.
+
+Mientras tanto el job es informativo: reporta sin bloquear. Bloquear cada PR con
+un fallo que no se entiende cuesta más de lo que avisa.
+
+### 6. Mantenimiento del allowlist de SVG
 
 Cuando un motor cambie lo que emite, la prueba de "sanear el catálogo no quita
 nada más que comentarios" lo detecta, y Dependabot agrupa los motores para que

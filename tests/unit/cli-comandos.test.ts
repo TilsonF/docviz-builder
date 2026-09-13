@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { run } from '../../src/cli.js';
+import { resolveJarPath } from '../../src/renderers/plantuml.js';
 
 const temps: string[] = [];
 let out = '';
@@ -145,12 +146,23 @@ describe('docviz init', () => {
 });
 
 describe('docviz setup', () => {
-  it('encuentra el jar ya descargado y no vuelve a bajarlo', async () => {
-    // La prueba no toca la red: el jar del propio repositorio ya esta ahi, y lo
-    // que se comprueba es que el comando exista y apunte al sitio correcto.
+  // Solo se comprueba con el jar ya descargado. Sin el, el comando haria lo que
+  // tiene que hacer —bajarse 27 MB de Maven— y eso no puede pasar dentro de las
+  // pruebas: son la parte del proyecto que nunca toca la red.
+  const jar = resolveJarPath();
+
+  it.skipIf(!existsSync(jar))('encuentra el jar ya descargado y no vuelve a bajarlo', async () => {
     expect(await cli('setup')).toBe(0);
     expect(out).toContain('plantuml.jar ya presente');
     expect(out).toContain(path.join('vendor', 'plantuml.jar'));
+  });
+
+  it('una version sin digest conocido se rechaza antes de descargar nada', async () => {
+    // Esto si se puede comprobar siempre y sin red: el script se niega antes
+    // de contactar con Maven, que es justo la garantia que da la verificacion.
+    expect(await cli('setup', '9.9.9-inventada')).toBe(1);
+    expect(err).toContain('no hay digest conocido');
+    expect(err).toContain('--sha256');
   });
 });
 

@@ -291,7 +291,9 @@ export function createProgram(): Command {
     .argument('[type]', 'muestra la ficha completa de un tipo concreto')
     .option('--short', 'solo los nombres, sin metadatos', false)
     .option('--json', 'salida en JSON, para consumirla desde otro programa', false)
-    .action((type: string | undefined, opts: { short?: boolean; json?: boolean }) => {
+    .option('-l, --lang <idioma>', 'idioma de las fichas: es | en', 'es')
+    .action((type: string | undefined, opts: { short?: boolean; json?: boolean; lang?: string }) => {
+      const idioma: Idioma = opts.lang === 'en' ? 'en' : 'es';
       if (type !== undefined) {
         const spec = findType(type);
         if (spec === undefined) {
@@ -301,7 +303,7 @@ export function createProgram(): Command {
           process.exitCode = 1;
           return;
         }
-        process.stdout.write(opts.json === true ? `${JSON.stringify(spec, null, 2)}\n` : ficha(spec));
+        process.stdout.write(opts.json === true ? `${JSON.stringify(spec, null, 2)}\n` : ficha(spec, idioma));
         return;
       }
 
@@ -326,7 +328,8 @@ export function createProgram(): Command {
         process.stdout.write(`\n\`\`\`${lang}\`\`\`\n`);
         const ancho = Math.max(...specs.map((s) => s.type.length));
         for (const spec of specs) {
-          process.stdout.write(`  ${spec.type.padEnd(ancho)}  ${spec.purpose}\n`);
+          const proposito = idioma === 'en' && spec.en !== undefined ? spec.en.purpose : spec.purpose;
+          process.stdout.write(`  ${spec.type.padEnd(ancho)}  ${proposito}\n`);
         }
       }
       process.stdout.write(
@@ -377,21 +380,32 @@ export function createProgram(): Command {
 }
 
 /** Ficha legible de un tipo, con su ejemplo listo para copiar. */
-function ficha(spec: TypeSpec): string {
+/** Idiomas en los que se puede leer el catalogo. */
+export type Idioma = 'es' | 'en';
+
+const ETIQUETAS = {
+  es: { usar: 'cuando usarlo:', evitar: 'cuando no:     ', alias: 'alias:         ', respaldo: 'respaldo:      ' },
+  en: { usar: 'when to use:  ', evitar: 'when not to:  ', alias: 'aliases:      ', respaldo: 'fallbacks:    ' },
+} as const;
+
+/** Ficha legible de un tipo, con su ejemplo listo para copiar. */
+function ficha(spec: TypeSpec, idioma: Idioma = 'es'): string {
+  const texto = idioma === 'en' && spec.en !== undefined ? spec.en : spec;
+  const et = ETIQUETAS[idioma];
   const lineas = [
     '',
     `${spec.type}  (${spec.lang}, ${spec.engine})`,
     '',
-    `  ${spec.purpose}`,
+    `  ${texto.purpose}`,
     '',
-    `  cuando usarlo:  ${spec.whenToUse}`,
-    `  cuando no:      ${spec.whenNotToUse}`,
+    `  ${et.usar}  ${texto.whenToUse}`,
+    `  ${et.evitar}  ${texto.whenNotToUse}`,
   ];
   if (spec.aliases !== undefined && spec.aliases.length > 0) {
-    lineas.push(`  alias:          ${spec.aliases.join(', ')}`);
+    lineas.push(`  ${et.alias}  ${spec.aliases.join(', ')}`);
   }
   if (spec.fallbacks !== undefined && spec.fallbacks.length > 0) {
-    lineas.push(`  respaldo:       ${spec.fallbacks.join(', ')}`);
+    lineas.push(`  ${et.respaldo}  ${spec.fallbacks.join(', ')}`);
   }
   lineas.push('', `  \`\`\`${spec.lang}`);
   for (const l of spec.example.split('\n')) lineas.push(`  ${l}`);

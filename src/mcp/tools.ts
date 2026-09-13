@@ -448,29 +448,98 @@ function tokenize(text: string): string[] {
 }
 
 /**
+ * Cuantos tipos del catalogo usan cada palabra.
+ *
+ * Es lo que separa una senal de un ruido. "componente" aparece en la prosa de
+ * media docena de tipos, asi que encontrarla en la peticion no distingue nada;
+ * "embudo" aparece en uno. Sin esta correccion, una peticion larga acumulaba un
+ * punto por cada palabra generica en cada tipo y enterraba al unico que
+ * importaba: era la causa de los cuatro fallos que el eval no lograba explicar.
+ */
+interface Frecuencias {
+  prosa: Map<string, number>;
+  total: number;
+}
+
+let frecuencias: Frecuencias | undefined;
+
+/**
+ * Prosa del tipo en los dos idiomas.
+ *
+ * Se concatenan a proposito en lugar de elegir uno: la peticion puede venir en
+ * cualquiera de los dos —y a menudo mezclada, con el termino tecnico en ingles
+ * dentro de una frase en español— y detectar el idioma para luego acertar solo
+ * a veces seria peor que mirar en ambos.
+ */
+function prosaDe(spec: {
+  purpose: string;
+  whenToUse: string;
+  en?: { purpose: string; whenToUse: string };
+}): string {
+  const ingles = spec.en === undefined ? '' : ` ${spec.en.purpose} ${spec.en.whenToUse}`;
+  return `${spec.purpose} ${spec.whenToUse}${ingles}`;
+}
+
+function calcularFrecuencias(): Frecuencias {
+  if (frecuencias !== undefined) return frecuencias;
+  const prosa = new Map<string, number>();
+  for (const spec of TYPE_CATALOG) {
+    for (const t of new Set(tokenize(prosaDe(spec)))) prosa.set(t, (prosa.get(t) ?? 0) + 1);
+  }
+
+  frecuencias = { prosa, total: TYPE_CATALOG.length };
+  return frecuencias;
+}
+
+/**
+ * Peso de una palabra: 1 si es casi exclusiva de un tipo, cerca de 0 si la usan
+ * todos. Se acota por abajo para que una palabra muy comun siga sumando algo.
+ */
+function peso(termino: string, frecuencia: Map<string, number>, total: number): number {
+  const df = frecuencia.get(termino) ?? 0;
+  if (df === 0) return 1;
+  const valor = Math.log(total / (1 + df)) / Math.log(total);
+  return Math.max(0.05, Math.min(1, valor));
+}
+
+/**
  * Puntua un tipo frente a los terminos de la peticion.
  *
  * Las palabras clave pesan mas que el texto libre: son las que el catalogo
  * declara a proposito para este uso, mientras que una coincidencia en la
- * descripcion puede ser casual.
+ * descripcion puede ser casual. Y dentro de cada categoria, cada palabra pesa
+ * segun lo especifica que sea (ver `calcularFrecuencias`).
  */
-function score(spec: { type: string; keywords: readonly string[]; purpose: string; whenToUse: string }, terms: readonly string[]): number {
+function score(
+  spec: {
+    type: string;
+    keywords: readonly string[];
+    purpose: string;
+    whenToUse: string;
+    en?: { purpose: string; whenToUse: string };
+  },
+  terms: readonly string[],
+): number {
   if (terms.length === 0) return 0;
+  const { prosa: dfProsa, total } = calcularFrecuencias();
   const keywords = spec.keywords.map((k) => k.toLowerCase());
-  const prose = `${spec.purpose} ${spec.whenToUse}`.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const tokensProsa = new Set(tokenize(prosaDe(spec)));
   const name = spec.type.toLowerCase();
 
-  let total = 0;
+  let total_ = 0;
   for (const term of terms) {
-    if (name.includes(term)) total += 6;
-    if (keywords.some((k) => k === term)) total += 5;
-    else if (keywords.some((k) => k.includes(term) || term.includes(k))) total += 3;
+    if (name.includes(term)) total_ += 6;
+    if (keywords.some((k) => k === term)) total_ += 5;
+    else if (keywords.some((k) => k.includes(term) || term.includes(k))) total_ += 3;
     // Coincidencia por raiz: quien escribe "interactuan" se refiere a
     // "interaccion", y exigir la forma exacta desaprovecha el catalogo.
-    else if (keywords.some((k) => sharePrefix(k, term))) total += 2;
-    if (prose.includes(term)) total += 1;
+    else if (keywords.some((k) => sharePrefix(k, term))) total_ += 2;
+    // Solo la prosa se pondera. Una palabra clave la puso alguien a proposito
+    // para este tipo; una coincidencia en la descripcion puede ser casual, y
+    // cuanto mas comun sea la palabra, mas probable es que lo sea.
+    if (tokensProsa.has(term)) total_ += peso(term, dfProsa, total);
   }
-  return total;
+  return total_;
 }
 
 /** Dos palabras comparten raiz si coinciden en sus primeros seis caracteres. */

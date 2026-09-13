@@ -187,3 +187,33 @@ describe('eleccion de motor', () => {
     ).not.toThrow();
   });
 });
+
+describe('ficha en ingles', () => {
+  it('no falta ningun tipo', () => {
+    const sin = TYPE_CATALOG.filter((s) => s.en === undefined).map((s) => s.type);
+    expect(sin).toEqual([]);
+  });
+
+  it('la traduccion no esta vacia ni es una copia del español', () => {
+    for (const spec of TYPE_CATALOG) {
+      const en = spec.en!;
+      expect(en.purpose.length, spec.type).toBeGreaterThan(10);
+      expect(en.whenToUse.length, spec.type).toBeGreaterThan(20);
+      expect(en.whenNotToUse.length, spec.type).toBeGreaterThan(15);
+      expect(en.purpose, spec.type).not.toBe(spec.purpose);
+    }
+  });
+
+  it('conserva las referencias cruzadas a otros tipos', () => {
+    // "usa `erd`" tiene que seguir siendo "use `erd`": si la traduccion se
+    // inventa el nombre del tipo, el consejo deja de poder seguirse.
+    const nombres = new Set(TYPE_CATALOG.map((s) => s.type));
+    for (const spec of TYPE_CATALOG) {
+      const citados = (texto: string): string[] =>
+        [...texto.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1]!).filter((n) => nombres.has(n));
+      const es = new Set(citados(`${spec.whenToUse} ${spec.whenNotToUse}`));
+      const en = new Set(citados(`${spec.en!.whenToUse} ${spec.en!.whenNotToUse}`));
+      expect([...en].sort(), spec.type).toEqual([...es].sort());
+    }
+  });
+});

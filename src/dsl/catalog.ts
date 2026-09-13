@@ -11,6 +11,8 @@
  * la otra mitad.
  */
 
+import { CATALOG_EN } from './catalog.en.js';
+
 export type DslLang = 'diagram' | 'chart' | 'architecture';
 
 export interface TypeSpec {
@@ -36,6 +38,19 @@ export interface TypeSpec {
   readonly whenToUse: string;
   /** Situacion en la que conviene otro tipo, u ninguno. */
   readonly whenNotToUse: string;
+  /**
+   * La misma ficha en ingles.
+   *
+   * No es cortesia: la puntuacion de `docviz suggest` mide la peticion contra
+   * la prosa del catalogo, y con la prosa solo en español una peticion en
+   * ingles se quedaba sin esa señal. Medido sobre el banco de casos, el hueco
+   * entre idiomas era de siete puntos.
+   */
+  readonly en?: {
+    readonly purpose: string;
+    readonly whenToUse: string;
+    readonly whenNotToUse: string;
+  };
   /** Esqueleto minimo que compila tal cual. */
   readonly example: string;
   /** Palabras clave para la busqueda de `docviz_suggest`. */
@@ -703,7 +718,7 @@ const EXECUTIVE: readonly TypeSpec[] = [
     purpose: 'Quien depende de quien.',
     whenToUse: 'Para grafos de dependencia entre modulos, servicios o equipos, incluso con ciclos.',
     whenNotToUse: 'Si el orden temporal importa: usa `sequence`.',
-    keywords: ['dependencias', 'acoplamiento', 'grafo', 'modulos', 'servicios', 'impacto', 'dependencies', 'who depends on whom', 'blast radius', 'coupling', 'services graph'],
+    keywords: ['dependencias', 'acoplamiento', 'grafo', 'modulos', 'servicios', 'impacto', 'dependencies', 'who depends on whom', 'blast radius', 'coupling', 'services graph', 'microservicios', 'microservices', 'que se rompe si cae', 'what breaks if one goes down', 'impacto de una caida'],
     example: ['type: dependency-map', 'title: Dependencias', 'dependencies:', '  - api -> base de datos', '  - web -> api'].join('\n'),
   }),
 ];
@@ -779,7 +794,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Comparacion entre categorias con etiquetas largas.',
     whenToUse: 'Cuando los nombres no caben bajo barras verticales.',
     whenNotToUse: 'Si son pocas categorias con nombres cortos: `bar` ocupa menos.',
-    keywords: ['barras horizontales', 'ranking', 'etiquetas largas', 'long labels', 'horizontal bars', 'ranking with names', 'wide category names'],
+    keywords: ['barras horizontales', 'ranking', 'etiquetas largas', 'long labels', 'horizontal bars', 'ranking with names', 'wide category names', 'nombres largos', 'long names', 'names are long'],
     example: ['type: horizontal-bar', 'data:', '  - label: Gestion de defectos', '    value: 12'].join('\n'),
   }),
   t({
@@ -947,7 +962,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Caida de volumen a lo largo de etapas sucesivas.',
     whenToUse: 'Para conversiones o filtros: candidatos por fase, incidencias por estado.',
     whenNotToUse: 'Si las etapas no son sucesivas: usa `bar`.',
-    keywords: ['embudo', 'conversion', 'etapas', 'caida', 'filtro', 'abandono', 'conversion', 'drop off', 'stages of signup', 'how many survive each step', 'attrition'],
+    keywords: ['embudo', 'conversion', 'etapas', 'caida', 'filtro', 'abandono', 'conversion', 'drop off', 'stages of signup', 'how many survive each step', 'attrition', 'sobreviven', 'cuantos llegan', 'de la visita a la compra', 'drop-off by step', 'how many reach each step'],
     example: [
       'type: funnel',
       'title: Conversion',
@@ -987,7 +1002,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Como se llega de un valor inicial a uno final, paso a paso.',
     whenToUse: 'Para descomponer una variacion en sus aportes positivos y negativos.',
     whenNotToUse: 'Si solo tienes el inicio y el final: usa `bar`.',
-    keywords: ['cascada', 'variacion', 'aportes', 'descomposicion', 'presupuesto', 'delta', 'bridge', 'from one value to another', 'contributions', 'walk from start to end', 'variance bridge'],
+    keywords: ['cascada', 'variacion', 'aportes', 'descomposicion', 'presupuesto', 'delta', 'bridge', 'from one value to another', 'contributions', 'walk from start to end', 'variance bridge', 'sumando y restando', 'adding and subtracting', 'de un resultado a otro', 'from one result to another', 'efectos acumulados'],
     example: [
       'type: waterfall',
       'title: Variacion de defectos',
@@ -1080,7 +1095,7 @@ const ARCHITECTURE: readonly TypeSpec[] = [
   }),
 ];
 
-export const TYPE_CATALOG: readonly TypeSpec[] = [
+const TIPOS: readonly TypeSpec[] = [
   ...UML,
   ...FLOW_AND_PRODUCT,
   ...EXECUTIVE,
@@ -1088,6 +1103,13 @@ export const TYPE_CATALOG: readonly TypeSpec[] = [
   ...CHARTS,
   ...ARCHITECTURE,
 ];
+
+// La traduccion se acopla aqui y no dentro de cada definicion: asi la ficha en
+// español se lee de corrido y anadir un idioma no obliga a tocar 57 objetos.
+export const TYPE_CATALOG: readonly TypeSpec[] = TIPOS.map((spec) => {
+  const en = CATALOG_EN[spec.type];
+  return en === undefined ? spec : { ...spec, en };
+});
 
 const BY_NAME = new Map<string, TypeSpec>();
 for (const spec of TYPE_CATALOG) {

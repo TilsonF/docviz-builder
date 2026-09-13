@@ -35,6 +35,7 @@ const opciones = {
   modelo: argv.includes('--modelo'),
   json: argv.includes('--json'),
   modeloId: valorDe('--modelo-id') ?? 'claude-opus-5',
+  particion: valorDe('--particion'),
   reintentos: Number.parseInt(valorDe('--reintentos') ?? '2', 10),
   minimo: Number.parseFloat(valorDe('--minimo') ?? '0'),
   soloCaso: valorDe('--caso'),
@@ -47,7 +48,11 @@ function valorDe(bandera) {
 
 async function cargarCasos() {
   const todos = JSON.parse(await readFile(path.join(raiz, 'eval', 'casos.json'), 'utf8'));
-  return todos.filter((c) => opciones.soloCaso === undefined || c.id === opciones.soloCaso);
+  return todos.filter(
+    (c) =>
+      (opciones.soloCaso === undefined || c.id === opciones.soloCaso) &&
+      (opciones.particion === undefined || (c.particion ?? 'entrenamiento') === opciones.particion),
+  );
 }
 
 /** Tipos que se dan por buenos para un caso. */
@@ -66,6 +71,7 @@ async function evaluarCatalogo() {
     return {
       id: caso.id,
       idioma: caso.idioma ?? 'es',
+      particion: caso.particion ?? 'entrenamiento',
       esperado: caso.tipo,
       propuestos,
       top1: propuestos.length > 0 && validos.includes(propuestos[0]),
@@ -73,13 +79,18 @@ async function evaluarCatalogo() {
     };
   });
 
-  const porIdioma = {};
-  for (const f of filas) {
-    const i = (porIdioma[f.idioma] ??= { casos: 0, top1: 0, top3: 0 });
-    i.casos += 1;
-    if (f.top1) i.top1 += 1;
-    if (f.top3) i.top3 += 1;
-  }
+  const agrupar = (clave) => {
+    const grupos = {};
+    for (const f of filas) {
+      const g = (grupos[f[clave]] ??= { casos: 0, top1: 0, top3: 0 });
+      g.casos += 1;
+      if (f.top1) g.top1 += 1;
+      if (f.top3) g.top3 += 1;
+    }
+    return grupos;
+  };
+  const porIdioma = agrupar('idioma');
+  const porParticion = agrupar('particion');
 
   return {
     modo: 'catalogo',
@@ -87,6 +98,7 @@ async function evaluarCatalogo() {
     top1: filas.filter((f) => f.top1).length,
     top3: filas.filter((f) => f.top3).length,
     porIdioma,
+    porParticion,
     filas,
   };
 }
@@ -239,6 +251,15 @@ if (opciones.json) {
   for (const [idioma, d] of Object.entries(resultado.porIdioma).sort()) {
     process.stdout.write(
       `    ${idioma}: ${d.casos} casos  ->  ${pct(d.top1, d.casos)} % / ${pct(d.top3, d.casos)} %\n`,
+    );
+  }
+  // La particion reservada es la unica cifra que se puede citar: los casos de
+  // entrenamiento se han mirado al ajustar la puntuacion, y lo que se ajusta
+  // mirando deja de medir.
+  process.stdout.write('\n');
+  for (const [particion, d] of Object.entries(resultado.porParticion).sort()) {
+    process.stdout.write(
+      `    ${particion.padEnd(14)} ${String(d.casos).padStart(2)} casos  ->  ${pct(d.top1, d.casos)} % / ${pct(d.top3, d.casos)} %\n`,
     );
   }
 } else {

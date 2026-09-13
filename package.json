@@ -1,5 +1,5 @@
 {
-  "name": "docviz",
+  "name": "docviz-builder",
   "version": "0.1.0",
   "description": "Compila bloques declarativos de diagramas dentro de Markdown a imagenes SVG/PNG, produciendo Markdown estandar y portable.",
   "keywords": [

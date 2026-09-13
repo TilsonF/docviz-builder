@@ -100,7 +100,7 @@ ignora.
 ## Primera vez en un proyecto
 
 ```bash
-npm install -D docviz
+npm install -D docviz-builder
 npx docviz setup    # descarga plantuml.jar (única operación de red)
 npx docviz init     # configuración, AGENTS.md y un documento de ejemplo
 npx docviz doctor   # qué motores puede usar esta máquina

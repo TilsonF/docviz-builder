@@ -66,7 +66,7 @@ sin Java sigue compilando lo que pueda en lugar de fallar entera.
 ### En tu proyecto
 
 ```bash
-npm install -D docviz
+npm install -D docviz-builder
 npx docviz setup    # descarga plantuml.jar desde Maven Central
 npx docviz init     # docviz.config.yaml, AGENTS.md, docs-src/ y un ejemplo
 npx docviz doctor   # qué motores puede usar esta máquina

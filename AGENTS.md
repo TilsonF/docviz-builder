@@ -222,8 +222,9 @@ Después de crear o modificar documentación:
 npm run docs:check
 ```
 
-3. Corrige cualquier error reportado. Los mensajes indican archivo, línea, motor
-   y motivo; no adivines.
+3. Corrige cualquier error reportado. Los mensajes indican **código**, archivo,
+   línea, motor y motivo; no adivines. Un documento con tres bloques rotos los
+   reporta los tres a la vez: arréglalos en una sola pasada.
 4. Ejecuta:
 
 ```bash
@@ -245,6 +246,35 @@ npm run docs:preview
 No reportes la tarea como terminada mientras existan errores de renderizado o
 imágenes rotas.
 
+### Qué hacer con cada código
+
+| Código | Qué hacer |
+|---|---|
+| `DV101` | Falta un campo obligatorio. El detalle dice cuál; `docviz types <tipo>` muestra el esqueleto completo |
+| `DV102` | El campo está pero con la forma equivocada (una lista donde iba un mapa, o al revés) |
+| `DV103` | El valor no es uno de los admitidos; el detalle los enumera |
+| `DV104` | Escribiste un campo que ese tipo no usa. Si el mensaje propone otro nombre, es una errata: corrígela |
+| `DV105` | El bloque no es YAML válido. Suele ser indentación o dos puntos sin escapar |
+| `DV106` | El `type` no existe o pertenece a otra valla. `docviz suggest "..."` propone el correcto |
+| `DV005` | El motor no está en esta máquina. No cambies el diagrama: avisa de que falta Java o Chromium |
+
+### Los avisos también hay que leerlos
+
+Un `AVISO ... [DV104]` significa que el bloque compiló pero una parte de lo que
+escribiste no llegó al dibujo. No falla el build, y por eso es fácil publicarlo
+sin darse cuenta. Trátalo como un error: o el campo sobra y se borra, o estaba
+mal escrito y se corrige.
+
+### Antes de publicar un cambio grande
+
+```bash
+docviz diff <docs-src de la versión anterior> docs-src
+```
+
+Enumera qué diagramas cambiaron, cuáles son nuevos y cuáles desaparecieron. Es
+la forma de comprobar que no tocaste de más: si aparecen modificados diagramas
+que no tenías intención de cambiar, revísalos antes de dar la tarea por hecha.
+
 ---
 
 ## Reglas
@@ -257,6 +287,7 @@ imágenes rotas.
 - No sustituyas diagramas declarativos por capturas de pantalla.
 - No edites nada dentro de `docs/assets/generated`.
 - Los diagramas viven como código dentro de `docs-src`.
+- No ignores un aviso de campo no reconocido: o sobra el campo, o está mal escrito.
 
 ---
 
@@ -315,6 +346,11 @@ comandos:
 | `docviz_validate_document` | Validar lo que acabas de escribir, antes de guardarlo |
 | `docviz_render_diagram` | Probar un diagrama suelto |
 | `docviz_build_document` | Compilar la documentación |
+| `docviz_diff` | Comprobar qué diagramas cambiaron respecto a la versión anterior |
+
+Si trabajas en un proyecto nuevo que aún no tiene DocViz, `npx docviz skill`
+instala este contrato en tu directorio de skills y `npx docviz init` deja el
+`AGENTS.md` completo.
 | `docviz_preview` | Revisar el resultado y detectar imágenes rotas |
 
 ---

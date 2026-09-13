@@ -1,0 +1,253 @@
+[
+  {
+    "id": "login",
+    "necesidad": "Explicar como se autentica un usuario: el navegador llama a la API, la API consulta la base de datos y devuelve un token.",
+    "tipo": "sequence"
+  },
+  {
+    "id": "pago-async",
+    "necesidad": "Mostrar el orden de las llamadas entre el frontend, la pasarela de pago y el webhook que confirma el cobro.",
+    "tipo": "sequence"
+  },
+  {
+    "id": "estados-pedido",
+    "necesidad": "Los estados por los que pasa un pedido y como se mueve entre ellos: creado, pagado, enviado, entregado, cancelado.",
+    "tipo": "state"
+  },
+  {
+    "id": "estados-ticket",
+    "necesidad": "El ciclo de vida de un ticket de soporte con sus transiciones y reintentos.",
+    "tipo": "state"
+  },
+  {
+    "id": "aprobacion",
+    "necesidad": "El proceso de aprobacion de una solicitud de vacaciones, con la decision del jefe y las dos ramas posibles.",
+    "tipo": "activity",
+    "acepta": [
+      "activity",
+      "flow"
+    ]
+  },
+  {
+    "id": "alta-cliente",
+    "necesidad": "El recorrido de extremo a extremo del alta de un cliente, paso a paso y sin decisiones complicadas.",
+    "tipo": "flow"
+  },
+  {
+    "id": "modelo-datos",
+    "necesidad": "Las entidades de la base de datos, sus campos y la cardinalidad entre cliente, pedido y linea de pedido.",
+    "tipo": "erd"
+  },
+  {
+    "id": "clases",
+    "necesidad": "La estructura de clases del dominio y como heredan unas de otras.",
+    "tipo": "class"
+  },
+  {
+    "id": "actores",
+    "necesidad": "Que puede hacer cada actor con el sistema: el cliente, el operador y el administrador.",
+    "tipo": "use-case"
+  },
+  {
+    "id": "componentes",
+    "necesidad": "Los modulos de software del backend, agrupados por responsabilidad, y como se conectan entre si.",
+    "tipo": "component"
+  },
+  {
+    "id": "infra",
+    "necesidad": "Sobre que infraestructura se ejecuta cada pieza: servidores, contenedores y base de datos.",
+    "tipo": "deployment"
+  },
+  {
+    "id": "pantalla",
+    "necesidad": "Un boceto de la pantalla de registro con sus campos y botones.",
+    "tipo": "wireframe"
+  },
+  {
+    "id": "estructura-json",
+    "necesidad": "La estructura de un JSON de respuesta dibujada como arbol.",
+    "tipo": "json",
+    "nombraTipo": true
+  },
+  {
+    "id": "wbs",
+    "necesidad": "La descomposicion jerarquica del trabajo del proyecto en paquetes y tareas.",
+    "tipo": "wbs"
+  },
+  {
+    "id": "cronograma",
+    "necesidad": "Las tareas del proyecto situadas en el calendario, con sus fechas de inicio y fin.",
+    "tipo": "gantt"
+  },
+  {
+    "id": "hitos",
+    "necesidad": "Los hitos de la empresa en orden cronologico, de 2020 a 2026.",
+    "tipo": "timeline"
+  },
+  {
+    "id": "fases",
+    "necesidad": "Las fases futuras del producto y que contiene cada una.",
+    "tipo": "roadmap",
+    "acepta": [
+      "roadmap",
+      "timeline"
+    ]
+  },
+  {
+    "id": "experiencia",
+    "necesidad": "El recorrido de un paciente por el proceso de cita, con su nivel de satisfaccion en cada paso.",
+    "tipo": "journey"
+  },
+  {
+    "id": "ramas-git",
+    "necesidad": "La historia de ramas, commits y fusiones del repositorio.",
+    "tipo": "git-graph"
+  },
+  {
+    "id": "tablero",
+    "necesidad": "Las tarjetas del equipo repartidas por columna de estado.",
+    "tipo": "kanban"
+  },
+  {
+    "id": "priorizacion",
+    "necesidad": "Situar las iniciativas segun esfuerzo e impacto en dos ejes continuos.",
+    "tipo": "quadrant",
+    "acepta": [
+      "quadrant",
+      "matrix-2x2"
+    ]
+  },
+  {
+    "id": "reparto",
+    "necesidad": "Como se reparte el presupuesto al pasar de las areas a los proyectos concretos.",
+    "tipo": "sankey"
+  },
+  {
+    "id": "perfil",
+    "necesidad": "El perfil de un equipo en cinco dimensiones a la vez para compararlo con el objetivo.",
+    "tipo": "radar"
+  },
+  {
+    "id": "objetivo",
+    "necesidad": "Descomponer el objetivo anual en lineas de accion y sus iniciativas.",
+    "tipo": "strategy-tree"
+  },
+  {
+    "id": "causas",
+    "necesidad": "Descomponer el problema de la rotacion de personal en sus causas raiz.",
+    "tipo": "issue-tree"
+  },
+  {
+    "id": "capacidades",
+    "necesidad": "Las capacidades de negocio agrupadas por dominio.",
+    "tipo": "capability-map"
+  },
+  {
+    "id": "cadena",
+    "necesidad": "Las etapas encadenadas que generan valor, de la compra a la entrega.",
+    "tipo": "value-chain"
+  },
+  {
+    "id": "antes-despues",
+    "necesidad": "Comparar como era el proceso antes y como queda despues del cambio.",
+    "tipo": "before-after"
+  },
+  {
+    "id": "dependencias",
+    "necesidad": "Que microservicio depende de cual, para ver que se rompe si cae uno.",
+    "tipo": "dependency-map"
+  },
+  {
+    "id": "bpmn",
+    "necesidad": "El proceso de negocio de facturacion en notacion BPMN estandar, con sus carriles.",
+    "tipo": "bpmn",
+    "nombraTipo": true
+  },
+  {
+    "id": "ventas-region",
+    "necesidad": "Comparar las ventas de este trimestre entre las cinco regiones.",
+    "tipo": "bar",
+    "acepta": [
+      "bar",
+      "horizontal-bar"
+    ]
+  },
+  {
+    "id": "etiquetas-largas",
+    "necesidad": "Comparar el gasto por departamento, y los nombres de los departamentos son largos.",
+    "tipo": "horizontal-bar"
+  },
+  {
+    "id": "composicion",
+    "necesidad": "Como se compone la facturacion total de cada mes por linea de producto.",
+    "tipo": "stacked-bar",
+    "acepta": [
+      "stacked-bar",
+      "stacked-area"
+    ]
+  },
+  {
+    "id": "tendencia",
+    "necesidad": "La evolucion del numero de usuarios activos mes a mes durante el ultimo ano.",
+    "tipo": "line"
+  },
+  {
+    "id": "correlacion",
+    "necesidad": "Si existe relacion entre el tamano del equipo y el tiempo de entrega, punto a punto.",
+    "tipo": "scatter"
+  },
+  {
+    "id": "distribucion",
+    "necesidad": "Como se distribuyen los tiempos de respuesta en tramos, para ver donde se concentran.",
+    "tipo": "histogram"
+  },
+  {
+    "id": "dispersion",
+    "necesidad": "Comparar la mediana y la dispersion del tiempo de resolucion entre cuatro equipos.",
+    "tipo": "box-plot"
+  },
+  {
+    "id": "objetivo-kpi",
+    "necesidad": "Un indicador con su valor actual frente al objetivo y los rangos de referencia.",
+    "tipo": "bullet"
+  },
+  {
+    "id": "embudo",
+    "necesidad": "Cuanta gente sobrevive a cada paso del proceso de registro, de la visita a la compra.",
+    "tipo": "funnel"
+  },
+  {
+    "id": "porcentajes",
+    "necesidad": "El reparto porcentual del presupuesto entre cuatro partidas.",
+    "tipo": "pie",
+    "acepta": [
+      "pie",
+      "donut"
+    ]
+  },
+  {
+    "id": "puente",
+    "necesidad": "Como se pasa del resultado del ano pasado al de este, sumando y restando cada efecto.",
+    "tipo": "waterfall"
+  },
+  {
+    "id": "calor",
+    "necesidad": "La intensidad de uso por dia de la semana y hora del dia.",
+    "tipo": "heatmap"
+  },
+  {
+    "id": "contexto",
+    "necesidad": "Quien usa el sistema y con que sistemas externos habla, a vista de pajaro.",
+    "tipo": "c4-context"
+  },
+  {
+    "id": "contenedores",
+    "necesidad": "Las piezas desplegables del sistema —web, API, base de datos— y como se comunican.",
+    "tipo": "c4-container"
+  },
+  {
+    "id": "componentes-c4",
+    "necesidad": "Las piezas internas de la API y sus responsabilidades, dentro del modelo C4.",
+    "tipo": "c4-component"
+  }
+]

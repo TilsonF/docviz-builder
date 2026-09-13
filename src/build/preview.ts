@@ -6,7 +6,7 @@
  */
 
 import { createReadStream } from 'node:fs';
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import http from 'node:http';
 import path from 'node:path';
 import { collectMarkdown } from './builder.js';
@@ -56,6 +56,12 @@ export async function startPreview(rootDir: string, port = 4321): Promise<Previe
   };
 }
 
+/** `true` si la ruta no esta contenida en la raiz. */
+function fuera(root: string, target: string): boolean {
+  const rel = path.relative(root, target);
+  return rel.startsWith('..') || path.isAbsolute(rel);
+}
+
 async function handle(root: string, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
   const url = new URL(req.url ?? '/', 'http://127.0.0.1');
   const decoded = decodeURIComponent(url.pathname);
@@ -69,7 +75,24 @@ async function handle(root: string, req: http.IncomingMessage, res: http.ServerR
 
   // Contencion: nada fuera de `root` puede servirse.
   const target = path.resolve(root, `.${decoded}`);
-  if (path.relative(root, target).startsWith('..')) {
+  if (fuera(root, target)) {
+    res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('acceso denegado');
+    return;
+  }
+
+  // Y otra vez sobre la ruta real: comparar cadenas no sigue los enlaces
+  // simbolicos, asi que un enlace dentro de la salida apuntando a /etc pasaria
+  // la comprobacion de arriba y se serviria igual.
+  let real: string;
+  try {
+    real = await realpath(target);
+  } catch {
+    res.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    res.end('no encontrado');
+    return;
+  }
+  if (fuera(await realpath(root), real)) {
     res.writeHead(403, { 'content-type': 'text/plain; charset=utf-8' });
     res.end('acceso denegado');
     return;

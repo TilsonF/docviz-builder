@@ -5,15 +5,21 @@
  * campo falla, que se esperaba y como se escribe bien.
  */
 
-import { DslValidationError } from '../core/errors.js';
+import { DslValidationError, ERROR_CODES, type ErrorCode } from '../core/errors.js';
 
-export function fail(message: string, detail?: string): never {
-  throw new DslValidationError(message, detail);
+/**
+ * Aborta la compilacion del bloque.
+ *
+ * El codigo es tan importante como el texto: un agente que reintenta necesita
+ * distinguir "falta un campo" de "el valor no vale" sin leer castellano.
+ */
+export function fail(message: string, detail?: string, code: ErrorCode = ERROR_CODES.DSL): never {
+  throw new DslValidationError(message, detail, code);
 }
 
 export function asRecord(value: unknown, field: string): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    fail(`${field} debe ser un mapa`, `valor recibido: ${preview(value)}`);
+    fail(`${field} debe ser un mapa`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
   }
   return value as Record<string, unknown>;
 }
@@ -29,7 +35,11 @@ export function requireString(record: Record<string, unknown>, key: string, fiel
   const value = record[key];
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value !== 'string' || value.trim() === '') {
-    fail(`falta el campo obligatorio "${key}" en ${field}`, `valor recibido: ${preview(value)}`);
+    fail(
+      `falta el campo obligatorio "${key}" en ${field}`,
+      `valor recibido: ${preview(value)}`,
+      ERROR_CODES.DSL_FIELD_MISSING,
+    );
   }
   return value.trim();
 }
@@ -47,26 +57,36 @@ export function optionalNumber(record: Record<string, unknown>, key: string, fie
   const value = record[key];
   if (value === undefined || value === null) return undefined;
   const n = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(n)) fail(`${field}.${key} debe ser numerico`, `valor recibido: ${preview(value)}`);
+  if (!Number.isFinite(n)) {
+    fail(`${field}.${key} debe ser numerico`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
+  }
   return n;
 }
 
 export function requireNumber(record: Record<string, unknown>, key: string, field: string): number {
   const n = optionalNumber(record, key, field);
-  if (n === undefined) fail(`falta el campo numerico obligatorio "${key}" en ${field}`);
+  if (n === undefined) {
+    fail(`falta el campo numerico obligatorio "${key}" en ${field}`, undefined, ERROR_CODES.DSL_FIELD_MISSING);
+  }
   return n;
 }
 
 export function requireArray(value: unknown, field: string): unknown[] {
   if (!Array.isArray(value) || value.length === 0) {
-    fail(`${field} debe ser una lista con al menos un elemento`, `valor recibido: ${preview(value)}`);
+    fail(
+      `${field} debe ser una lista con al menos un elemento`,
+      `valor recibido: ${preview(value)}`,
+      ERROR_CODES.DSL_FIELD_MISSING,
+    );
   }
   return value;
 }
 
 export function optionalArray(value: unknown, field: string): unknown[] {
   if (value === undefined || value === null) return [];
-  if (!Array.isArray(value)) fail(`${field} debe ser una lista`, `valor recibido: ${preview(value)}`);
+  if (!Array.isArray(value)) {
+    fail(`${field} debe ser una lista`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
+  }
   return value;
 }
 
@@ -80,7 +100,7 @@ export function nameOf(item: unknown, field: string, key = 'name'): string {
   if (typeof item === 'number' || typeof item === 'boolean') return String(item);
   if (typeof item === 'string') {
     const t = item.trim();
-    if (t === '') fail(`${field} contiene un elemento vacio`);
+    if (t === '') fail(`${field} contiene un elemento vacio`, undefined, ERROR_CODES.DSL_FIELD_MISSING);
     return t;
   }
   const record = asRecord(item, field);
@@ -110,7 +130,11 @@ export function oneOf<T extends string>(
   if (value === undefined) return fallback;
   const normalized = value.trim().toLowerCase() as T;
   if (!allowed.includes(normalized)) {
-    fail(`${field} no admite el valor "${value}"`, `valores validos: ${allowed.join(', ')}`);
+    fail(
+      `${field} no admite el valor "${value}"`,
+      `valores validos: ${allowed.join(', ')}`,
+      ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
+    );
   }
   return normalized;
 }

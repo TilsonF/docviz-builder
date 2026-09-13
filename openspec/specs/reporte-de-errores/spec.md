@@ -89,3 +89,61 @@ pre-commit.
 - **DADO** un bloque `chart` con un tipo inexistente
 - **CUANDO** se ejecuta la comprobación
 - **ENTONCES** falla indicando archivo, línea y valores válidos
+
+### Requirement: Todo error lleva un código estable
+
+El reporte **MUST** incluir un código de regla junto al motivo, y ese código
+**MUST NOT** cambiar de significado una vez publicado.
+
+El destinatario habitual del reporte es un agente reintentando. Decidir la
+corrección analizando un mensaje escrito en castellano es frágil: la redacción
+puede mejorarse en cualquier momento y el agente se rompería. El código separa
+lo que es contrato de lo que es prosa.
+
+#### Scenario: Falta un campo obligatorio
+- **DADO** un bloque `diagram` de tipo `sequence` sin `participants`
+- **CUANDO** se valida
+- **ENTONCES** el reporte incluye el código `DV101`
+- **Y** el mismo código llega a las herramientas MCP en un campo aparte del texto
+
+### Requirement: Un bloque inválido no oculta a los siguientes
+
+La validación **MUST** reportar todos los bloques inválidos de un documento, cada
+uno con su línea, y **MUST NOT** abandonar el documento al encontrar el primero.
+
+Es el mismo motivo por el que los errores se acumulan entre documentos: un ciclo
+de correcciones de una en una, con una pasada completa entre cada una, es caro y
+desmotiva a arreglarlas todas.
+
+#### Scenario: Documento con dos bloques rotos y uno correcto
+- **DADO** un documento con dos bloques de DSL inválidos y uno válido
+- **CUANDO** se valida
+- **ENTONCES** el reporte describe los dos errores con su línea respectiva
+- **Y** el bloque válido se cuenta como interpretable
+
+### Requirement: Un campo que no se usa se reporta
+
+El sistema **MUST** avisar de los campos declarados en un bloque que el tipo no
+utiliza, y **SHOULD** proponer el campo válido más parecido cuando la diferencia
+sea propia de una errata.
+
+Escribir `steps:` donde el tipo espera `flow:` produce un documento que compila
+y miente: el diagrama sale vacío y nadie se entera. Un fallo ruidoso es
+preferible a una documentación silenciosamente incompleta.
+
+Cuando el bloque compila el hallazgo es un aviso y **MUST NOT** alterar el código
+de salida: el documento es válido, solo incompleto respecto a la intención de su
+autor. Cuando el bloque falla, el hallazgo **MUST** acompañar al error, porque la
+errata suele ser su causa real.
+
+#### Scenario: Errata en el nombre de un campo
+- **DADO** un bloque `sequence` que escribe `particpants` en lugar de `participants`
+- **CUANDO** se valida
+- **ENTONCES** el reporte nombra el campo desconocido
+- **Y** propone `participants`
+
+#### Scenario: Campo sobrante en un bloque que compila
+- **DADO** un bloque `chart` de tipo `bar` correcto al que se añade `notas:`
+- **CUANDO** se valida
+- **ENTONCES** se emite un aviso con el código `DV104`
+- **Y** la validación termina con código cero

@@ -120,3 +120,40 @@ export function browserNotFoundHelp(): string {
     '  - ejecuta `npx playwright install chromium`.',
   ].join('\n');
 }
+
+/**
+ * Argumentos con los que se lanza Chromium.
+ *
+ * `--no-sandbox` **no** esta en la lista por defecto. El contenido que se
+ * dibuja aqui puede venir del documento de otra persona —un pull request, por
+ * ejemplo— y renderizarlo en un navegador sin sandbox convierte cualquier fallo
+ * del motor de render en ejecucion con los permisos del usuario. Se activa a
+ * proposito, no por descuido.
+ */
+export function chromiumLaunchArgs(noSandbox: boolean): string[] {
+  const args = [
+    '--disable-dev-shm-usage',
+    '--disable-gpu',
+    '--hide-scrollbars',
+    '--mute-audio',
+    '--disable-background-networking',
+    '--disable-sync',
+    '--no-first-run',
+    '--no-default-browser-check',
+  ];
+  if (noSandbox) args.unshift('--no-sandbox');
+  return args;
+}
+
+/**
+ * Si hay que desactivar el sandbox.
+ *
+ * Como root, Chromium **se niega a arrancar** con el sandbox activo, asi que en
+ * ese caso se desactiva solo: es eso o no dibujar nada, y es la situacion
+ * habitual dentro de un contenedor. En cualquier otro caso hay que pedirlo.
+ */
+export function shouldDisableSandbox(explicit?: boolean): boolean {
+  if (explicit !== undefined) return explicit;
+  if (process.env['DOCVIZ_NO_SANDBOX'] === '1') return true;
+  return process.getuid?.() === 0;
+}

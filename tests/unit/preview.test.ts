@@ -145,3 +145,36 @@ describe('ciclo de vida', () => {
     expect(server.url).toBe(`http://127.0.0.1:${server.port}/`);
   });
 });
+
+describe('contencion del servidor', () => {
+  it('no sirve un archivo al que apunta un enlace simbolico fuera de la raiz', async () => {
+    const { mkdtemp, writeFile, symlink, rm } = await import('node:fs/promises');
+    const fuera = await mkdtemp(path.join(tmpdir(), 'docviz-fuera-'));
+    const secreto = path.join(fuera, 'secreto.md');
+    await writeFile(secreto, '# no deberia verse\n', 'utf8');
+
+    const enlace = path.join(root, 'atajo.md');
+    try {
+      await symlink(secreto, enlace);
+    } catch {
+      // Sin permiso para crear enlaces (Windows): la prueba no aplica.
+      await rm(fuera, { recursive: true, force: true });
+      return;
+    }
+
+    try {
+      // Comparar cadenas de ruta no sigue el enlace; hay que resolverlo.
+      const res = await fetch(`${server.url}atajo.md`);
+      expect(res.status).toBe(403);
+      expect(await res.text()).toContain('acceso denegado');
+    } finally {
+      await rm(enlace, { force: true });
+      await rm(fuera, { recursive: true, force: true });
+    }
+  });
+
+  it('sigue sirviendo los documentos normales', async () => {
+    const res = await fetch(`${server.url}doc.md`);
+    expect(res.status).toBe(200);
+  });
+});

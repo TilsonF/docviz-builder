@@ -83,6 +83,21 @@ export function toPosix(p: string): string {
 }
 
 /**
+ * Ruta legible de un archivo en un mensaje de error.
+ *
+ * Relativa a la raiz del proyecto mientras el archivo este dentro; si esta
+ * fuera —compilar un directorio de otro sitio es legitimo— se muestra completa,
+ * porque `../../../../../private/tmp/...` no ayuda a nadie a encontrarlo.
+ */
+export function displayPath(rootDir: string, file: string): string {
+  const relative = path.relative(rootDir, file);
+  if (relative === '' || relative.startsWith('..') || path.isAbsolute(relative)) {
+    return toPosix(path.resolve(file));
+  }
+  return toPosix(relative);
+}
+
+/**
  * Ruta relativa desde el documento compilado hasta el recurso, siempre con
  * prefijo `./` o `../` para que sea inequivocamente relativa.
  */

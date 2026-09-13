@@ -1,0 +1,55 @@
+name: Publicar
+
+# Publica el paquete en npm al etiquetar una version.
+#
+#   git tag v0.2.0 && git push origin v0.2.0
+#
+# El registro es npmjs publico y no GitHub Packages a proposito: el objetivo es
+# que cualquiera —y cualquier agente— pueda hacer `npx docviz` sin autenticarse.
+# GitHub Packages exige un token hasta para leer, que es justo la friccion que
+# hace que una herramienta no se use.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  # Firma de procedencia: npm registra desde que commit y que workflow salio
+  # cada version publicada.
+  id-token: write
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      # No se publica algo que no compila ni pasa sus propias comprobaciones.
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run test:unit
+
+      - name: Comprobar que la etiqueta coincide con la version del paquete
+        run: |
+          etiqueta="${GITHUB_REF_NAME#v}"
+          paquete="$(node -p "require('./package.json').version")"
+          if [ "$etiqueta" != "$paquete" ]; then
+            echo "la etiqueta ($etiqueta) no coincide con la version del paquete ($paquete)" >&2
+            exit 1
+          fi
+
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

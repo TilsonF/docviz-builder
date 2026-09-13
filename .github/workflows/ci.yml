@@ -1,0 +1,129 @@
+name: CI
+
+# Las compuertas del proyecto —documentacion al dia, umbral de cobertura, los 57
+# tipos dibujandose de verdad— solo sirven si se ejecutan siempre. Aqui es donde
+# dejan de depender de que alguien se acuerde.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # PlantUML necesita una JVM. El resto de motores van embebidos.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      # El jar pesa 27 MB y no se versiona: se descarga una vez y se cachea por
+      # version, de modo que solo se vuelve a bajar al subirla.
+      - name: Cachear plantuml.jar
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}
+
+      - name: Descargar PlantUML
+        run: npm run setup
+
+      # Mermaid y BPMN dibujan dentro de un Chromium. DocViz no descarga
+      # navegadores: se le proporciona uno y lo encuentra en la cache.
+      - name: Cachear Chromium
+        id: cache-chromium
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Instalar Chromium
+        if: steps.cache-chromium.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps chromium
+
+      # Un build en frio son 33 segundos dibujando; con cache, medio. Se guarda
+      # por contenido de los documentos y del codigo que los compila.
+      - name: Cachear los recursos generados
+        uses: actions/cache@v4
+        with:
+          path: .docviz-cache
+          key: docviz-${{ hashFiles('src/**/*.ts', 'examples/**/*.md', 'docs-src/**/*.md') }}
+          restore-keys: docviz-
+
+      # El arbol de produccion es lo que viaja dentro del paquete: una
+      # vulnerabilidad ahi la hereda todo el que lo instale, aunque el codigo
+      # afectado no este en ningun camino que DocViz ejecute.
+      - name: Auditar dependencias de produccion
+        run: npm audit --omit=dev --audit-level=moderate
+
+      # Las de desarrollo se reportan y no bloquean: no salen de este repositorio.
+      - name: Auditar dependencias de desarrollo
+        run: npm audit --audit-level=moderate || true
+
+      - name: Compilar
+        run: npm run build
+
+      - name: Comprobar tipos
+        run: npm run typecheck
+
+      # Falla si la documentacion quedo desfasada del catalogo de tipos.
+      - name: Comprobar la documentacion
+        run: npm run docs:check
+
+      # Incluye las pruebas que dibujan los 57 tipos con su motor real.
+      - name: Pruebas y cobertura
+        run: npm run test:coverage
+
+      # Mide si el catalogo guia bien la eleccion de tipo. No usa ningun modelo
+      # ni la red: es la parte determinista del eval, y sirve de compuerta
+      # contra regresiones al tocar keywords o descripciones.
+      - name: Eval del catalogo
+        run: npm run eval -- --minimo 0.85
+
+      - name: Compilar la documentacion del proyecto
+        run: npm run docs:build
+
+      - name: Verificar que no haya imagenes rotas
+        run: npm run docs:verify
+
+      # Dibuja el catalogo completo: es la prueba manual convertida en automatica.
+      - name: Compilar el catalogo
+        run: npm run showcase
+
+      - name: Verificar el catalogo
+        run: node bin/docviz.mjs verify artifacts/showcase
+
+      # Pide a GitHub que renderice el resultado con su propia API.
+      - name: Comprobar el renderizado en GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: npm run check:github
+
+      - name: Publicar los resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados
+          path: |
+            coverage/
+            artifacts/showcase/
+          retention-days: 14

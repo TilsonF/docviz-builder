@@ -37,9 +37,12 @@ documentación confidencial a ningún sitio.
 - [Configuración](#configuración)
 - [Temas](#temas)
 - [Caché y determinismo](#caché-y-determinismo)
+- [Qué cambió entre dos versiones](#qué-cambió-entre-dos-versiones)
 - [Errores](#errores)
 - [Seguridad](#seguridad)
 - [Servidor MCP](#servidor-mcp)
+- [Que tu agente sepa que existe](#que-tu-agente-sepa-que-existe)
+- [Cómo sabemos que un modelo lo sabe usar](#cómo-sabemos-que-un-modelo-lo-sabe-usar)
 - [Desarrollo](#desarrollo)
 
 ---
@@ -60,15 +63,30 @@ como WebAssembly o JavaScript puro.
 Varios tipos declaran un motor alternativo, así que una máquina sin navegador o
 sin Java sigue compilando lo que pueda en lugar de fallar entera.
 
+### En tu proyecto
+
 ```bash
-npm install
-npm run setup      # descarga vendor/plantuml.jar desde Maven Central
-npm run build
+npm install -D docviz
+npx docviz setup    # descarga plantuml.jar desde Maven Central
+npx docviz init     # docviz.config.yaml, AGENTS.md, docs-src/ y un ejemplo
+npx docviz doctor   # qué motores puede usar esta máquina
 ```
 
-`npm run setup` es la única operación que usa la red, y solo una vez. Si tu
-organización ya distribuye el jar, apúntalo con `renderers.plantuml.jar` en la
-configuración y omite este paso.
+`docviz setup` es la única operación que usa la red, y solo una vez. No se
+ejecuta en el `postinstall` a propósito: una herramienta pensada para
+documentación confidencial no descarga nada por su cuenta sin que se lo pidas.
+Si tu organización ya distribuye el jar, apúntalo con `renderers.plantuml.jar`
+en la configuración y omite ese paso.
+
+### Desde el repositorio
+
+```bash
+git clone https://github.com/TilsonF/docviz-builder.git
+cd docviz-builder
+npm install
+npm run setup
+npm run build
+```
 
 DocViz **no descarga navegadores**. Usa el Chrome del sistema o el Chromium que
 ya tengan cacheado Playwright o Puppeteer. Si no encuentra ninguno, lo dice y
@@ -86,9 +104,12 @@ docviz build <source> --output <target>
 |---|---|
 | `docviz build` | Compila los documentos y genera los recursos |
 | `docviz check` | Valida los bloques sin renderizar (rápido) |
+| `docviz diff` | Compara los diagramas de dos versiones de la documentación |
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
 | `docviz preview` | Sirve el resultado en un visor local |
 | `docviz types` | Lista los tipos del DSL y los temas |
+| `docviz setup` | Descarga `plantuml.jar` dentro del paquete |
+| `docviz skill` | Instala el contrato de DocViz como skill de tu agente |
 | `docviz suggest "..."` | Recomienda un tipo a partir de una frase |
 | `npm run docs:sync` | Regenera las tablas de tipos de la documentación |
 | `npm run check:github` | Comprueba cómo renderizaría GitHub la salida |
@@ -483,6 +504,51 @@ sin perder los aciertos.
 
 ---
 
+## Qué cambió entre dos versiones
+
+El diff de un `.md` dice que se tocó un bloque YAML, pero no si el dibujo
+resultante es distinto. `docviz diff` compara dos árboles de documentos y
+responde en términos de diagramas:
+
+```bash
+docviz diff ./docs-src-anterior ./docs-src
+```
+
+```
+base: docs-src-anterior
+head: docs-src
+
+  ~ arquitectura.md:12  "Autenticación"  (diagram, plantuml)
+  + arquitectura.md:96  "Métricas"       (chart, vega-lite)
+  - antiguo.md:5        "Modelo viejo"   (diagram, d2)
+
+resumen: 1 nuevo(s), 1 eliminado(s), 1 modificado(s), 12 igual(es)
+```
+
+Lo que se compara es el **contenido efectivo** —motor más fuente compilada—, no
+el recurso generado. En consecuencia:
+
+- cambiar de tema no aparece como cambio de diagrama;
+- actualizar la versión de un motor tampoco;
+- reordenar el YAML sin alterar el resultado tampoco;
+- insertar un párrafo delante no convierte en nuevos a los diagramas que
+  quedaron desplazados: la identidad es `archivo + título`, no la línea.
+
+No renderiza nada, así que es tan rápido como `check`. Un lado inválido no
+aborta la comparación —la versión antigua puede estar rota y aun así interesa
+saber qué cambió— pero sus bloques se reportan como aviso.
+
+Opciones: `--all` incluye también los diagramas que no cambiaron, `--json`
+devuelve la estructura completa y `--exit-code` termina con código 1 si algo
+cambió, igual que `git diff`. En un pipeline:
+
+```bash
+git worktree add /tmp/base origin/main
+docviz diff /tmp/base/docs-src ./docs-src --exit-code || echo "revisar los diagramas"
+```
+
+---
+
 ## Errores
 
 Un fallo de render **nunca** produce un documento incorrecto en silencio: el
@@ -490,6 +556,7 @@ build termina con código distinto de cero y reporta dónde está el problema.
 
 ```
 ERROR
+codigo: DV002
 archivo: docs-src/arquitectura.md
 linea: 74
 renderer: plantuml
@@ -504,6 +571,79 @@ detalle:
 que el documento no mienta sobre lo que contiene. No es el comportamiento por
 defecto.
 
+### El código de regla
+
+Todo error lleva un código estable. El destinatario habitual del reporte es un
+agente reintentando, y decidir la corrección analizando un mensaje escrito en
+castellano es frágil: la redacción puede cambiar, el código no.
+
+| Código | Qué pasó |
+|---|---|
+| `DV001` | El lenguaje de la valla no tiene renderer registrado |
+| `DV002` | El motor falló al dibujar |
+| `DV003` | Una ruta intentó salirse del directorio de salida |
+| `DV004` | Configuración inválida |
+| `DV005` | El motor que necesita el tipo no está disponible en esta máquina |
+| `DV006` | El renderer no puede producir ese formato |
+| `DV007` | Colisión de hash truncado |
+| `DV100` | DSL inválido, sin clasificar |
+| `DV101` | Falta un campo obligatorio |
+| `DV102` | El campo existe pero su valor no tiene la forma esperada |
+| `DV103` | El valor no pertenece al conjunto admitido |
+| `DV104` | El bloque declara un campo que el tipo no usa |
+| `DV105` | El bloque no es YAML válido |
+| `DV106` | El `type` no existe o no pertenece a esa valla |
+
+Los códigos son parte del contrato: se añaden códigos nuevos en lugar de
+reutilizar los existentes.
+
+### Un bloque roto no esconde a los siguientes
+
+El escaneo no se detiene en el primer error: un documento con tres bloques
+inválidos los reporta los tres, cada uno con su línea. Corregirlos de uno en
+uno, con un build completo entre cada corrección, es un ciclo caro.
+
+```
+documentos: 1
+bloques:    1  (2 invalido(s))
+avisos:     0
+errores:    2
+```
+
+### Erratas y campos ignorados
+
+Escribir `steps:` donde el tipo espera `flow:` no rompe nada: simplemente el
+contenido no se dibuja. Ese silencio es peor que un error, porque el documento
+sale y nadie se entera de que le falta la mitad.
+
+DocViz detecta los campos que el tipo no usa y, si se parecen a uno válido, dice
+cuál:
+
+```
+ERROR
+codigo: DV101
+archivo: docs-src/login.md
+linea: 5
+motivo: diagram.participants debe ser una lista con al menos un elemento
+detalle:
+  valor recibido: undefined
+  campos no reconocidos:
+    - el campo "particpants" no existe en el tipo sequence; quiza querias "participants"
+    - el campo "steps" no existe en el tipo sequence y se ha ignorado
+  campos del ejemplo de sequence: flow, participants, title, type
+  ficha completa: docviz types sequence
+```
+
+Cuando el bloque **sí** compila, el campo ignorado se reporta como aviso
+(`AVISO archivo:linea [DV104] ...`) en stderr y no cambia el código de salida:
+el documento es válido, solo incompleto respecto a lo que su autor escribió.
+
+La lista de campos válidos no se mantiene a mano —serían 57 listas que acabarían
+divergiendo— sino que se deduce de dos fuentes que ya existen: las claves del
+ejemplo canónico del catálogo, que las pruebas de integración dibujan de verdad,
+y las claves que el compilador leyó realmente. Un campo que no está en ninguna
+de las dos no hizo nada; eso es un hecho, no una heurística.
+
 ---
 
 ## Seguridad
@@ -511,11 +651,52 @@ defecto.
 1. Motores locales por defecto; ninguna petición de red durante el build.
 2. `kroki.io` bloqueado salvo autorización explícita.
 3. Límite de tiempo y de tamaño por diagrama.
-4. `!include`, `!includeurl` e `!import` de PlantUML deshabilitados.
+4. `!include`, `!includeurl`, `!import` y `!theme … from` de PlantUML
+   deshabilitados: son lectura de disco arbitraria y SSRF.
 5. `data.url` de Vega-Lite rechazado a cualquier profundidad.
-6. Todos los SVG se sanean: sin `<script>`, sin manejadores `on*`, sin `javascript:`.
-7. Toda ruta de escritura queda contenida en el directorio de salida.
-8. Ningún contenido del documento se usa como ruta ni se pasa a un shell.
+6. Toda ruta de escritura queda contenida en el directorio de salida, y el
+   servidor de previsualización resuelve los enlaces simbólicos antes de servir.
+7. Ningún contenido del documento se usa como ruta ni se pasa a un shell: los
+   motores se invocan con un array de argumentos, nunca con una cadena.
+8. El CI audita el árbol de dependencias de producción en cada commit y falla a
+   partir de severidad moderada. Dependabot abre los pull requests de
+   actualización sin que nadie tenga que acordarse.
+
+### El SVG que sale de aquí es inerte
+
+Vía `![](...)` el navegador carga el SVG como imagen y no ejecuta nada. Pero en
+cuanto alguien lo **incrusta dentro de un HTML** —que es lo natural para
+conservar el tema claro/oscuro— el SVG pasa a ser markup vivo. Por eso todo SVG
+se sanea con una **lista de permitidos**: 49 elementos y 104 atributos medidos
+sobre lo que emiten de verdad los seis motores en los 57 tipos del catálogo.
+
+Lo que no está en la lista se cae, incluido lo que no se nos haya ocurrido.
+Además se eliminan los comentarios XML, se escapan `<` y `>` dentro de los
+valores de atributo, se rechaza cualquier esquema de URL que no sea `http(s)` o
+un fragmento interno —resolviendo antes las entidades, porque
+`java&#115;cript:` se lee igual que `javascript:`— y el CSS pierde `@import`,
+`expression(` y las `url()` ejecutables.
+
+`tests/unit/svg-seguridad.test.ts` mantiene un banco de 23 vectores conocidos y
+comprueba, además, que sanear los 69 diagramas del catálogo no quita nada más
+que comentarios. La versión anterior del saneador era una lista de prohibidos y
+dejaba pasar nueve de esos vectores.
+
+### Chromium con sandbox
+
+Mermaid y BPMN dibujan dentro de un Chromium local, y el contenido del diagrama
+puede venir del documento de otra persona. El sandbox **está activo por
+defecto**: se desactiva solo como root —donde Chromium no arranca de otra
+forma—, o si se pide con `renderers.noSandbox: true` o `DOCVIZ_NO_SANDBOX=1`.
+Mermaid además se configura con `securityLevel: 'strict'` y sin etiquetas HTML.
+
+### El único descargable se verifica
+
+`docviz setup` es lo único que trae bytes de fuera. Se comprueba contra un
+digest SHA-256 fijado en el repositorio y verificado contra el checksum
+publicado en Maven Central; si no coincide, **no se escribe nada**. Para una
+versión de PlantUML sin digest conocido hay que pasarlo con `--sha256`, o pedir
+explícitamente `--sin-verificar`.
 
 ---
 
@@ -531,6 +712,7 @@ comandos:
 | `docviz_validate_document` | Valida bloques sin renderizar |
 | `docviz_render_diagram` | Renderiza un diagrama suelto |
 | `docviz_build_document` | Compila y verifica la documentación |
+| `docviz_diff` | Qué diagramas cambiaron entre dos versiones |
 | `docviz_preview` | Devuelve el Markdown compilado y sus incidencias |
 
 Registro en un cliente MCP:
@@ -546,6 +728,57 @@ Registro en un cliente MCP:
   }
 }
 ```
+
+---
+
+## Que tu agente sepa que existe
+
+`docviz init` deja un `AGENTS.md` en el proyecto, y con eso basta para los
+agentes que lo leen solos. Pero un agente solo abre `AGENTS.md` si ya está
+trabajando en ese repositorio: no hay forma de que sepa que DocViz existe antes
+de eso.
+
+```bash
+npx docviz skill              # lo instala en .claude/skills/ del proyecto
+npx docviz skill --global     # o en tu perfil, para todos tus proyectos
+npx docviz skill --dir .config/opencode/skills   # otro agente
+```
+
+El skill es un resumen corto: las tres vallas, cómo preguntar el tipo, el flujo
+de trabajo y la tabla de códigos de error. El catálogo completo de los 57 tipos
+sigue en `AGENTS.md`, al que el skill apunta.
+
+---
+
+## Cómo sabemos que un modelo lo sabe usar
+
+Que un LLM acierte no es una intuición: se mide. `eval/casos.json` contiene 45
+necesidades escritas como las escribiría una persona —sin nombrar el tipo— con
+el tipo que debería elegir.
+
+```bash
+npm run eval            # sin red y sin coste: mide si el catálogo guía bien
+npm run eval:modelo     # la medida real, con un modelo de verdad
+```
+
+El **modo catálogo** pregunta a `docviz suggest` qué tipo usaría para cada
+necesidad. No usa ningún modelo, pero mide justo lo que un modelo lee para
+decidir: los `keywords`, el `purpose` y el `whenToUse`. Es determinista, dura un
+segundo y por eso es una compuerta de CI (`npm run eval -- --minimo 0.85`).
+
+El **modo modelo** es la medida real: se le entrega el mismo `AGENTS.md` que
+recibiría en un proyecto, se le pide el bloque y se compila. Si falla, se le
+devuelve el error tal cual —con su código y su errata señalada— y se le deja
+reintentar. Lo que se mide entonces no es solo si acierta, sino si los mensajes
+de error le permiten recuperarse. Requiere `ANTHROPIC_API_KEY` y gasta dinero.
+
+Medida actual del modo catálogo: **80,0 %** de acierto en la primera propuesta y
+**88,9 %** entre las tres primeras. Los fallos conocidos están en gráficos cuyo
+nombre nadie usa al describir la necesidad (`histogram`, `funnel`,
+`stacked-bar`, `horizontal-bar`): el término de dominio aparece en el catálogo,
+pero lo ahogan las coincidencias de prosa genérica. Es el primer objetivo de
+mejora, y hay que hacerlo con una partición de casos aparte para que el número
+siga siendo honesto.
 
 ---
 

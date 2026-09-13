@@ -84,3 +84,20 @@ agente— alcanza en el sistema de archivos.
 - **DADO** una petición de previsualización con una ruta que sube de directorio
 - **CUANDO** se ejecuta
 - **ENTONCES** se rechaza indicando que está fuera del directorio de salida
+
+### Requirement: El agente recibe código y avisos por separado
+
+Las herramientas de validación y de build **MUST** devolver el código de regla de
+cada error en un campo propio, y **MUST** devolver los avisos de campos no
+utilizados como lista aparte de los errores.
+
+Obligar al agente a buscar el código dentro de un texto formateado para humanos
+es pedirle que analice una cadena que puede cambiar de redacción. Y mezclar
+avisos con errores le haría, o bien ignorar los avisos, o bien tratar como
+bloqueante algo que no lo es.
+
+#### Scenario: Documento con una errata en un campo
+- **DADO** un documento con un bloque que declara un campo que su tipo no usa
+- **CUANDO** el agente lo valida
+- **ENTONCES** el resultado incluye ese hallazgo en la lista de avisos
+- **Y** el indicador de éxito sigue siendo verdadero

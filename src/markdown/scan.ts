@@ -15,18 +15,50 @@ import { toString as mdastToString } from 'mdast-util-to-string';
 import type { Code, Heading, Root } from 'mdast';
 import type { DiagramBlock, OutputFormat } from '../core/types.js';
 
+export interface CompiledBlock {
+  rendererType: string;
+  source: string;
+  title?: string;
+  /** Campos declarados que el compilador no uso. */
+  warnings?: ReadonlyArray<{ code: string; field: string; message: string }>;
+}
+
 export interface ScanContext {
   /** Devuelve el tipo canonico de renderer para un lenguaje, o `undefined`. */
   resolveLanguage(lang: string): string | undefined;
   /** Compila el DSL de alto nivel. Solo se invoca para lenguajes de DSL. */
-  compileDsl?(lang: string, source: string): { rendererType: string; source: string; title?: string };
+  compileDsl?(lang: string, source: string): CompiledBlock;
   /** Lenguajes de DSL de alto nivel (`diagram`, `chart`, `architecture`). */
   dslLanguages: readonly string[];
+}
+
+/** Bloque que no se pudo compilar, con la linea en la que empieza su valla. */
+export interface ScanIssue {
+  line: number;
+  lang: string;
+  error: unknown;
+}
+
+/** Aviso localizado: el bloque compila, pero parte de lo escrito no se dibuja. */
+export interface ScanWarning {
+  line: number;
+  lang: string;
+  code: string;
+  field: string;
+  message: string;
 }
 
 export interface ScanResult {
   tree: Root;
   blocks: DiagramBlock[];
+  /**
+   * Errores de compilacion del DSL, uno por bloque.
+   *
+   * El escaneo no aborta al primero: un documento con tres bloques rotos debe
+   * reportar los tres, o corregirlos cuesta tres builds completos.
+   */
+  errors: ScanIssue[];
+  warnings: ScanWarning[];
 }
 
 const processor = unified()
@@ -47,6 +79,8 @@ export function parseMarkdown(text: string): Root {
 export function scanDocument(text: string, context: ScanContext): ScanResult {
   const tree = parseMarkdown(text);
   const blocks: DiagramBlock[] = [];
+  const errors: ScanIssue[] = [];
+  const warnings: ScanWarning[] = [];
 
   // Encabezados con su offset, para deducir el titulo del diagrama siguiente.
   const headings: Array<{ offset: number; text: string }> = [];
@@ -79,10 +113,19 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
 
     if (isDsl) {
       if (context.compileDsl === undefined) return;
-      const compiled = context.compileDsl(lang, rawSource);
+      let compiled: CompiledBlock;
+      try {
+        compiled = context.compileDsl(lang, rawSource);
+      } catch (err) {
+        errors.push({ line, lang, error: err });
+        return;
+      }
       rendererType = compiled.rendererType;
       source = compiled.source;
       dslTitle = compiled.title;
+      for (const w of compiled.warnings ?? []) {
+        warnings.push({ line, lang, code: w.code, field: w.field, message: w.message });
+      }
     } else {
       rendererType = rendererFromLang!;
       source = rawSource;
@@ -109,7 +152,9 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
   });
 
   blocks.sort((a, b) => a.start - b.start);
-  return { tree, blocks };
+  errors.sort((a, b) => a.line - b.line);
+  warnings.sort((a, b) => a.line - b.line);
+  return { tree, blocks, errors, warnings };
 }
 
 export interface FenceMeta {

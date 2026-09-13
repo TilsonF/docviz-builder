@@ -7,6 +7,7 @@
  * hay que compilarlo de nuevo.
  */
 
+import { ERROR_CODES } from '../core/errors.js';
 import { fail } from './util.js';
 import { findType, TYPE_CATALOG, type TypeSpec } from './catalog.js';
 import {
@@ -137,6 +138,7 @@ export function compileType(
     fail(
       `el tipo "${typeName}" no existe`,
       `tipos disponibles: ${TYPE_CATALOG.map((s) => s.type).sort().join(', ')}`,
+      ERROR_CODES.DSL_TYPE,
     );
   }
 
@@ -154,6 +156,7 @@ export function compileType(
     fail(
       `el tipo "${spec.type}" necesita el motor ${spec.engine}${alternatives}, y no hay ninguno disponible`,
       'habilita ese renderer en docviz.config.yaml o instala lo que necesita: Java para PlantUML, un Chromium para Mermaid y BPMN',
+      ERROR_CODES.RENDERER_UNAVAILABLE,
     );
   }
 
@@ -167,6 +170,7 @@ export function compileChartType(doc: Record<string, unknown>, typeName: string)
     fail(
       `el tipo de grafico "${typeName}" no existe`,
       `tipos disponibles: ${TYPE_CATALOG.filter((s) => s.lang === 'chart').map((s) => s.type).sort().join(', ')}`,
+      ERROR_CODES.DSL_TYPE,
     );
   }
   return { engine: spec.engine, source: compileChartOfType(doc, spec.type), spec };

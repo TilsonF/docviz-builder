@@ -8,6 +8,7 @@
  *   docviz_validate_document  valida bloques sin renderizar
  *   docviz_render_diagram     renderiza un diagrama suelto
  *   docviz_build_document     compila docs-src -> docs
+ *   docviz_diff               que diagramas cambiaron entre dos versiones
  *   docviz_preview            devuelve el Markdown compilado y sus incidencias
  */
 
@@ -16,6 +17,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import {
   buildDocuments,
+  diffDocuments,
   listTypes,
   suggestType,
   previewDocument,
@@ -117,6 +119,23 @@ export function createServer(): McpServer {
       },
     },
     async (args) => asContent(await buildDocuments(args)),
+  );
+
+  server.registerTool(
+    'docviz_diff',
+    {
+      title: 'Que diagramas cambiaron',
+      description:
+        'Compara los diagramas de dos versiones de la documentacion y devuelve cuales son nuevos, cuales ' +
+        'desaparecieron y cuales cambiaron. No renderiza nada. Usalo tras reescribir documentacion para ' +
+        'comprobar que no tocaste diagramas que no querias tocar.',
+      inputSchema: {
+        base: z.string().describe('directorio de la version anterior'),
+        head: z.string().describe('directorio de la version nueva'),
+        cwd: z.string().optional(),
+      },
+    },
+    async (args) => asContent(await diffDocuments(args)),
   );
 
   server.registerTool(

@@ -1,0 +1,30 @@
+# Las dependencias envejecen solas; las auditorias del CI solo avisan de lo que
+# ya salio publicado. Esto abre el pull request sin que nadie se acuerde.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      # Los motores de render se agrupan: suben juntos y se prueban juntos,
+      # porque una prueba de integracion dibuja los 57 tipos con todos ellos.
+      motores:
+        patterns:
+          - '@terrastruct/d2'
+          - '@hpcc-js/wasm-graphviz'
+          - mermaid
+          - bpmn-js
+          - likec4
+          - vega
+          - vega-lite
+          - svgbob-wasm
+          - puppeteer-core
+      desarrollo:
+        dependency-type: development
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

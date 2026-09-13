@@ -1,0 +1,21 @@
+# Configuracion de GitHub Pages.
+#
+# El sitio se sirve desde `docs/`, que es la salida de DocViz: la documentacion
+# publicada la compila la propia herramienta. Este archivo no es Markdown, asi
+# que el build lo copia tal cual desde `docs-src/`.
+
+title: DocViz
+description: Diagramas como código dentro de Markdown. Escribes la intención; DocViz elige el motor.
+theme: jekyll-theme-cayman
+
+show_downloads: false
+
+# Los recursos generados se sirven tal cual; Jekyll no debe interpretarlos.
+include:
+  - assets
+
+defaults:
+  - scope:
+      path: ''
+    values:
+      layout: default

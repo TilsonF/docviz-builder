@@ -52,6 +52,15 @@ import {
 } from './diagram-product.js';
 import { asciiArt, bpmn } from './diagram-bpmn.js';
 import { architectureC4, d2Flow, mermaidErd, mermaidTimeline } from './fallbacks.js';
+import {
+  d2Class,
+  d2Component,
+  d2Deployment,
+  d2Sequence,
+  d2State,
+  d2UseCase,
+  d2Wbs,
+} from './fallbacks-d2.js';
 import { architectureLikeC4 } from './architecture.js';
 import { compileChartOfType } from './chart.js';
 
@@ -65,18 +74,18 @@ type Compiler = (doc: Record<string, unknown>) => string;
  */
 const COMPILERS: Readonly<Record<string, Readonly<Record<string, Compiler>>>> = {
   // UML
-  sequence: { plantuml: sequence },
-  class: { plantuml: classDiagram },
-  state: { plantuml: stateDiagram },
+  sequence: { plantuml: sequence, d2: d2Sequence },
+  class: { plantuml: classDiagram, d2: d2Class },
+  state: { plantuml: stateDiagram, d2: d2State },
   activity: { plantuml: activityDiagram },
   erd: { plantuml: entityRelationship, mermaid: mermaidErd },
-  'use-case': { plantuml: useCase },
-  component: { plantuml: componentDiagram },
-  deployment: { plantuml: deployment },
+  'use-case': { plantuml: useCase, d2: d2UseCase },
+  component: { plantuml: componentDiagram, d2: d2Component },
+  deployment: { plantuml: deployment, d2: d2Deployment },
   wireframe: { plantuml: wireframe },
   json: { plantuml: jsonTree },
   yaml: { plantuml: yamlTree },
-  wbs: { plantuml: workBreakdown },
+  wbs: { plantuml: workBreakdown, d2: d2Wbs },
 
   // Flujos, tiempo y producto
   flow: { mermaid: flowchart, d2: d2Flow },

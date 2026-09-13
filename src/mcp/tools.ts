@@ -12,9 +12,18 @@ import { build, check } from '../build/builder.js';
 import { diff as diffTrees } from '../build/diff.js';
 import { verify } from '../build/verify.js';
 import { loadConfig, resolveFromRoot } from '../config/load.js';
-import { DocVizError, BuildFailedError } from '../core/errors.js';
-import { compileDsl, dslCatalog, dslCatalogDetailed, isDslLanguage } from '../dsl/index.js';
-import { TYPE_CATALOG } from '../dsl/catalog.js';
+import { DocVizError, BuildFailedError, ERROR_CODES } from '../core/errors.js';
+import { parse as parseYaml } from 'yaml';
+import {
+  compileDsl,
+  dslCatalog,
+  dslCatalogDetailed,
+  findType,
+  isDslLanguage,
+  unknownFields,
+  type FieldWarning,
+} from '../dsl/index.js';
+import { TYPE_CATALOG, type TypeSpec } from '../dsl/catalog.js';
 import { buildRegistry } from '../renderers/index.js';
 import { getTheme, themeNames } from '../themes/index.js';
 import { toPosix } from '../core/paths.js';
@@ -181,6 +190,113 @@ export async function diffDocuments(args: {
   } catch (err) {
     return describeError(err);
   }
+}
+
+/**
+ * `docviz_fix`
+ *
+ * Recibe un bloque que no compila y devuelve el bloque corregido.
+ *
+ * No adivina: solo aplica las correcciones que se deducen del propio catalogo
+ * —renombrar un campo cuya errata es inequivoca— y vuelve a compilar para decir
+ * si con eso basta. Cuando no basta, devuelve el diagnostico y el esqueleto
+ * canonico del tipo, que es lo que el agente necesita para reescribirlo.
+ *
+ * Existe porque el ciclo "falla, lee el error, reintenta" cuesta una llamada al
+ * modelo cada vuelta, y la mitad de las vueltas son una letra cambiada de sitio.
+ */
+export function fixBlock(args: { lang?: string; source: string }): ToolResult {
+  const lang = args.lang ?? 'diagram';
+  if (!isDslLanguage(lang)) {
+    return { ok: false, error: `"${lang}" no es una valla de DocViz`, code: ERROR_CODES.DSL_TYPE };
+  }
+
+  const original = args.source;
+  const primero = intentar(lang, original);
+  if (primero.ok && primero.warnings.length === 0) {
+    return { ok: true, cambiado: false, source: original, aplicado: [], nota: 'el bloque ya compilaba' };
+  }
+
+  // Las erratas se corrigen sobre el texto, no sobre el YAML ya interpretado:
+  // asi se conservan comentarios, orden y sangrado tal como los escribio quien
+  // lo redacto. Devolver un bloque reformateado seria devolver otro bloque.
+  const aplicado: Array<{ de: string; a: string }> = [];
+  let corregido = original;
+  for (const aviso of primero.warnings) {
+    if (aviso.suggestion === undefined) continue;
+    const renombrado = renombrarClave(corregido, aviso.field, aviso.suggestion);
+    if (renombrado === undefined) continue;
+    corregido = renombrado;
+    aplicado.push({ de: aviso.field, a: aviso.suggestion });
+  }
+
+  const segundo = intentar(lang, corregido);
+  const spec = primero.spec ?? segundo.spec;
+
+  if (segundo.ok && segundo.warnings.length === 0) {
+    return { ok: true, cambiado: aplicado.length > 0, source: corregido, aplicado };
+  }
+
+  return {
+    ok: false,
+    cambiado: aplicado.length > 0,
+    source: corregido,
+    aplicado,
+    ...(segundo.error !== undefined ? { error: segundo.error.message, code: segundo.error.code, detail: segundo.error.format() } : {}),
+    pendientes: segundo.warnings.map((w) => w.message),
+    ...(spec !== undefined ? { ejemplo: `\`\`\`${spec.lang}\n${spec.example}\n\`\`\`` } : {}),
+  };
+}
+
+interface Intento {
+  ok: boolean;
+  warnings: FieldWarning[];
+  error?: DocVizError;
+  spec?: TypeSpec;
+}
+
+function intentar(lang: string, source: string): Intento {
+  try {
+    const compiled = compileDsl(lang, source);
+    const salida: Intento = { ok: true, warnings: [...(compiled.warnings ?? [])] };
+    if (compiled.spec !== undefined) salida.spec = compiled.spec;
+    return salida;
+  } catch (err) {
+    const salida: Intento = { ok: false, warnings: [] };
+    if (err instanceof DocVizError) salida.error = err;
+
+    // Aunque no compile, se puede saber de que tipo hablaba para devolver su
+    // ejemplo y para detectar las erratas: es justo el caso en el que hacen
+    // falta, porque la errata suele ser la causa del fallo.
+    const declarado = /^\s*type:\s*(\S+)/m.exec(source)?.[1];
+    const spec = declarado === undefined ? undefined : findType(declarado);
+    if (spec !== undefined) {
+      salida.spec = spec;
+      try {
+        const doc = parseYaml(source) as Record<string, unknown> | null;
+        if (doc !== null && typeof doc === 'object' && !Array.isArray(doc)) {
+          salida.warnings = unknownFields(doc, spec);
+        }
+      } catch {
+        // YAML invalido: no hay campos que analizar, solo el error de sintaxis.
+      }
+    }
+    return salida;
+  }
+}
+
+/**
+ * Renombra una clave de YAML conservando el resto del texto.
+ *
+ * Se niega si el destino ya existe: fusionar dos claves no es una correccion,
+ * es perder una de las dos.
+ */
+function renombrarClave(texto: string, de: string, a: string): string | undefined {
+  const escapado = de.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const origen = new RegExp(`^(\\s*)(?:- )?${escapado}(\\s*:)`, 'm');
+  if (!origen.test(texto)) return undefined;
+  if (new RegExp(`^\\s*(?:- )?${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:`, 'm').test(texto)) return undefined;
+  return texto.replace(origen, (_m, sangria: string, dosPuntos: string) => `${sangria}${a}${dosPuntos}`);
 }
 
 /**

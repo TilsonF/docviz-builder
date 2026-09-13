@@ -74,6 +74,38 @@ describe('cada tipo del catalogo se dibuja de verdad', () => {
   }
 });
 
+/**
+ * Un respaldo declarado tiene que dibujar, no solo estar escrito.
+ *
+ * `fallbacks: ['d2']` es una promesa que se cobra en el peor momento posible:
+ * en una maquina sin Java, a mitad de un build. Si el compilador alternativo no
+ * existiera o produjera algo ilegible, el fallo aparecereria alli y no aqui.
+ */
+describe('cada respaldo declarado dibuja de verdad', () => {
+  for (const spec of TYPE_CATALOG) {
+    for (const respaldo of spec.fallbacks ?? []) {
+      const ausente = sinNavegador.includes(respaldo);
+
+      it.skipIf(ausente)(`${spec.type} cae a ${respaldo} y sigue saliendo`, async () => {
+        // Se compila como si el motor preferido no existiera en esta maquina.
+        const compiled = compileDsl(spec.lang, spec.example, (engine) => engine === respaldo);
+        expect(compiled.rendererType).toBe(respaldo);
+
+        const renderer = registry.get(respaldo);
+        const result = await renderer.render(compiled.source, { ...options, title: spec.type });
+        const svg = result.content.toString('utf8');
+
+        assertUsableSvg(svg);
+        const { width, height } = svgSize(svg);
+        expect(width, `${spec.type} en ${respaldo} salio sin ancho`).toBeGreaterThan(20);
+        expect(height, `${spec.type} en ${respaldo} salio sin alto`).toBeGreaterThan(20);
+      });
+
+      if (ausente) omitidos.push(`${spec.type}->${respaldo}`);
+    }
+  }
+});
+
 describe('cobertura de la comprobacion', () => {
   it('se comprueban todos los tipos que la maquina puede dibujar', () => {
     const comprobables = TYPE_CATALOG.filter((s) => !sinNavegador.includes(s.engine));

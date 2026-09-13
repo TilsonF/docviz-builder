@@ -85,7 +85,7 @@ Quien habla con quien y en que orden.
 
 **Cuando no.** Si el orden temporal no importa; entonces es un diagrama de componentes o de dependencias.
 
-Alias: `uml-sequence`.
+Alias: `uml-sequence`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -119,7 +119,7 @@ Estructura de clases o entidades y sus relaciones.
 
 **Cuando no.** Si lo que describes son tablas y claves foraneas: usa `erd`.
 
-Alias: `uml-class`.
+Alias: `uml-class`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -159,7 +159,7 @@ Estados de una entidad y las transiciones entre ellos.
 
 **Cuando no.** Si el proceso es una secuencia de tareas sin estados propios: usa `activity` o `flow`.
 
-Alias: `uml-state`.
+Alias: `uml-state`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -285,7 +285,7 @@ Que puede hacer cada actor con el sistema.
 
 **Cuando no.** Si necesitas detallar como ocurre cada caso: eso es `sequence` o `activity`.
 
-Alias: `casos-de-uso`.
+Alias: `casos-de-uso`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -325,7 +325,7 @@ Componentes de software agrupados y como se conectan.
 
 **Cuando no.** Si describes el sistema completo y su entorno: usa `c4-context` o `c4-container`.
 
-Alias: `componentes`.
+Alias: `componentes`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -363,7 +363,7 @@ Donde se ejecuta cada pieza y sobre que infraestructura.
 
 **Cuando no.** Si el interes es la responsabilidad logica y no la maquina: usa `component` o C4.
 
-Alias: `despliegue`.
+Alias: `despliegue`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram
@@ -493,7 +493,7 @@ Descomposicion jerarquica del trabajo de un proyecto.
 
 **Cuando no.** Si lo que importa son las fechas: usa `gantt`. Si es un analisis causal: `issue-tree`.
 
-Alias: `work-breakdown`.
+Alias: `work-breakdown`. Si falta plantuml, se dibuja con d2.
 
 ````md
 ```diagram

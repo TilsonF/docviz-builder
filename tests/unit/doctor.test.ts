@@ -185,10 +185,13 @@ describe('que se puede dibujar', () => {
 
     expect(d.ok).toBe(false);
     expect(d.motoresAusentes).toContain('plantuml');
-    // `erd` tiene respaldo en mermaid; `sequence` depende de PlantUML.
+    // `erd` cae a mermaid y `sequence` a d2, que va embebido y esta siempre.
     expect(tipo(d.degradados, 'erd')).toMatchObject({ motorPreferido: 'plantuml', motorEfectivo: 'mermaid' });
-    expect(tipo(d.imposibles, 'sequence')).toMatchObject({ motorPreferido: 'plantuml' });
-    expect(tipo(d.imposibles, 'sequence')!.motorEfectivo).toBeUndefined();
+    expect(tipo(d.degradados, 'sequence')).toMatchObject({ motorPreferido: 'plantuml', motorEfectivo: 'd2' });
+    // `wireframe` no tiene respaldo: no hay forma razonable de dibujar un
+    // boceto de pantalla con otro motor, asi que ese si se cae.
+    expect(tipo(d.imposibles, 'wireframe')).toMatchObject({ motorPreferido: 'plantuml' });
+    expect(tipo(d.imposibles, 'wireframe')!.motorEfectivo).toBeUndefined();
     // Lo que no depende de PlantUML sigue intacto.
     expect(tipo(d.intactos, 'strategy-tree')).toMatchObject({ motorEfectivo: 'd2' });
   });

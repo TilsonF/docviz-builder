@@ -105,6 +105,7 @@ docviz build <source> --output <target>
 | `docviz build` | Compila los documentos y genera los recursos |
 | `docviz check` | Valida los bloques sin renderizar (rápido) |
 | `docviz diff` | Compara los diagramas de dos versiones de la documentación |
+| `docviz fix` | Corrige las erratas de un bloque que no compila |
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
 | `docviz preview` | Sirve el resultado en un visor local |
 | `docviz types` | Lista los tipos del DSL y los temas |
@@ -249,18 +250,18 @@ El catálogo cubre <!-- docviz:tipos-total -->57<!-- /docviz:tipos-total --> tip
 
 | Necesidad | `type` | Motor |
 |---|---|---|
-| Quien habla con quien y en que orden | `sequence` | plantuml |
-| Estructura de clases o entidades y sus relaciones | `class` | plantuml |
-| Estados de una entidad y las transiciones entre ellos | `state` | plantuml |
+| Quien habla con quien y en que orden | `sequence` | plantuml (o d2) |
+| Estructura de clases o entidades y sus relaciones | `class` | plantuml (o d2) |
+| Estados de una entidad y las transiciones entre ellos | `state` | plantuml (o d2) |
 | Proceso con decisiones y ramas paralelas | `activity` | plantuml |
 | Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
-| Que puede hacer cada actor con el sistema | `use-case` | plantuml |
-| Componentes de software agrupados y como se conectan | `component` | plantuml |
-| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml |
+| Que puede hacer cada actor con el sistema | `use-case` | plantuml (o d2) |
+| Componentes de software agrupados y como se conectan | `component` | plantuml (o d2) |
+| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml (o d2) |
 | Boceto de una pantalla: campos, botones y disposicion | `wireframe` | plantuml |
 | Estructura de un JSON dibujada como arbol | `json` | plantuml |
 | Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
-| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml |
+| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml (o d2) |
 | Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
 | Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
 | Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |
@@ -713,6 +714,7 @@ comandos:
 | `docviz_render_diagram` | Renderiza un diagrama suelto |
 | `docviz_build_document` | Compila y verifica la documentación |
 | `docviz_diff` | Qué diagramas cambiaron entre dos versiones |
+| `docviz_fix` | Devuelve corregido un bloque que no compila |
 | `docviz_preview` | Devuelve el Markdown compilado y sus incidencias |
 
 Registro en un cliente MCP:

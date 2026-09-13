@@ -6,12 +6,14 @@
  *   docviz diff <base> <head>
  *   docviz setup
  *   docviz skill
+ *   docviz fix <archivo>
  *   docviz verify <output>
  *   docviz preview <output>
  *   docviz types
  */
 
 import { execFile } from 'node:child_process';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
@@ -22,6 +24,7 @@ import { diagnosticar, formatearDiagnostico } from './build/doctor.js';
 import { init, formatearInit } from './build/init.js';
 import { startPreview } from './build/preview.js';
 import { installSkill, formatearSkill } from './build/skill.js';
+import { fixBlock } from './mcp/tools.js';
 import { verify } from './build/verify.js';
 import { loadConfig, resolveFromRoot } from './config/load.js';
 import { BuildFailedError, DocVizError } from './core/errors.js';
@@ -33,6 +36,13 @@ import type { RendererBackend } from './config/types.js';
 const VERSION = '0.1.0';
 
 const ejecutar = promisify(execFile);
+
+/** Lee el bloque de la entrada estandar, para encadenarlo con otro comando. */
+async function leerEntrada(): Promise<string> {
+  const trozos: Buffer[] = [];
+  for await (const trozo of process.stdin) trozos.push(Buffer.from(trozo as Buffer));
+  return Buffer.concat(trozos).toString('utf8');
+}
 
 export function createProgram(): Command {
   const program = new Command();
@@ -221,6 +231,33 @@ export function createProgram(): Command {
       }
       const result = await init({ cwd: process.cwd(), theme: opts.theme, force: opts.force === true });
       process.stdout.write(formatearInit(result, opts.theme));
+    });
+
+  program
+    .command('fix')
+    .description('corrige las erratas de un bloque que no compila')
+    .argument('<archivo>', 'archivo con el bloque, o - para leer de la entrada estandar')
+    .option('-l, --lang <valla>', 'valla del bloque: diagram | chart | architecture', 'diagram')
+    .option('--json', 'salida en JSON', false)
+    .action(async (archivo: string, opts: { lang?: string; json?: boolean }) => {
+      const source = archivo === '-' ? await leerEntrada() : await readFile(path.resolve(archivo), 'utf8');
+      const result = fixBlock({ source, ...(opts.lang !== undefined ? { lang: opts.lang } : {}) });
+
+      if (opts.json === true) {
+        process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+        if (!result.ok) process.exitCode = 1;
+        return;
+      }
+
+      for (const c of (result['aplicado'] ?? []) as Array<{ de: string; a: string }>) {
+        process.stderr.write(`corregido: "${c.de}" -> "${c.a}"\n`);
+      }
+      process.stdout.write(`${String(result['source'] ?? source)}\n`);
+      if (!result.ok) {
+        process.stderr.write(`\n${String(result['detail'] ?? result['error'] ?? 'sigue sin compilar')}\n`);
+        for (const p2 of (result['pendientes'] ?? []) as string[]) process.stderr.write(`  ${p2}\n`);
+        process.exitCode = 1;
+      }
     });
 
   program

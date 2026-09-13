@@ -43,18 +43,18 @@ Busca por **lo que quieres explicar**, no por la tecnología.
 
 | Necesidad | `type` | Motor |
 |---|---|---|
-| Quien habla con quien y en que orden | `sequence` | plantuml |
-| Estructura de clases o entidades y sus relaciones | `class` | plantuml |
-| Estados de una entidad y las transiciones entre ellos | `state` | plantuml |
+| Quien habla con quien y en que orden | `sequence` | plantuml (o d2) |
+| Estructura de clases o entidades y sus relaciones | `class` | plantuml (o d2) |
+| Estados de una entidad y las transiciones entre ellos | `state` | plantuml (o d2) |
 | Proceso con decisiones y ramas paralelas | `activity` | plantuml |
 | Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
-| Que puede hacer cada actor con el sistema | `use-case` | plantuml |
-| Componentes de software agrupados y como se conectan | `component` | plantuml |
-| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml |
+| Que puede hacer cada actor con el sistema | `use-case` | plantuml (o d2) |
+| Componentes de software agrupados y como se conectan | `component` | plantuml (o d2) |
+| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml (o d2) |
 | Boceto de una pantalla: campos, botones y disposicion | `wireframe` | plantuml |
 | Estructura de un JSON dibujada como arbol | `json` | plantuml |
 | Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
-| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml |
+| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml (o d2) |
 | Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
 | Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
 | Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |
@@ -347,6 +347,7 @@ comandos:
 | `docviz_render_diagram` | Probar un diagrama suelto |
 | `docviz_build_document` | Compilar la documentación |
 | `docviz_diff` | Comprobar qué diagramas cambiaron respecto a la versión anterior |
+| `docviz_fix` | Antes de reescribir a mano un bloque que falló, pídele el corregido |
 
 Si trabajas en un proyecto nuevo que aún no tiene DocViz, `npx docviz skill`
 instala este contrato en tu directorio de skills y `npx docviz init` deja el

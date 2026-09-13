@@ -49,18 +49,18 @@ describir algo que el compilador no acepte.
 
 | Necesidad | `type` | Motor |
 |---|---|---|
-| Quien habla con quien y en que orden | `sequence` | plantuml |
-| Estructura de clases o entidades y sus relaciones | `class` | plantuml |
-| Estados de una entidad y las transiciones entre ellos | `state` | plantuml |
+| Quien habla con quien y en que orden | `sequence` | plantuml (o d2) |
+| Estructura de clases o entidades y sus relaciones | `class` | plantuml (o d2) |
+| Estados de una entidad y las transiciones entre ellos | `state` | plantuml (o d2) |
 | Proceso con decisiones y ramas paralelas | `activity` | plantuml |
 | Entidades de datos, sus campos y su cardinalidad | `erd` | plantuml (o mermaid) |
-| Que puede hacer cada actor con el sistema | `use-case` | plantuml |
-| Componentes de software agrupados y como se conectan | `component` | plantuml |
-| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml |
+| Que puede hacer cada actor con el sistema | `use-case` | plantuml (o d2) |
+| Componentes de software agrupados y como se conectan | `component` | plantuml (o d2) |
+| Donde se ejecuta cada pieza y sobre que infraestructura | `deployment` | plantuml (o d2) |
 | Boceto de una pantalla: campos, botones y disposicion | `wireframe` | plantuml |
 | Estructura de un JSON dibujada como arbol | `json` | plantuml |
 | Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
-| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml |
+| Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml (o d2) |
 | Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
 | Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
 | Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid |

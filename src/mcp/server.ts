@@ -9,6 +9,7 @@
  *   docviz_render_diagram     renderiza un diagrama suelto
  *   docviz_build_document     compila docs-src -> docs
  *   docviz_diff               que diagramas cambiaron entre dos versiones
+ *   docviz_fix                devuelve corregido un bloque que no compila
  *   docviz_preview            devuelve el Markdown compilado y sus incidencias
  */
 
@@ -18,6 +19,7 @@ import { z } from 'zod';
 import {
   buildDocuments,
   diffDocuments,
+  fixBlock,
   listTypes,
   suggestType,
   previewDocument,
@@ -136,6 +138,22 @@ export function createServer(): McpServer {
       },
     },
     async (args) => asContent(await diffDocuments(args)),
+  );
+
+  server.registerTool(
+    'docviz_fix',
+    {
+      title: 'Corregir un bloque que no compila',
+      description:
+        'Pasale un bloque que fallo y devuelve el bloque corregido. Solo aplica correcciones deducibles del ' +
+        'catalogo —renombrar un campo cuya errata es inequivoca— y vuelve a compilar para decir si basta. ' +
+        'Si no basta, devuelve el diagnostico y el esqueleto del tipo. Usalo antes de reescribir el bloque a mano.',
+      inputSchema: {
+        source: z.string().describe('contenido del bloque, sin las vallas'),
+        lang: z.enum(['diagram', 'chart', 'architecture']).optional(),
+      },
+    },
+    async (args) => asContent(fixBlock(args)),
   );
 
   server.registerTool(

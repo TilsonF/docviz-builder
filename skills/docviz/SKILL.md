@@ -76,6 +76,12 @@ Cada error trae un **código** además de archivo y línea. Léelo, no adivines:
 Un documento con varios bloques rotos los reporta **todos a la vez**:
 arréglalos en una sola pasada.
 
+Y antes de reescribir un bloque a mano:
+
+```bash
+npx docviz fix bloque.yaml    # corrige las erratas y dice si con eso basta
+```
+
 Un `AVISO ... [DV104]` no rompe el build, pero significa que un campo que
 escribiste no llegó al dibujo. O sobra, o está mal escrito; en ningún caso se
 ignora.

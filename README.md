@@ -823,6 +823,15 @@ lugar de en una sorpresa semanas después.
 
 ---
 
+## Compatibilidad
+
+DocViz está en `0.x`. [COMPATIBILIDAD.md](./COMPATIBILIDAD.md) describe qué se
+considera contrato público —el DSL, los códigos de error, los nombres de las
+herramientas MCP, los comandos y el formato de salida— y qué es detalle interno
+que puede cambiar. Conviene fijar la versión hasta la 1.0.
+
+---
+
 ## Licencia
 
 MIT.

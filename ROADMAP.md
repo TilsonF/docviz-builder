@@ -8,12 +8,29 @@ Estado y siguientes pasos de DocViz. Lo que ya está hecho vive en el
 57 tipos sobre seis motores, dibujados de verdad en cada commit. DSL de tres
 vallas, salida Markdown portable, todo local. Servidor MCP, skill instalable y
 `AGENTS.md` que no puede desfasarse del catálogo. Códigos de error estables,
-`diff` entre versiones, banco de casos que mide el acierto, y un saneador de
-SVG con lista de permitidos. 889 pruebas, cobertura 96/88/95/98, cero
-vulnerabilidades.
+`diff` entre versiones, banco de casos que mide el acierto, saneador de SVG con
+lista de permitidos, catálogo bilingüe, respaldos hacia D2 y reparación
+automática de bloques. Cerca de mil pruebas, cero vulnerabilidades.
 
 Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 **llegar a quien la use**.
+
+### Cerrado desde la primera versión de este documento
+
+- **Catálogo bilingüe.** Las 57 fichas existen en inglés y `suggest` puntúa
+  contra ambos idiomas. Medido sobre casos reservados, el acierto en inglés pasó
+  de 75,0 % a 87,5 %.
+- **Validación de campos anidados.** Una errata dentro de `flow:` o de
+  `entities:` ya no es silenciosa.
+- **Respaldos hacia D2.** Sin Java caían 11 tipos; ahora caen 4. Una prueba
+  comprueba que cada respaldo declarado dibuje de verdad.
+- **`docviz fix`.** Devuelve corregido un bloque que no compila, sin adivinar y
+  conservando el texto original.
+- **Matriz de CI** en Windows y macOS.
+- **Rendimiento**: 26,4 s → 12,4 s con el caché vacío, repartiendo entre motores.
+- **Determinismo**: `git-graph` producía bytes distintos en cada render. Estaba
+  roto desde el principio y no tenía prueba; ahora la tiene, para los 57 tipos.
+- **Sitio** con el catálogo completo, y **COMPATIBILIDAD.md** con el contrato.
 
 ---
 
@@ -30,70 +47,45 @@ sin medir.
 La parte determinista (`npm run eval`) sí corre en CI y hoy da **80,0 %** de
 acierto en la primera propuesta y **88,9 %** entre las tres primeras.
 
-### 2. Inglés
+### 2. La documentación en inglés
 
-Todo —README, `AGENTS.md`, el skill, los mensajes de error— está en español. El
-público de un paquete cuyo argumento es "cualquier agente sabe usarlo" lee
-inglés, y los modelos rinden mejor con instrucciones en inglés. Conviene
-decidirlo antes de que haya usuarios citando la documentación actual.
+El catálogo ya es bilingüe, pero el README, `AGENTS.md`, el skill y los mensajes
+de error siguen siendo solo en español. Es lo que queda del trabajo de idioma, y
+conviene cerrarlo antes de que haya usuarios citando la documentación actual —o
+analizando la salida, que es peor.
 
-### 3. Hillclimb del `suggest`, con partición reservada
+### 3. Seguir subiendo el acierto de `suggest`
 
-Los cuatro fallos conocidos (`histogram`, `funnel`, `stacked-bar`,
-`horizontal-bar`) no son vocabulario faltante: "embudo" y "distribucion" ya
-están en el catálogo. Es la puntuación —las coincidencias de prosa genérica
-suman en muchos tipos y ahogan el término de dominio—. Objetivo: >90 % en la
-primera propuesta, medido **sobre casos reservados**, o el número deja de
-significar nada.
+Medida actual sobre casos reservados: **88,0 %** en la primera propuesta,
+**92,0 %** entre las tres primeras.
 
-### 4. Validación de campos anidados
+El banco ya está partido en entrenamiento y reservado, y esa partición dejó una
+lección que conviene no olvidar: ponderar las palabras por lo específicas que
+son subió el entrenamiento diez puntos y **no movió el reservado ni uno**. Era
+sobreajuste entero. Lo único que generalizó fue traducir el catálogo.
 
-Hoy solo se miran las claves de primer nivel: una errata dentro de `flow:` o de
-`elements:` sigue siendo silenciosa.
+Así que el siguiente intento no debería ser otro ajuste de la puntuación, sino
+más vocabulario real —o más casos, que también revelan huecos—. Y medido donde
+toca.
+
+### 4. Los cuatro tipos sin respaldo
+
+`wireframe`, `json`, `yaml` y `activity` se caen sin Java. Los tres primeros no
+admiten un respaldo con sentido; `activity` necesitaría ramas con condición en
+D2, que es viable. Decidir cuáles se resuelven y cuáles se documentan como
+dependientes de PlantUML.
 
 ---
 
 ## Medio plazo
 
-### 5. Ampliar los respaldos
+### 5. Sin Chromium siguen cayendo nueve
 
-49 de 57 tipos no tienen ninguno: sin Chromium caen 12 tipos, sin Java otros 11.
-Varios `plantuml → mermaid` y `mermaid → d2` son viables y subirían la tasa de
-éxito real más que cualquier mejora de los mensajes.
+`journey`, `git-graph`, `kanban`, `quadrant`, `sankey`, `treemap`, `radar`,
+`block` y `bpmn`. Varios son viables sobre D2 o Vega-Lite —`quadrant` es un
+scatter, `kanban` son columnas— y el resto probablemente no.
 
-### 6. `docviz_fix`
-
-El agente manda el bloque roto y recibe el corregido. Con los códigos ya puestos
-es barato, pero el eval con modelo dirá si hace falta o si con los mensajes
-basta.
-
-### 7. Matriz de CI
-
-Windows y macOS no se han ejecutado nunca. Hay candidatos de Chromium para
-Windows en el código que nadie ha probado.
-
-### 8. Rendimiento
-
-El build en frío son unos 33 s y los renders van en serie. Irrelevante con nueve
-diagramas, molesto con doscientos.
-
----
-
-## Largo plazo
-
-### 9. Catálogo visual en el sitio
-
-Los 57 tipos dibujados, generados en el workflow de Pages para no versionar 69
-SVG. Es la página que convence.
-
-### 10. Criterios para la 1.0
-
-Decidir explícitamente qué es contrato estable —códigos de error, el DSL, las
-herramientas MCP, el formato de salida— y qué puede cambiar. Hoy `0.x` no
-promete nada, y está bien; pero conviene saber qué se va a prometer antes de
-prometerlo.
-
-### 11. Mantenimiento del allowlist de SVG
+### 6. Mantenimiento del allowlist de SVG
 
 Cuando un motor cambie lo que emite, la prueba de "sanear el catálogo no quita
 nada más que comentarios" lo detecta, y Dependabot agrupa los motores para que

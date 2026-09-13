@@ -1,5 +1,5 @@
 {
-  "name": "@tilsonf/docviz-builder",
+  "name": "docviz",
   "version": "0.1.0",
   "description": "Compila bloques declarativos de diagramas dentro de Markdown a imagenes SVG/PNG, produciendo Markdown estandar y portable.",
   "keywords": [
@@ -110,8 +110,5 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/TilsonF/docviz-builder.git"
-  },
-  "publishConfig": {
-    "access": "public"
   }
 }

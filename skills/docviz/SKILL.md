@@ -57,6 +57,9 @@ npx docviz verify docs                        # comprueba que no haya imágenes 
 npx docviz diff <docs-src anterior> docs-src  # qué diagramas cambiaron
 ```
 
+Mientras escribes, `npx docviz preview docs --watch` recompila al guardar y
+recarga el navegador solo.
+
 No des la tarea por terminada mientras `check` o `verify` fallen.
 
 ## Cuando algo falla

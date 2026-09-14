@@ -109,7 +109,7 @@ docviz build <source> --output <target>
 | `docviz diff` | Compara los diagramas de dos versiones de la documentación |
 | `docviz fix` | Corrige las erratas de un bloque que no compila |
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
-| `docviz preview` | Sirve el resultado en un visor local |
+| `docviz preview` | Sirve el resultado en un visor local, con `--watch` |
 | `docviz types` | Lista los tipos del DSL y los temas |
 | `docviz setup` | Descarga `plantuml.jar` dentro del paquete |
 | `docviz skill` | Instala el contrato de DocViz como skill de tu agente |
@@ -129,6 +129,24 @@ docviz build ./docs-src \
   --renderer-url http://localhost:8000 \
   --continue-on-error
 ```
+
+### Mientras escribes
+
+```bash
+docviz preview docs --watch
+```
+
+Compila, sirve el resultado en `http://127.0.0.1:4321` y se queda observando
+`docs-src`. Al guardar recompila —con el caché, solo lo que cambió— y **el
+navegador se recarga solo**. `docviz build --watch` hace lo mismo sin servidor,
+para cuando ya tienes tu propio visor abierto.
+
+En modo observación un error no tumba el proceso: se reporta y se sigue
+esperando al siguiente guardado, que es lo único razonable cuando estás a mitad
+de escribir un bloque.
+
+Sin `--watch` la página servida es HTML sin nada añadido: una previsualización
+tiene que poder guardarse y abrirse sola.
 
 Flujo recomendado, ya cableado como scripts de npm:
 

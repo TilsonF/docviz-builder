@@ -1,14 +1,14 @@
 /**
  * Interfaz de linea de comandos (seccion 17).
  *
- *   docviz build <source> --output <target> [--theme ...] [--clean] ...
+ *   docviz build <source> --output <target> [--theme ...] [--clean] [--watch]
  *   docviz check <source>
  *   docviz diff <base> <head>
  *   docviz setup
  *   docviz skill
  *   docviz fix <archivo>
  *   docviz verify <output>
- *   docviz preview <output>
+ *   docviz preview <output> [--watch]
  *   docviz types
  */
 
@@ -23,6 +23,7 @@ import { diff, formatDiff, hasChanges } from './build/diff.js';
 import { diagnosticar, formatearDiagnostico } from './build/doctor.js';
 import { init, formatearInit } from './build/init.js';
 import { startPreview } from './build/preview.js';
+import { watchSource } from './build/watch.js';
 import { installSkill, formatearSkill } from './build/skill.js';
 import { fixBlock } from './mcp/tools.js';
 import { verify } from './build/verify.js';
@@ -64,6 +65,7 @@ export function createProgram(): Command {
     .option('--renderer-url <url>', 'URL de una instancia Kroki self-hosted')
     .option('--backend <backend>', 'backend por defecto: local | kroki')
     .option('--continue-on-error', 'no aborta ante un diagrama invalido', false)
+    .option('-w, --watch', 'recompila cada vez que cambie un documento', false)
     .action(async (source: string | undefined, opts: BuildCliOptions) => {
       const config = await loadConfig({
         configPath: opts.config,
@@ -106,6 +108,15 @@ export function createProgram(): Command {
         process.stderr.write(`\n${result.errors.map((e) => e.format()).join('\n\n')}\n`);
         process.stderr.write(`\n${result.errors.length} diagrama(s) fallaron (--continue-on-error activo)\n`);
         process.exitCode = 1;
+      }
+
+      if (opts.watch === true) {
+        const origen = resolveFromRoot(config, config.source);
+        await observar(origen, async () => {
+          // En modo observacion un error no puede tumbar el proceso: se
+          // reporta y se sigue esperando al siguiente guardado.
+          await recompilar(config, { continueOnError: true });
+        });
       }
     });
 
@@ -203,16 +214,39 @@ export function createProgram(): Command {
     .argument('[output]', 'directorio de salida a servir')
     .option('-c, --config <file>', 'archivo de configuracion')
     .option('-p, --port <port>', 'puerto', '4321')
-    .action(async (output: string | undefined, opts: { config?: string; port: string }) => {
+    .option('-w, --watch', 'recompila al guardar y recarga el navegador', false)
+    .action(async (output: string | undefined, opts: { config?: string; port: string; watch?: boolean }) => {
       const config = await loadConfig({
         configPath: opts.config,
         overrides: output !== undefined ? { output } : {},
       });
       const dir = resolveFromRoot(config, config.output);
-      const server = await startPreview(dir, Number.parseInt(opts.port, 10));
-      process.stdout.write(`previsualizacion en ${server.url}\npulsa Ctrl+C para detener\n`);
+      const observando = opts.watch === true;
+
+      // Con `--watch` se compila antes de servir: si no, la primera pagina
+      // seria la de la sesion anterior, o ninguna.
+      if (observando) await recompilar(config, { continueOnError: true });
+
+      const server = await startPreview(dir, Number.parseInt(opts.port, 10), { liveReload: observando });
+      process.stdout.write(
+        `previsualizacion en ${server.url}\n` +
+          (observando ? `observando ${path.relative(process.cwd(), resolveFromRoot(config, config.source))}\n` : '') +
+          'pulsa Ctrl+C para detener\n',
+      );
+
+      const watcher = observando
+        ? watchSource(resolveFromRoot(config, config.source), {
+            onLog: (m) => process.stderr.write(`${m}\n`),
+            onChange: async () => {
+              await recompilar(config, { continueOnError: true });
+              server.recargar();
+            },
+          })
+        : undefined;
+
       await new Promise<void>((resolve) => {
         process.on('SIGINT', () => {
+          watcher?.close();
           void server.close().then(resolve);
         });
       });
@@ -453,6 +487,53 @@ function ficha(spec: TypeSpec, idioma: Idioma = 'es'): string {
 }
 
 /**
+ * Compila una vez e informa en una linea, para el modo observacion.
+ *
+ * El resumen completo del build es util una vez; repetido en cada guardado se
+ * convierte en ruido que tapa lo unico que importa, que es si fallo algo.
+ */
+async function recompilar(
+  config: Awaited<ReturnType<typeof loadConfig>>,
+  options: { continueOnError: boolean },
+): Promise<void> {
+  const inicio = Date.now();
+  try {
+    const result = await build(config, { continueOnError: options.continueOnError });
+    const ms = Date.now() - inicio;
+    const fallos = result.errors.length;
+    process.stdout.write(
+      `${new Date().toTimeString().slice(0, 8)}  ${result.stats.blocks} diagrama(s) en ${ms} ms` +
+        `${result.stats.cacheHits > 0 ? ` (${result.stats.cacheHits} del cache)` : ''}` +
+        `${fallos > 0 ? `  — ${fallos} con error` : ''}\n`,
+    );
+    escribirAvisos(result.warnings);
+    if (fallos > 0) process.stderr.write(`${result.errors.map((e) => e.format()).join('\n\n')}\n`);
+  } catch (err) {
+    // Ni un error de build ni uno inesperado pueden terminar la observacion.
+    if (err instanceof BuildFailedError || err instanceof DocVizError) {
+      process.stderr.write(`\n${err.format()}\n`);
+      return;
+    }
+    process.stderr.write(`\n${err instanceof Error ? err.message : String(err)}\n`);
+  }
+}
+
+/** Observa el origen hasta que el usuario interrumpa. */
+async function observar(origen: string, alCambiar: () => Promise<void>): Promise<void> {
+  process.stdout.write(`observando ${path.relative(process.cwd(), origen)}\npulsa Ctrl+C para detener\n`);
+  const watcher = watchSource(origen, {
+    onLog: (m) => process.stderr.write(`${m}\n`),
+    onChange: alCambiar,
+  });
+  await new Promise<void>((resolve) => {
+    process.on('SIGINT', () => {
+      watcher.close();
+      resolve();
+    });
+  });
+}
+
+/**
  * Los avisos van a stderr y no cambian el codigo de salida.
  *
  * Un campo ignorado no rompe el documento, pero si se mezcla con la salida
@@ -482,6 +563,7 @@ interface BuildCliOptions {
   rendererUrl?: string;
   backend?: RendererBackend;
   continueOnError?: boolean;
+  watch?: boolean;
 }
 
 export async function run(argv: readonly string[] = process.argv): Promise<number> {

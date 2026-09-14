@@ -35,6 +35,7 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   y `docviz types --lang en`, con las tablas generadas desde el catálogo.
 - **Más respaldos**: en una máquina con solo Node —sin Java y sin Chromium—
   funcionan 46 de los 57 tipos. Antes eran 34.
+- **`--watch`** en `preview` y en `build`, con recarga del navegador.
 
 ---
 
@@ -106,6 +107,31 @@ un fallo que no se entiende cuesta más de lo que avisa.
 Cuando un motor cambie lo que emite, la prueba de "sanear el catálogo no quita
 nada más que comentarios" lo detecta, y Dependabot agrupa los motores para que
 suban juntos. Es la deuda que deja la lista de permitidos, y está cubierta.
+
+---
+
+## Lo que falta como herramienta de uso diario
+
+Distinto de lo anterior: no es ingeniería pendiente, es lo que se echa en falta
+al usarla para escribir documentación de verdad.
+
+1. **Temas de marca.** La configuración solo acepta los cuatro nombres
+   integrados. Cada documento que se entrega a un cliente quiere su paleta, y
+   hoy la única salida es bifurcar el paquete.
+2. **Datos desde archivo en los gráficos.** Hoy hay que teclearlos, así que el
+   gráfico no se puede regenerar cuando el dato cambia. Ojo: `data.url` de
+   Vega-Lite está rechazado a propósito y debe seguir estándolo; lo que falta es
+   una ruta **relativa al documento** que resuelva DocViz, nunca una URL.
+3. **PNG para todos los motores.** Solo PlantUML lo emite; los otros ocho, solo
+   SVG. La pieza ya existe (`scripts/rasterize.mjs`) pero está fuera del build.
+4. **Un modelo, varias vistas** en `architecture`. Hoy cada bloque repite sus
+   elementos, y a los tres meses las tres vistas del mismo sistema ya no
+   coinciden. LikeC4 —que ya es el motor— lo resuelve de forma nativa.
+5. **`check --json`** y un esquema por tipo, para que el editor avise antes de
+   llegar a la terminal.
+6. **Publicar.** Llevar la salida a Outline o Confluence sigue siendo manual.
+   Es la última milla, y mete a DocViz en el negocio de hablar con servicios
+   externos, que hasta ahora ha evitado a propósito: decisión, no tarea.
 
 ---
 

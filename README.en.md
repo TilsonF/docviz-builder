@@ -83,12 +83,32 @@ and explains how to point at one.
 | `docviz diff` | Compares the diagrams of two versions of the documentation |
 | `docviz fix` | Fixes the typos of a block that does not compile |
 | `docviz verify` | Checks the result has no broken images |
-| `docviz preview` | Serves the result in a local viewer |
+| `docviz preview` | Serves the result in a local viewer, with `--watch` |
 | `docviz types` | Lists the DSL types and the themes |
 | `docviz suggest "..."` | Recommends a type from a sentence |
 | `docviz setup` | Downloads `plantuml.jar` inside the package |
 | `docviz skill` | Installs the DocViz contract as a skill for your agent |
 | `docviz doctor` | Checks the environment and which types can be drawn |
+
+---
+
+## While you write
+
+```bash
+docviz preview docs --watch
+```
+
+Compiles, serves the result on `http://127.0.0.1:4321` and keeps watching
+`docs-src`. On save it recompiles — only what changed, thanks to the cache — and
+**the browser reloads itself**. `docviz build --watch` does the same without a
+server, for when you already have your own viewer open.
+
+In watch mode an error does not bring the process down: it is reported and the
+watcher keeps waiting for the next save, which is the only sensible behaviour
+while you are halfway through writing a block.
+
+Without `--watch` the served page is plain HTML with nothing injected: a preview
+has to be saveable and openable on its own.
 
 ---
 

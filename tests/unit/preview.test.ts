@@ -178,3 +178,55 @@ describe('contencion del servidor', () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe('recarga en vivo', () => {
+  it('sin --watch la pagina no lleva nada añadido', async () => {
+    // Una previsualizacion tiene que poder guardarse y abrirse sola; un guion
+    // que intenta conectarse a un servidor que ya no existe seria basura.
+    const res = await fetch(`${server.url}doc.md`);
+    const html = await res.text();
+    expect(html).not.toContain('EventSource');
+    expect(html).not.toContain('__docviz');
+  });
+
+  it('con --watch inyecta el guion y avisa por el canal', async () => {
+    const { startPreview } = await import('../../src/build/preview.js');
+    const vivo = await startPreview(root, 0, { liveReload: true });
+
+    try {
+      const html = await (await fetch(`${vivo.url}doc.md`)).text();
+      expect(html).toContain('EventSource');
+      expect(html).toContain('/__docviz/recargar');
+
+      // Se abre el canal como lo haria el navegador y se espera el aviso.
+      const res = await fetch(`${vivo.url}__docviz/recargar`);
+      expect(res.headers.get('content-type')).toContain('text/event-stream');
+
+      const lector = res.body!.getReader();
+      const decodificador = new TextDecoder();
+      const primero = decodificador.decode((await lector.read()).value);
+      expect(primero).toContain('conectado');
+
+      vivo.recargar();
+      const aviso = decodificador.decode((await lector.read()).value);
+      expect(aviso).toContain('recargar');
+
+      await lector.cancel();
+    } finally {
+      await vivo.close();
+    }
+  });
+
+  it('cerrar no se queda esperando a las pestañas abiertas', async () => {
+    const { startPreview } = await import('../../src/build/preview.js');
+    const vivo = await startPreview(root, 0, { liveReload: true });
+    const res = await fetch(`${vivo.url}__docviz/recargar`);
+    const lector = res.body!.getReader();
+    void lector.read();
+
+    // Sin cerrar las conexiones a mano, `close()` esperaria indefinidamente y
+    // el proceso quedaria colgado al salir de `--watch`.
+    await expect(vivo.close()).resolves.toBeUndefined();
+    await lector.cancel().catch(() => undefined);
+  });
+});

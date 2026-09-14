@@ -57,6 +57,9 @@ npx docviz verify docs                        # check for broken images
 npx docviz diff <previous docs-src> docs-src  # which diagrams changed
 ```
 
+While writing, `npx docviz preview docs --watch` recompiles on save and reloads
+the browser by itself.
+
 Do not consider the task done while `check` or `verify` fail.
 
 ## When something fails

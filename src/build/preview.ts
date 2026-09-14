@@ -28,14 +28,47 @@ const MIME: Readonly<Record<string, string>> = {
 export interface PreviewServer {
   url: string;
   port: number;
+  /** Avisa a los navegadores abiertos de que la salida cambio. */
+  recargar(): void;
   close(): Promise<void>;
 }
 
-export async function startPreview(rootDir: string, port = 4321): Promise<PreviewServer> {
+export interface PreviewOptions {
+  /**
+   * Inyecta el guion de recarga y habilita el canal de avisos.
+   *
+   * Solo se activa con `--watch`. Sin el, la pagina servida es HTML sin nada
+   * añadido: la previsualizacion tiene que poder guardarse y abrirse sola.
+   */
+  liveReload?: boolean;
+}
+
+/** Ruta del canal de avisos. Empieza por `__` para no chocar con un documento. */
+const CANAL = '/__docviz/recargar';
+
+export async function startPreview(
+  rootDir: string,
+  port = 4321,
+  options: PreviewOptions = {},
+): Promise<PreviewServer> {
   const root = path.resolve(rootDir);
+  const liveReload = options.liveReload === true;
+  // Cada pestaña abierta mantiene una conexion; se avisa a todas a la vez.
+  const abiertas = new Set<http.ServerResponse>();
 
   const server = http.createServer((req, res) => {
-    void handle(root, req, res).catch(() => {
+    if (liveReload && (req.url ?? '') === CANAL) {
+      res.writeHead(200, {
+        'content-type': 'text/event-stream',
+        'cache-control': 'no-cache',
+        connection: 'keep-alive',
+      });
+      res.write(': conectado\n\n');
+      abiertas.add(res);
+      req.on('close', () => abiertas.delete(res));
+      return;
+    }
+    void handle(root, req, res, liveReload).catch(() => {
       res.writeHead(500, { 'content-type': 'text/plain; charset=utf-8' });
       res.end('error interno del servidor de previsualizacion');
     });
@@ -52,7 +85,17 @@ export async function startPreview(rootDir: string, port = 4321): Promise<Previe
   return {
     url: `http://127.0.0.1:${actualPort}/`,
     port: actualPort,
-    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    recargar: () => {
+      for (const res of abiertas) res.write('data: recargar\n\n');
+    },
+    close: () =>
+      new Promise<void>((resolve) => {
+        // Sin cerrar las conexiones abiertas, `close()` espera a que el
+        // navegador se canse: el proceso quedaria colgado al salir.
+        for (const res of abiertas) res.end();
+        abiertas.clear();
+        server.close(() => resolve());
+      }),
   };
 }
 
@@ -62,12 +105,17 @@ function fuera(root: string, target: string): boolean {
   return rel.startsWith('..') || path.isAbsolute(rel);
 }
 
-async function handle(root: string, req: http.IncomingMessage, res: http.ServerResponse): Promise<void> {
+async function handle(
+  root: string,
+  req: http.IncomingMessage,
+  res: http.ServerResponse,
+  liveReload = false,
+): Promise<void> {
   const url = new URL(req.url ?? '/', 'http://127.0.0.1');
   const decoded = decodeURIComponent(url.pathname);
 
   if (decoded === '/') {
-    const html = await indexPage(root);
+    const html = await indexPage(root, liveReload);
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     res.end(html);
     return;
@@ -116,7 +164,7 @@ async function handle(root: string, req: http.IncomingMessage, res: http.ServerR
   if (ext === '.md' && url.searchParams.get('raw') !== '1') {
     const text = await readFile(target, 'utf8');
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-    res.end(documentPage(path.relative(root, target), text));
+    res.end(documentPage(path.relative(root, target), text, liveReload));
     return;
   }
 
@@ -127,7 +175,7 @@ async function handle(root: string, req: http.IncomingMessage, res: http.ServerR
   createReadStream(target).pipe(res);
 }
 
-async function indexPage(root: string): Promise<string> {
+async function indexPage(root: string, liveReload = false): Promise<string> {
   const files = await collectMarkdown(root);
   const items = files
     .map((f) => toPosix(path.relative(root, f)))
@@ -139,6 +187,7 @@ async function indexPage(root: string): Promise<string> {
     `<h1>Documentos compilados</h1>
      <p class="meta">${files.length} documento(s) &middot; ${assets} recurso(s) generado(s) &middot; raiz <code>${escapeHtml(root)}</code></p>
      <ul class="docs">${items}</ul>`,
+    liveReload,
   );
 }
 
@@ -156,12 +205,13 @@ async function countAssets(root: string): Promise<number> {
  * tablas. No pretende ser un visor completo: su unico objetivo es que la
  * validacion visual se pueda hacer sin instalar nada mas.
  */
-function documentPage(relative: string, markdown: string): string {
+function documentPage(relative: string, markdown: string, liveReload = false): string {
   const body = renderMarkdown(markdown);
   return page(
     relative,
     `<p class="meta"><a href="/">&larr; indice</a> &middot; <code>${escapeHtml(relative)}</code> &middot; <a href="?raw=1">ver fuente</a></p>
      <article>${body}</article>`,
+    liveReload,
   );
 }
 
@@ -271,7 +321,19 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
-function page(title: string, body: string): string {
+/**
+ * Guion de recarga.
+ *
+ * Se conecta al canal de avisos y recarga cuando llega uno. Si el servidor se
+ * para, `EventSource` reintenta solo, asi que reiniciar `--watch` recupera la
+ * pestaña sin tocarla. Va en linea porque un archivo aparte seria un recurso
+ * mas que servir y que confundir con la salida.
+ */
+const RECARGA = `<script>
+  new EventSource('${CANAL}').onmessage = () => location.reload();
+</script>`;
+
+function page(title: string, body: string, liveReload = false): string {
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -304,6 +366,6 @@ function page(title: string, body: string): string {
   }
 </style>
 </head>
-<body>${body}</body>
+<body>${body}${liveReload ? RECARGA : ''}</body>
 </html>`;
 }

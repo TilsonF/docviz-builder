@@ -36,6 +36,14 @@ export interface RenderersConfig {
    * de otra forma— y desactivada en cualquier otro caso.
    */
   noSandbox?: boolean;
+  /**
+   * Rasterizado a PNG de los motores que solo emiten SVG.
+   *
+   * `scale` es la densidad —2 da una imagen nitida en una diapositiva— y
+   * `scheme` elige que variante del tema se congela, porque un PNG no puede
+   * llevar las dos como si hace el SVG.
+   */
+  png: { enabled: boolean; scale: number; scheme: 'light' | 'dark' };
 }
 
 import type { CustomThemeSpec } from '../themes/index.js';

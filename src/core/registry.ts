@@ -12,6 +12,20 @@ export class RendererRegistry {
   private readonly renderers = new Map<string, DiagramRenderer>();
   /** Alias de lenguaje -> tipo canonico (`dot` -> `graphviz`, etc.). */
   private readonly aliases = new Map<string, string>();
+  /**
+   * Recursos compartidos entre renderers.
+   *
+   * El rasterizador a PNG mantiene su propio navegador y no pertenece a ningun
+   * renderer concreto: sin esto, quedaria vivo al terminar el build y el proceso
+   * no saldria.
+   */
+  private readonly compartidos: Array<() => Promise<void>> = [];
+
+  /** Registra algo que hay que liberar junto con los renderers. */
+  alLiberar(fn: () => Promise<void>): this {
+    this.compartidos.push(fn);
+    return this;
+  }
 
   register(type: string, renderer: DiagramRenderer, aliases: readonly string[] = []): this {
     const key = normalize(type);
@@ -62,6 +76,13 @@ export class RendererRegistry {
     for (const renderer of this.renderers.values()) {
       try {
         await renderer.dispose?.();
+      } catch (err) {
+        errors.push(err);
+      }
+    }
+    for (const liberar of this.compartidos.splice(0)) {
+      try {
+        await liberar();
       } catch (err) {
         errors.push(err);
       }

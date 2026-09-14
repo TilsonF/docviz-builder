@@ -379,6 +379,37 @@ de `!include` sigue bloqueada.
 Cualquier otro lenguaje (`typescript`, `bash`, `json`, vallas sin lenguaje) se
 deja intacto.
 
+### PNG
+
+Todos los motores pueden emitir PNG, no solo PlantUML:
+
+````md
+```diagram format=png
+type: strategy-tree
+root: Objetivo
+```
+````
+
+Para una diapositiva, un Word o un correo, donde un SVG no siempre encaja. Los
+ocho motores que solo dibujan SVG se rasterizan después, con el mismo Chromium
+local que usan Mermaid y BPMN — sin dependencias nuevas y con el mismo
+endurecimiento.
+
+Un PNG es una sola imagen y no puede llevar las dos variantes del tema como sí
+hace el SVG, así que hay que elegir una:
+
+```yaml
+renderers:
+  png:
+    enabled: true   # false lo apaga: PNG deja de ofrecerse
+    scale: 2        # densidad; 2 queda nítido en una proyección
+    scheme: light   # o dark
+```
+
+Sin un navegador en la máquina, PNG simplemente no se ofrece: anunciar un
+formato que no se puede producir sería peor que no ofrecerlo, porque el fallo
+aparecería a mitad del build en vez de en `docviz doctor`.
+
 ### Opciones en la valla
 
 ````md

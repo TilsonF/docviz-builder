@@ -39,6 +39,7 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 - **Temas de marca**: se parte de un tema incluido y se sobrescriben los colores.
 - **Datos desde archivo** en los gráficos: `.csv`, `.tsv` y `.json`, relativos al
   documento y sin salir del árbol de origen.
+- **PNG desde los nueve motores**, no solo PlantUML.
 
 ---
 

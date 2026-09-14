@@ -132,6 +132,37 @@ describe('el render es determinista', () => {
   }
 });
 
+/**
+ * PNG de verdad, de un motor que solo sabe SVG.
+ *
+ * El envoltorio se comprueba con un navegador de mentira en las pruebas
+ * unitarias; esto comprueba lo otro: que del Chromium real salga un PNG valido,
+ * con las dimensiones del SVG y **los mismos bytes dos veces**, que es la
+ * promesa de la que depende el cache.
+ */
+describe('rasterizado a PNG', () => {
+  const sinNavegador = findBrowser() === undefined;
+
+  for (const tipo of ['strategy-tree', 'bar', 'c4-context'] as const) {
+    it.skipIf(sinNavegador)(`${tipo} sale en PNG y es determinista`, async () => {
+      const spec = TYPE_CATALOG.find((s) => s.type === tipo)!;
+      const compiled = compileDsl(spec.lang, spec.example, available);
+      const renderer = registry.get(compiled.rendererType);
+
+      expect(renderer.supportedFormats, `${tipo} no ofrece png`).toContain('png');
+
+      const opciones = { ...options, format: 'png' as const, title: tipo };
+      const primero = await renderer.render(compiled.source, opciones);
+      const segundo = await renderer.render(compiled.source, opciones);
+
+      // Firma del formato: los ocho primeros bytes de todo PNG.
+      expect([...primero.content.subarray(0, 8)]).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
+      expect(primero.content.byteLength).toBeGreaterThan(1000);
+      expect(segundo.content.equals(primero.content), `${tipo} cambia entre renders`).toBe(true);
+    });
+  }
+});
+
 describe('cobertura de la comprobacion', () => {
   it('se comprueban todos los tipos que la maquina puede dibujar', () => {
     const comprobables = TYPE_CATALOG.filter((s) => !sinNavegador.includes(s.engine));

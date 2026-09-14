@@ -14,6 +14,7 @@ import { VegaLiteRenderer } from '../../src/renderers/vega-lite.js';
 import { browserCandidates, browserNotFoundHelp, findBrowser } from '../../src/renderers/browser.js';
 import { packageVersion } from '../../src/core/package-version.js';
 import { buildRegistry } from '../../src/renderers/index.js';
+import { motorReal } from '../../src/renderers/rasterizador.js';
 import { defaultConfig } from '../../src/config/load.js';
 import { RenderError } from '../../src/core/errors.js';
 import { getTheme } from '../../src/themes/index.js';
@@ -215,18 +216,18 @@ describe('buildRegistry con backend kroki', () => {
     const cfg = defaultConfig(process.cwd());
     cfg.renderers.backend = 'kroki';
     const registry = buildRegistry(cfg);
-    expect(registry.get('plantuml').constructor.name).toBe('KrokiRenderer');
-    expect(registry.get('mermaid').constructor.name).toBe('KrokiRenderer');
+    expect(motorReal(registry.get('plantuml')).constructor.name).toBe('KrokiRenderer');
+    expect(motorReal(registry.get('mermaid')).constructor.name).toBe('KrokiRenderer');
     // LikeC4 es especializado: Kroki no lo cubre.
-    expect(registry.get('likec4').constructor.name).toBe('LikeC4Renderer');
+    expect(motorReal(registry.get('likec4')).constructor.name).toBe('LikeC4Renderer');
   });
 
   it('permite fijar el backend por motor', () => {
     const cfg = defaultConfig(process.cwd());
     cfg.renderers.d2.backend = 'kroki';
     const registry = buildRegistry(cfg);
-    expect(registry.get('d2').constructor.name).toBe('KrokiRenderer');
-    expect(registry.get('mermaid').constructor.name).toBe('MermaidRenderer');
+    expect(motorReal(registry.get('d2')).constructor.name).toBe('KrokiRenderer');
+    expect(motorReal(registry.get('mermaid')).constructor.name).toBe('MermaidRenderer');
   });
 
   it('resuelve la ruta del jar relativa a la raiz del proyecto', () => {

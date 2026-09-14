@@ -43,6 +43,7 @@ export function defaultConfig(rootDir: string): DocVizConfig {
     hash: { length: DEFAULT_HASH_LENGTH },
     renderers: {
       backend: 'local',
+      png: { enabled: true, scale: 2, scheme: 'light' },
       timeoutMs: 60_000,
       maxOutputBytes: 8 * 1024 * 1024,
       kroki: {
@@ -195,6 +196,12 @@ export function mergeConfig(base: DocVizConfig, raw: unknown): DocVizConfig {
     if (typeof renderers['timeoutMs'] === 'number') r.timeoutMs = renderers['timeoutMs'];
     if (typeof renderers['maxOutputBytes'] === 'number') r.maxOutputBytes = renderers['maxOutputBytes'];
     if (typeof renderers['noSandbox'] === 'boolean') r.noSandbox = renderers['noSandbox'];
+    const png = obj(renderers['png'], 'renderers.png');
+    if (png !== undefined) {
+      if (typeof png['enabled'] === 'boolean') r.png.enabled = png['enabled'];
+      if (typeof png['scale'] === 'number') r.png.scale = png['scale'];
+      if (png['scheme'] === 'light' || png['scheme'] === 'dark') r.png.scheme = png['scheme'];
+    }
 
     const kroki = obj(renderers['kroki'], 'renderers.kroki');
     if (kroki !== undefined) {
@@ -319,6 +326,12 @@ function validate(config: DocVizConfig): void {
   }
   if (config.renderers.timeoutMs <= 0) {
     throw new ConfigError('renderers.timeoutMs debe ser mayor que cero');
+  }
+  if (config.renderers.png.scale <= 0 || config.renderers.png.scale > 4) {
+    throw new ConfigError(
+      'renderers.png.scale debe estar entre 0 y 4',
+      `valor recibido: ${config.renderers.png.scale}. Por encima de 4 el lienzo se recorta antes que mejorar`,
+    );
   }
   if (config.renderers.maxOutputBytes <= 0) {
     throw new ConfigError('renderers.maxOutputBytes debe ser mayor que cero');

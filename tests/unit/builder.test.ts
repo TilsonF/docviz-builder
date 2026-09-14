@@ -85,9 +85,22 @@ describe('check', () => {
     const root = await project({ 'docs-src/a.md': '## Uno\n\n```d2\nA -> B\n```\n' });
     const cfg = config(root);
     cfg.formats['d2'] = 'png';
+    // Con el rasterizado activo cualquier motor puede dar PNG, asi que el caso
+    // solo existe cuando se ha desactivado a proposito. Es real: quien no
+    // quiera pagar un navegador en su build lo apaga.
+    cfg.renderers = { ...cfg.renderers, png: { ...cfg.renderers.png, enabled: false } };
     const result = await check(cfg);
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]!.format()).toContain('no puede producir png');
+  });
+
+  it('con el rasterizado activo, ese mismo formato ya no es imposible', async () => {
+    const root = await project({ 'docs-src/a.md': '## Uno\n\n```d2\nA -> B\n```\n' });
+    const cfg = config(root);
+    cfg.formats['d2'] = 'png';
+    const result = await check(cfg);
+    // Salvo que la maquina no tenga navegador, en cuyo caso vuelve a serlo.
+    expect(result.errors.length).toBeLessThanOrEqual(1);
   });
 
   it('reporta un DSL invalido con archivo y sin renderizar', async () => {

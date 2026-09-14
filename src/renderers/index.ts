@@ -16,6 +16,8 @@ import { createPlantUmlRenderer } from './plantuml.js';
 import { createVegaLiteRenderer } from './vega-lite.js';
 import { createSvgbobRenderer } from './svgbob.js';
 import { createBpmnRenderer } from './bpmn.js';
+import { findBrowser } from './browser.js';
+import { conPng, Rasterizador } from './rasterizador.js';
 import type { DocVizConfig, RendererBackend } from '../config/types.js';
 import type { DiagramRenderer } from '../core/types.js';
 
@@ -38,11 +40,29 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
   const r = config.renderers;
   const resolve = (engine: { backend?: RendererBackend }): RendererBackend => engine.backend ?? r.backend;
 
+  // PNG para los motores que solo emiten SVG. Solo se ofrece si hay un
+  // navegador: anunciar un formato que no se puede producir seria peor que no
+  // ofrecerlo, porque el fallo aparecereria a mitad del build.
+  const navegador = r.png.enabled ? findBrowser(r.mermaid.browserPath ?? r.bpmn.browserPath) : undefined;
+  const rasterizador =
+    navegador === undefined
+      ? undefined
+      : new Rasterizador({
+          scale: r.png.scale,
+          scheme: r.png.scheme,
+          ...(r.mermaid.browserPath !== undefined ? { browserPath: r.mermaid.browserPath } : {}),
+          ...(r.noSandbox !== undefined ? { noSandbox: r.noSandbox } : {}),
+        });
+  if (rasterizador !== undefined) registry.alLiberar(() => rasterizador.dispose());
+
+  const conFormatos = (renderer: DiagramRenderer): DiagramRenderer =>
+    rasterizador === undefined ? renderer : conPng(renderer, rasterizador);
+
   const withKroki = (type: string, local: () => DiagramRenderer, engine: { backend?: RendererBackend }) => {
     if (resolve(engine) === 'kroki' && krokiSupports(type)) {
-      return createKrokiRenderer(type, r.kroki);
+      return conFormatos(createKrokiRenderer(type, r.kroki));
     }
-    return local();
+    return conFormatos(local());
   };
 
   if (r.plantuml.enabled) {
@@ -99,7 +119,7 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
 
   // LikeC4 es un renderer especializado; Kroki no lo cubre.
   if (r.likec4.enabled) {
-    registry.register('likec4', createLikeC4Renderer(), ALIASES['likec4']);
+    registry.register('likec4', conFormatos(createLikeC4Renderer()), ALIASES['likec4']);
   }
 
   // C4 dibujado con PlantUML: respaldo de LikeC4, sin dependencias adicionales.
@@ -115,14 +135,20 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
   }
 
   if (r.svgbob.enabled) {
-    registry.register('svgbob', createSvgbobRenderer(), ALIASES['svgbob']);
+    registry.register('svgbob', conFormatos(createSvgbobRenderer()), ALIASES['svgbob']);
   }
 
   if (r.bpmn.enabled) {
-    registry.register('bpmn', createBpmnRenderer({
-        browserPath: r.bpmn.browserPath,
-        ...(r.noSandbox !== undefined ? { noSandbox: r.noSandbox } : {}),
-      }), ALIASES['bpmn']);
+    registry.register(
+      'bpmn',
+      conFormatos(
+        createBpmnRenderer({
+          browserPath: r.bpmn.browserPath,
+          ...(r.noSandbox !== undefined ? { noSandbox: r.noSandbox } : {}),
+        }),
+      ),
+      ALIASES['bpmn'],
+    );
   }
 
   return registry;

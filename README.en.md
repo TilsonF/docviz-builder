@@ -225,6 +225,30 @@ remain available as an escape hatch.
 
 ---
 
+## PNG
+
+Every engine can emit PNG, not just PlantUML:
+
+````md
+```diagram format=png
+type: strategy-tree
+root: Goal
+```
+````
+
+For a slide, a Word document or an email, where an SVG does not always fit. The
+eight engines that only draw SVG are rasterised afterwards with the same local
+Chromium that Mermaid and BPMN use — no new dependency, same hardening.
+
+A PNG is a single image and cannot carry both theme variants the way the SVG
+does, so one has to be chosen: `renderers.png.scheme` (`light` by default) and
+`renderers.png.scale`.
+
+Without a browser on the machine, PNG is simply not offered: advertising a
+format that cannot be produced would be worse than not offering it.
+
+---
+
 ## What changed between two versions
 
 A `.md` diff tells you a YAML block was touched, but not whether the resulting

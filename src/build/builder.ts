@@ -24,7 +24,7 @@ import type { RendererRegistry } from '../core/registry.js';
 import { compileDsl, DSL_LANGUAGES } from '../dsl/index.js';
 import { scanDocument, type ScanResult } from '../markdown/scan.js';
 import { applyReplacements, type Replacement } from '../markdown/transform.js';
-import { getTheme, themeFingerprint } from '../themes/index.js';
+import { resolveTheme, themeFingerprint } from '../themes/index.js';
 import { resolveFromRoot } from '../config/load.js';
 import type { DocVizConfig } from '../config/types.js';
 
@@ -93,7 +93,7 @@ export async function check(config: DocVizConfig): Promise<CheckResult> {
     const text = await readFile(file, 'utf8');
     let scanned: ScanResult;
     try {
-      scanned = scanBlocks(text, registry);
+      scanned = scanBlocks(text, registry, { baseDir: path.dirname(file), root: sourceDir });
     } catch (err) {
       errors.push(toDocVizError(err, { file: relative }));
       continue;
@@ -167,7 +167,7 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
     log(`limpieza: se elimino ${toPosix(path.relative(config.rootDir, outputDir))}`);
   }
 
-  const theme = getTheme(config.theme.name);
+  const theme = resolveTheme(config);
   const fingerprintValue = themeFingerprint(theme);
   const registry = buildRegistry(config);
   const cache = new AssetCache(resolveFromRoot(config, config.cache.dir), config.cache.enabled);
@@ -203,7 +203,7 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
 
       let scanned: ScanResult;
       try {
-        scanned = scanBlocks(text, registry);
+        scanned = scanBlocks(text, registry, { baseDir: path.dirname(file), root: sourceDir });
       } catch (err) {
         result.errors.push(toDocVizError(err, { file: relativeSource }));
         continue;
@@ -329,7 +329,7 @@ interface RenderBlockArgs {
   assetsDir: string;
   themeName: string;
   themeFingerprintValue: string;
-  theme: ReturnType<typeof getTheme>;
+  theme: ReturnType<typeof resolveTheme>;
 }
 
 async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
@@ -404,12 +404,17 @@ function resolveFormat(
   return block.requestedFormat ?? config.formats[block.rendererType] ?? fallback;
 }
 
-function scanBlocks(text: string, registry: RendererRegistry): ScanResult {
+function scanBlocks(
+  text: string,
+  registry: RendererRegistry,
+  datos?: { baseDir: string; root: string },
+): ScanResult {
   return scanDocument(text, {
     resolveLanguage: (lang) => registry.resolve(lang),
     // El DSL necesita saber que motores hay registrados: si el preferido no
-    // esta, compila para el respaldo declarado en lugar de abortar.
-    compileDsl: (lang, source) => compileDsl(lang, source, (engine) => registry.has(engine)),
+    // esta, compila para el respaldo declarado en lugar de abortar. Y el
+    // directorio del documento, para resolver los datos de un archivo.
+    compileDsl: (lang, source) => compileDsl(lang, source, (engine) => registry.has(engine), datos),
     dslLanguages: DSL_LANGUAGES,
   });
 }

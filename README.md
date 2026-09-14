@@ -464,6 +464,32 @@ LikeC4 no pasa por Kroki: siempre usa el renderer especializado.
 
 ---
 
+## Datos desde un archivo
+
+Un informe saca sus números de una exportación, y teclearlos dentro del bloque
+tiene dos costes: es donde se cuelan los errores, y hace que el gráfico **no se
+pueda regenerar** cuando el dato cambia.
+
+````md
+```chart
+type: bar
+title: Ventas por mes
+dataFile: ./ventas.csv
+```
+````
+
+Admite `.csv`, `.tsv` y `.json` —una lista en la raíz o un objeto con la clave
+`data`—. El CSV se lee como lo produce una hoja de cálculo: cabecera, comillas
+dobles y comas dentro de un campo entrecomillado. Un valor que parece un código,
+como `007`, se conserva como texto.
+
+Deliberadamente **no admite URLs**. `data.url` de Vega-Lite está rechazado a
+propósito y debe seguir estándolo: el build no hace peticiones de red porque la
+documentación puede ser confidencial. La ruta es relativa al documento, la
+resuelve DocViz y no puede salirse del árbol de origen.
+
+---
+
 ## Temas
 
 `default`, `corporate`, `executive` y `dark`. Un tema define la misma identidad
@@ -494,6 +520,35 @@ sin duplicar recursos ni escribir `<picture>` a mano.
 | D2 | Trae su propio par de temas (`themeID` / `darkThemeID`) |
 
 El tema `dark` es de un solo modo: quien lo elige quiere oscuro siempre.
+
+### El tema de tu marca
+
+Lo que se entrega a un cliente quiere su paleta. No hace falta escribir los seis
+dialectos: se parte de un tema incluido y se sobrescriben los colores que
+interesen.
+
+```yaml
+theme:
+  name: acme
+  base: corporate
+  palette:
+    primary: "#0F62FE"
+    accent: "#FF7EB6"
+  darkPalette:          # opcional; sin esto, los cambios valen para los dos modos
+    primary: "#78A9FF"
+  fontFamily: Inter, sans-serif
+```
+
+De ahí se derivan los `skinparam`, las variables de Mermaid, las ranuras de D2,
+los atributos de Graphviz, la configuración de Vega-Lite y la paleta de LikeC4 —
+exactamente igual que en los temas incluidos, porque es el mismo código. Y como
+la huella del tema entra en el hash del recurso, ajustar un color repinta lo
+afectado y solo lo afectado.
+
+Los colores **tienen que ser hexadecimales**. Acaban dentro de una regla CSS y
+de un `skinparam`, así que aceptar una cadena libre convertiría el tema en una
+vía de inyección: `#fff; } svg { display:none` es CSS válido. Lo mismo con la
+tipografía, que no admite comillas ni punto y coma.
 
 ---
 

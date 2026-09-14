@@ -58,7 +58,8 @@ describe('campos conocidos de un tipo', () => {
   it('salen del ejemplo canonico mas los universales', () => {
     const spec = findType('sequence')!;
     const fields = knownFields(spec);
-    expect([...fields].sort()).toEqual(['flow', 'participants', 'title', 'type']);
+    // `dataFile` es universal: no lo declara el tipo, lo admite cualquier bloque.
+    expect([...fields].sort()).toEqual(['dataFile', 'flow', 'participants', 'title', 'type']);
   });
 
   it('se memoriza entre llamadas', () => {
@@ -68,7 +69,7 @@ describe('campos conocidos de un tipo', () => {
 
   it('un ejemplo que no es un mapa deja solo los universales', () => {
     const spec = { ...findType('sequence')!, type: 'inventado', example: '- suelto\n- lista' };
-    expect([...knownFields(spec)].sort()).toEqual(['title', 'type']);
+    expect([...knownFields(spec)].sort()).toEqual(['dataFile', 'title', 'type']);
   });
 });
 

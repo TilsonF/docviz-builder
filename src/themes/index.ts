@@ -8,8 +8,10 @@
 import { fingerprint } from '../core/hash.js';
 import { ConfigError } from '../core/errors.js';
 import type { Theme, ThemePalette } from './types.js';
+import { buildCustomTheme, type CustomThemeSpec } from './custom.js';
 
 export type { Theme, ThemePalette } from './types.js';
+export type { CustomThemeSpec } from './custom.js';
 
 const SANS = "'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif";
 const MONO = "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace";
@@ -445,4 +447,25 @@ export function getTheme(name: string): Theme {
  */
 export function themeFingerprint(theme: Theme): string {
   return fingerprint(theme);
+}
+
+/**
+ * Tema de marca declarado en la configuracion.
+ *
+ * La derivacion por motor la hace `buildTheme`, la misma que usan los cuatro
+ * temas incluidos: un tema a medida no es un caso especial, es otro tema.
+ */
+export function buildTheme_(spec: CustomThemeSpec): Theme {
+  const base = getTheme(spec.base ?? 'default');
+  return buildCustomTheme(spec, base, buildTheme);
+}
+
+/**
+ * Tema que toca usar segun la configuracion.
+ *
+ * Es el unico punto por el que se resuelve un tema en el build, para que dar de
+ * alta uno a medida no obligue a tocar cada llamada.
+ */
+export function resolveTheme(config: { theme: { name: string; custom?: CustomThemeSpec } }): Theme {
+  return config.theme.custom === undefined ? getTheme(config.theme.name) : buildTheme_(config.theme.custom);
 }

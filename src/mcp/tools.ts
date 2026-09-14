@@ -25,7 +25,7 @@ import {
 } from '../dsl/index.js';
 import { TYPE_CATALOG, type TypeSpec } from '../dsl/catalog.js';
 import { buildRegistry } from '../renderers/index.js';
-import { getTheme, themeNames } from '../themes/index.js';
+import { getTheme, resolveTheme, themeNames } from '../themes/index.js';
 import { toPosix } from '../core/paths.js';
 
 export interface ToolResult {
@@ -320,7 +320,7 @@ export async function renderDiagram(args: {
       cwd: args.cwd,
       overrides: args.theme !== undefined ? { theme: args.theme } : {},
     });
-    const theme = getTheme(config.theme.name);
+    const theme = resolveTheme(config);
 
     // El `type` puede ser un tipo del DSL o directamente un motor.
     const registry = buildRegistry(config);

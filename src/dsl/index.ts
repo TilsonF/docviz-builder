@@ -23,6 +23,7 @@ import {
   unknownNestedFields,
   type FieldWarning,
 } from './fields.js';
+import { resolverDatos, type ContextoDatos } from './datos.js';
 import { asRecord, optionalString } from './util.js';
 
 export const DSL_LANGUAGES = ['diagram', 'chart', 'architecture'] as const;
@@ -70,6 +71,7 @@ export function compileDsl(
   lang: string,
   source: string,
   isAvailable: EngineAvailability = ALL_AVAILABLE,
+  datos?: ContextoDatos,
 ): CompiledDsl {
   if (!isDslLanguage(lang)) {
     throw new DslValidationError(
@@ -94,6 +96,11 @@ export function compileDsl(
   }
 
   const doc = asRecord(parsed, lang);
+
+  // Los datos de un archivo se resuelven antes de compilar: para los seis tipos
+  // de grafico siguen llegando en `data`, y no hay que tocar ni uno.
+  resolverDatos(doc, datos);
+
   const title = optionalString(doc, 'title');
   const declared = optionalString(doc, 'type');
 
@@ -162,6 +169,8 @@ export { compileChartOfType } from './chart.js';
 export { knownFields, unknownFields, describeFieldWarnings, editDistance } from './fields.js';
 export type { FieldWarning } from './fields.js';
 export { compileArchitecture, architectureLikeC4 } from './architecture.js';
+export { resolverDatos, leerSeparado } from './datos.js';
+export type { ContextoDatos } from './datos.js';
 
 /** Nombres de tipo de `diagram`, en orden alfabetico. */
 export function diagramTypeNames(): string[] {

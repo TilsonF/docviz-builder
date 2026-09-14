@@ -38,6 +38,8 @@ export interface RenderersConfig {
   noSandbox?: boolean;
 }
 
+import type { CustomThemeSpec } from '../themes/index.js';
+
 export interface DocVizConfig {
   /** Directorio raiz de los documentos fuente. */
   source: string;
@@ -47,7 +49,14 @@ export interface DocVizConfig {
   assetsDir: string;
   /** Formato preferido por tipo de renderer. */
   formats: Record<string, OutputFormat>;
-  theme: { name: string };
+  /**
+   * Tema visual.
+   *
+   * `name` elige uno de los incluidos. Con `custom` se declara uno de marca: se
+   * parte de uno incluido y se sobrescriben los colores que interesen, sin
+   * tener que escribir los seis dialectos de motor.
+   */
+  theme: { name: string; custom?: CustomThemeSpec };
   cache: { enabled: boolean; dir: string };
   hash: { length: number };
   renderers: RenderersConfig;

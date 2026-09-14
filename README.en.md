@@ -245,6 +245,52 @@ changed, like `git diff`.
 
 ---
 
+## Data from a file
+
+A report takes its numbers from an export, and typing them inside the block has
+two costs: it is where the mistakes creep in, and it means the chart **cannot be
+regenerated** when the data changes.
+
+````md
+```chart
+type: bar
+title: Sales per month
+dataFile: ./sales.csv
+```
+````
+
+Accepts `.csv`, `.tsv` and `.json` — a list at the root, or an object with a
+`data` key. CSV is read the way a spreadsheet writes it: header, double quotes,
+and commas inside a quoted field. A value that looks like a code, such as `007`,
+stays text.
+
+It deliberately **does not accept URLs**. Vega-Lite's `data.url` is rejected on
+purpose and must stay that way: the build makes no network requests because the
+documentation may be confidential. The path is relative to the document, DocViz
+resolves it, and it cannot escape the source tree.
+
+## Your brand's theme
+
+What you hand to a client wants their palette. You do not have to write the six
+engine dialects: start from a bundled theme and override the colours you care
+about.
+
+```yaml
+theme:
+  name: acme
+  base: corporate
+  palette:
+    primary: "#0F62FE"
+    accent: "#FF7EB6"
+  fontFamily: Inter, sans-serif
+```
+
+Colours **must be hexadecimal**: they end up inside a CSS rule and a
+`skinparam`, so accepting a free-form string would turn the theme into an
+injection vector.
+
+---
+
 ## Errors
 
 A render failure **never** silently produces an incorrect document: the build

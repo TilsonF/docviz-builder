@@ -36,6 +36,9 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 - **Más respaldos**: en una máquina con solo Node —sin Java y sin Chromium—
   funcionan 46 de los 57 tipos. Antes eran 34.
 - **`--watch`** en `preview` y en `build`, con recarga del navegador.
+- **Temas de marca**: se parte de un tema incluido y se sobrescriben los colores.
+- **Datos desde archivo** en los gráficos: `.csv`, `.tsv` y `.json`, relativos al
+  documento y sin salir del árbol de origen.
 
 ---
 
@@ -115,14 +118,7 @@ suban juntos. Es la deuda que deja la lista de permitidos, y está cubierta.
 Distinto de lo anterior: no es ingeniería pendiente, es lo que se echa en falta
 al usarla para escribir documentación de verdad.
 
-1. **Temas de marca.** La configuración solo acepta los cuatro nombres
-   integrados. Cada documento que se entrega a un cliente quiere su paleta, y
-   hoy la única salida es bifurcar el paquete.
-2. **Datos desde archivo en los gráficos.** Hoy hay que teclearlos, así que el
-   gráfico no se puede regenerar cuando el dato cambia. Ojo: `data.url` de
-   Vega-Lite está rechazado a propósito y debe seguir estándolo; lo que falta es
-   una ruta **relativa al documento** que resuelva DocViz, nunca una URL.
-3. **PNG para todos los motores.** Solo PlantUML lo emite; los otros ocho, solo
+1. **PNG para todos los motores.** Solo PlantUML lo emite; los otros ocho, solo
    SVG. La pieza ya existe (`scripts/rasterize.mjs`) pero está fuera del build.
 4. **Un modelo, varias vistas** en `architecture`. Hoy cada bloque repite sus
    elementos, y a los tres meses las tres vistas del mismo sistema ya no

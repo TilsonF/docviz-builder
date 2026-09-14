@@ -13,7 +13,7 @@ import { ConfigError } from '../core/errors.js';
 import { DEFAULT_CACHE_DIR } from '../core/cache.js';
 import { DEFAULT_HASH_LENGTH, MAX_HASH_LENGTH, MIN_HASH_LENGTH } from '../core/hash.js';
 import { assertRelativeDir } from '../core/paths.js';
-import { themeNames } from '../themes/index.js';
+import { buildTheme_, themeNames } from '../themes/index.js';
 import type { OutputFormat } from '../core/types.js';
 import type { DocVizConfig, RendererBackend } from './types.js';
 
@@ -164,6 +164,19 @@ export function mergeConfig(base: DocVizConfig, raw: unknown): DocVizConfig {
   else {
     const t = obj(theme, 'theme');
     if (t !== undefined && typeof t['name'] === 'string') out.theme.name = t['name'];
+    // Un tema declarado con `palette` o `base` es de marca: se construye
+    // partiendo de uno incluido en lugar de buscarse en la lista.
+    if (t !== undefined && (t['palette'] !== undefined || t['darkPalette'] !== undefined || t['base'] !== undefined)) {
+      out.theme.custom = {
+        name: typeof t['name'] === 'string' ? t['name'] : 'marca',
+        ...(typeof t['base'] === 'string' ? { base: t['base'] } : {}),
+        ...(obj(t['palette'], 'theme.palette') !== undefined ? { palette: obj(t['palette'], 'theme.palette')! } : {}),
+        ...(obj(t['darkPalette'], 'theme.darkPalette') !== undefined
+          ? { darkPalette: obj(t['darkPalette'], 'theme.darkPalette')! }
+          : {}),
+        ...(typeof t['fontFamily'] === 'string' ? { fontFamily: t['fontFamily'] } : {}),
+      };
+    }
   }
 
   const cache = obj(doc['cache'], 'cache');
@@ -277,6 +290,19 @@ function applyOverrides(config: DocVizConfig, overrides: NonNullable<LoadConfigO
 }
 
 function validate(config: DocVizConfig): void {
+  if (config.theme.custom !== undefined) {
+    // Se construye ahora, no al dibujar: un color mal escrito tiene que fallar
+    // al cargar la configuracion y no a mitad del primer diagrama.
+    const base = config.theme.custom.base ?? 'default';
+    if (!themeNames().includes(base)) {
+      throw new ConfigError(
+        `el tema base "${base}" no existe`,
+        `temas disponibles: ${themeNames().join(', ')}`,
+      );
+    }
+    buildTheme_(config.theme.custom);
+    return;
+  }
   if (!themeNames().includes(config.theme.name)) {
     throw new ConfigError(
       `el tema "${config.theme.name}" no existe`,

@@ -159,7 +159,8 @@ async function inventory(
     const text = await readFile(file, 'utf8');
     const scanned = scanDocument(text, {
       resolveLanguage: (lang) => registry.resolve(lang),
-      compileDsl: (lang, source) => compileDsl(lang, source, (engine) => registry.has(engine)),
+      compileDsl: (lang, source) =>
+        compileDsl(lang, source, (engine) => registry.has(engine), { baseDir: path.dirname(file), root: dir }),
       dslLanguages: DSL_LANGUAGES,
     });
 

@@ -22,7 +22,7 @@ import { ERROR_CODES, type ErrorCode } from '../core/errors.js';
 import type { TypeSpec } from './catalog.js';
 
 /** Campos que admite cualquier bloque, sea cual sea su tipo. */
-const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title'];
+const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title', 'dataFile'];
 
 /** Distancia maxima para considerar que un campo es una errata de otro. */
 const MAX_TYPO_DISTANCE = 2;

@@ -43,25 +43,23 @@ export interface ContextoDatos {
  * Se hace antes de compilar para que los seis tipos de grafico lo hereden sin
  * cambiar ni uno: para ellos los datos siguen llegando en `data`.
  */
-export function resolverDatos(doc: Record<string, unknown>, contexto?: ContextoDatos): void {
-  const declarado = doc['dataFile'];
-  if (declarado === undefined) return;
-
-  if (doc['data'] !== undefined) {
-    fail(
-      'no se pueden declarar `data` y `dataFile` a la vez',
-      'deja solo uno: si los datos vienen de un archivo, quita la lista escrita a mano',
-      ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
-    );
-  }
-  if (typeof declarado !== 'string' || declarado.trim() === '') {
-    fail('chart.dataFile debe ser una ruta', `valor recibido: ${JSON.stringify(declarado)}`, ERROR_CODES.DSL_FIELD_TYPE);
-  }
-  const ruta = declarado.trim();
-
+/**
+ * Resuelve una ruta declarada en un bloque y devuelve su contenido.
+ *
+ * Es el unico sitio por el que un documento puede leer un archivo, y por eso
+ * concentra las tres condiciones: no es una URL, no sale del arbol de origen y
+ * tiene un formato que se sabe leer. Lo comparten los datos de un grafico y el
+ * modelo de una arquitectura.
+ */
+export function leerArchivoDeclarado(
+  ruta: string,
+  campo: string,
+  formatos: ReadonlySet<string>,
+  contexto: ContextoDatos | undefined,
+): { texto: string; extension: string } {
   if (/^[a-z][a-z0-9+.-]*:/i.test(ruta)) {
     fail(
-      'chart.dataFile no admite URLs',
+      `${campo} no admite URLs`,
       'el build no hace peticiones de red: la documentacion tratada puede ser confidencial. ' +
         'Descarga el archivo junto al documento y apunta a el con una ruta relativa.',
       ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
@@ -69,7 +67,7 @@ export function resolverDatos(doc: Record<string, unknown>, contexto?: ContextoD
   }
   if (contexto === undefined) {
     fail(
-      'chart.dataFile solo funciona al compilar un documento',
+      `${campo} solo funciona al compilar un documento`,
       'este bloque se esta compilando suelto, sin un archivo del que partir para resolver la ruta',
       ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
     );
@@ -79,17 +77,17 @@ export function resolverDatos(doc: Record<string, unknown>, contexto?: ContextoD
   const dentro = path.relative(contexto.root, absoluta);
   if (dentro.startsWith('..') || path.isAbsolute(dentro)) {
     fail(
-      'chart.dataFile apunta fuera del directorio de origen',
+      `${campo} apunta fuera del directorio de origen`,
       `${ruta} sale de ${contexto.root}; un documento no puede leer archivos de cualquier sitio de la maquina`,
       ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
     );
   }
 
   const extension = path.extname(absoluta).toLowerCase();
-  if (!FORMATOS.has(extension)) {
+  if (!formatos.has(extension)) {
     fail(
-      `chart.dataFile no sabe leer "${extension}"`,
-      `formatos admitidos: ${[...FORMATOS].join(', ')}`,
+      `${campo} no sabe leer "${extension}"`,
+      `formatos admitidos: ${[...formatos].join(', ')}`,
       ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
     );
   }
@@ -107,12 +105,31 @@ export function resolverDatos(doc: Record<string, unknown>, contexto?: ContextoD
   if (bytes > MAXIMO_BYTES) {
     fail(
       `${ruta} pesa ${(bytes / 1e6).toFixed(1)} MB`,
-      `el limite es ${MAXIMO_BYTES / 1e6} MB: un grafico legible tiene decenas de filas, no millones`,
+      `el limite es ${MAXIMO_BYTES / 1e6} MB`,
       ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
     );
   }
 
-  const texto = readFileSync(absoluta, 'utf8');
+  return { texto: readFileSync(absoluta, 'utf8'), extension };
+}
+
+export function resolverDatos(doc: Record<string, unknown>, contexto?: ContextoDatos): void {
+  const declarado = doc['dataFile'];
+  if (declarado === undefined) return;
+
+  if (doc['data'] !== undefined) {
+    fail(
+      'no se pueden declarar `data` y `dataFile` a la vez',
+      'deja solo uno: si los datos vienen de un archivo, quita la lista escrita a mano',
+      ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
+    );
+  }
+  if (typeof declarado !== 'string' || declarado.trim() === '') {
+    fail('chart.dataFile debe ser una ruta', `valor recibido: ${JSON.stringify(declarado)}`, ERROR_CODES.DSL_FIELD_TYPE);
+  }
+  const ruta = declarado.trim();
+  const { texto, extension } = leerArchivoDeclarado(ruta, 'chart.dataFile', FORMATOS, contexto);
+
   doc['data'] = extension === '.json' ? leerJson(texto, ruta) : leerSeparado(texto, extension === '.tsv' ? '\t' : ',', ruta);
 }
 

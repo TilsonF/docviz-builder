@@ -40,6 +40,8 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 - **Datos desde archivo** en los gráficos: `.csv`, `.tsv` y `.json`, relativos al
   documento y sin salir del árbol de origen.
 - **PNG desde los nueve motores**, no solo PlantUML.
+- **Un modelo, varias vistas** en `architecture`: el sistema se declara una vez
+  y cada bloque elige qué enseña con `include` / `exclude`.
 
 ---
 

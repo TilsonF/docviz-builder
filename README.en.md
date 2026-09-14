@@ -269,6 +269,43 @@ changed, like `git diff`.
 
 ---
 
+## One model, several views
+
+Documenting a real system takes three views — context, containers, components —
+and if every block declares its elements again, three months later the three no
+longer agree and nobody knows which one is right.
+
+The model is written once, in `plataforma.model.yaml`, and each view picks what
+it shows:
+
+````md
+```architecture
+type: c4-context
+model: ./plataforma.model.yaml
+include: [customer, platform, gateway]
+```
+
+```architecture
+type: c4-container
+model: ./plataforma.model.yaml
+exclude: [gateway]
+```
+````
+
+Without `include` or `exclude` the whole model is drawn. Whatever the block
+declares on its own is **added** to the model, for the view that needs an
+external system the shared model does not own.
+
+Two details that avoid surprises: a relation is only drawn when both ends are in
+the view — an arrow hanging off something invisible confuses more than omitting
+it — and if an element's parent falls outside, the reference is dropped instead
+of breaking the diagram.
+
+The path follows the same rules as `dataFile`: relative to the document, no
+URLs, and it cannot escape the source tree.
+
+---
+
 ## Data from a file
 
 A report takes its numbers from an export, and typing them inside the block has

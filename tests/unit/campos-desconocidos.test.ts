@@ -58,8 +58,7 @@ describe('campos conocidos de un tipo', () => {
   it('salen del ejemplo canonico mas los universales', () => {
     const spec = findType('sequence')!;
     const fields = knownFields(spec);
-    // `dataFile` es universal: no lo declara el tipo, lo admite cualquier bloque.
-    expect([...fields].sort()).toEqual(['dataFile', 'flow', 'participants', 'title', 'type']);
+    expect([...fields].sort()).toEqual(['flow', 'participants', 'title', 'type']);
   });
 
   it('se memoriza entre llamadas', () => {
@@ -69,7 +68,27 @@ describe('campos conocidos de un tipo', () => {
 
   it('un ejemplo que no es un mapa deja solo los universales', () => {
     const spec = { ...findType('sequence')!, type: 'inventado', example: '- suelto\n- lista' };
-    expect([...knownFields(spec)].sort()).toEqual(['dataFile', 'title', 'type']);
+    expect([...knownFields(spec)].sort()).toEqual(['title', 'type']);
+  });
+});
+
+describe('campos que admite una valla entera', () => {
+  it('`dataFile` vale en un grafico', () => {
+    expect([...knownFields(findType('bar')!)]).toContain('dataFile');
+  });
+
+  it('`model`, `include` y `exclude` valen en arquitectura', () => {
+    const fields = knownFields(findType('c4-container')!);
+    for (const campo of ['model', 'include', 'exclude']) expect([...fields], campo).toContain(campo);
+  });
+
+  it('pero no valen en cualquier sitio', () => {
+    // `include` en un `sequence` no significa nada: darlo por bueno en los 57
+    // tipos debilitaria la deteccion justo donde mas sirve.
+    const fields = knownFields(findType('sequence')!);
+    for (const campo of ['dataFile', 'model', 'include', 'exclude']) {
+      expect([...fields], campo).not.toContain(campo);
+    }
   });
 });
 

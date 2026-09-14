@@ -24,6 +24,7 @@ import {
   type FieldWarning,
 } from './fields.js';
 import { resolverDatos, type ContextoDatos } from './datos.js';
+import { resolverModelo } from './modelo.js';
 import { asRecord, optionalString } from './util.js';
 
 export const DSL_LANGUAGES = ['diagram', 'chart', 'architecture'] as const;
@@ -97,9 +98,11 @@ export function compileDsl(
 
   const doc = asRecord(parsed, lang);
 
-  // Los datos de un archivo se resuelven antes de compilar: para los seis tipos
-  // de grafico siguen llegando en `data`, y no hay que tocar ni uno.
+  // Lo que viene de un archivo se resuelve antes de compilar: para los
+  // compiladores no existe la diferencia entre un bloque con modelo o con datos
+  // externos y uno escrito entero a mano.
   resolverDatos(doc, datos);
+  resolverModelo(doc, datos);
 
   const title = optionalString(doc, 'title');
   const declared = optionalString(doc, 'type');
@@ -170,6 +173,7 @@ export { knownFields, unknownFields, describeFieldWarnings, editDistance } from 
 export type { FieldWarning } from './fields.js';
 export { compileArchitecture, architectureLikeC4 } from './architecture.js';
 export { resolverDatos, leerSeparado } from './datos.js';
+export { resolverModelo } from './modelo.js';
 export type { ContextoDatos } from './datos.js';
 
 /** Nombres de tipo de `diagram`, en orden alfabetico. */

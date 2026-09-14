@@ -22,7 +22,20 @@ import { ERROR_CODES, type ErrorCode } from '../core/errors.js';
 import type { TypeSpec } from './catalog.js';
 
 /** Campos que admite cualquier bloque, sea cual sea su tipo. */
-const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title', 'dataFile'];
+const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title'];
+
+/**
+ * Campos que admite toda una valla, aunque no aparezcan en el ejemplo del tipo.
+ *
+ * No son universales a proposito: `include` en un `sequence` no significa nada,
+ * y darlo por bueno en los 57 tipos debilitaria la deteccion de erratas justo
+ * donde mas sirve. Cada campo vale donde tiene sentido y en ningun sitio mas.
+ */
+const POR_VALLA: Readonly<Record<string, readonly string[]>> = {
+  chart: ['dataFile'],
+  architecture: ['model', 'include', 'exclude'],
+  diagram: [],
+};
 
 /** Distancia maxima para considerar que un campo es una errata de otro. */
 const MAX_TYPO_DISTANCE = 2;
@@ -142,7 +155,7 @@ export function knownFields(spec: TypeSpec): ReadonlySet<string> {
   const cached = knownCache.get(spec.type);
   if (cached !== undefined) return cached;
 
-  const fields = new Set<string>(UNIVERSAL_FIELDS);
+  const fields = new Set<string>([...UNIVERSAL_FIELDS, ...(POR_VALLA[spec.lang] ?? [])]);
   try {
     const parsed: unknown = parseYaml(spec.example);
     if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {

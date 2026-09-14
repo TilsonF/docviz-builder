@@ -495,6 +495,64 @@ LikeC4 no pasa por Kroki: siempre usa el renderer especializado.
 
 ---
 
+## Un modelo, varias vistas
+
+Documentar un sistema de verdad son tres vistas —contexto, contenedores,
+componentes—, y si cada bloque declara sus elementos otra vez, a los tres meses
+las tres ya no coinciden y nadie sabe cuál es la buena.
+
+El modelo se escribe una vez:
+
+```yaml
+# plataforma.model.yaml
+elements:
+  - id: cliente
+    kind: person
+    name: Cliente
+  - id: plataforma
+    kind: system
+    name: Plataforma de pagos
+  - id: api
+    kind: container
+    name: API
+    technology: NestJS
+    parent: plataforma
+relations:
+  - from: cliente
+    to: plataforma
+    label: Paga
+```
+
+Y cada vista elige qué enseña:
+
+````md
+```architecture
+type: c4-context
+model: ./plataforma.model.yaml
+include: [cliente, plataforma, pasarela]
+```
+
+```architecture
+type: c4-container
+model: ./plataforma.model.yaml
+exclude: [pasarela]
+```
+````
+
+Sin `include` ni `exclude` se dibuja el modelo entero. Lo que el bloque declare
+por su cuenta se **suma** al modelo, para la vista que necesita un sistema
+externo que no pertenece al modelo común.
+
+Dos detalles que evitan sorpresas: una relación solo se dibuja si sus dos
+extremos están en la vista —una flecha colgando de algo que no se ve confunde
+más que omitirla— y si el padre de un elemento queda fuera, la referencia se
+retira en lugar de romper el diagrama.
+
+La ruta sigue las mismas reglas que `dataFile`: relativa al documento, sin URLs
+y sin salirse del árbol de origen.
+
+---
+
 ## Datos desde un archivo
 
 Un informe saca sus números de una exportación, y teclearlos dentro del bloque

@@ -83,7 +83,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@terrastruct/d2": "^0.1.33",
     "bpmn-js": "^18.24.0",
-    "commander": "^14.0.2",
+    "commander": "^15.0.0",
     "likec4": "^1.59.2",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.16.1",

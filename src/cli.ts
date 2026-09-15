@@ -7,6 +7,7 @@
  *   docviz setup
  *   docviz skill
  *   docviz fix <archivo>
+ *   docviz schema [valla]
  *   docviz verify <output>
  *   docviz preview <output> [--watch]
  *   docviz types
@@ -30,6 +31,7 @@ import { verify } from './build/verify.js';
 import { loadConfig, resolveFromRoot } from './config/load.js';
 import { BuildFailedError, DocVizError } from './core/errors.js';
 import { dslCatalog, findType, TYPE_CATALOG, type TypeSpec } from './dsl/index.js';
+import { esquemaDeConfiguracion, esquemaDeTipo, esquemaDeValla } from './dsl/esquema.js';
 import { suggestType } from './mcp/tools.js';
 import { themeNames } from './themes/index.js';
 import type { RendererBackend } from './config/types.js';
@@ -126,12 +128,42 @@ export function createProgram(): Command {
     .argument('[source]', 'directorio de documentos fuente')
     .option('-c, --config <file>', 'archivo de configuracion')
     .option('--verbose', 'lista cada bloque detectado', false)
-    .action(async (source: string | undefined, opts: { config?: string; verbose?: boolean }) => {
+    .option('--json', 'salida en JSON, para un editor o un pipeline', false)
+    .action(async (source: string | undefined, opts: { config?: string; verbose?: boolean; json?: boolean }) => {
       const config = await loadConfig({
         configPath: opts.config,
         overrides: source !== undefined ? { source } : {},
       });
       const result = await check(config);
+
+      if (opts.json === true) {
+        // Todo por stdout y nada por stderr: quien consume esto analiza una
+        // sola corriente, y un aviso suelto en la otra le rompe el JSON.
+        process.stdout.write(
+          `${JSON.stringify(
+            {
+              ok: result.errors.length === 0,
+              documents: result.documents,
+              blocks: result.blocks,
+              invalidBlocks: result.invalidBlocks,
+              findings: result.findings,
+              warnings: result.warnings,
+              errors: result.errors.map((e) => ({
+                code: e.code,
+                message: e.message,
+                ...(e.location.file !== undefined ? { file: e.location.file } : {}),
+                ...(e.location.line !== undefined ? { line: e.location.line } : {}),
+                ...(e.location.renderer !== undefined ? { engine: e.location.renderer } : {}),
+                ...(e.detail !== undefined ? { detail: e.detail } : {}),
+              })),
+            },
+            null,
+            2,
+          )}\n`,
+        );
+        if (result.errors.length > 0) process.exitCode = 1;
+        return;
+      }
 
       if (opts.verbose === true) {
         for (const f of result.findings) {
@@ -409,6 +441,41 @@ export function createProgram(): Command {
         `\ntemas: ${themeNames().join(', ')}\n` +
           `\ndocviz types <tipo>   ficha completa con ejemplo\n` +
           `docviz suggest "..."  recomendacion a partir de una frase\n`,
+      );
+    });
+
+  program
+    .command('schema')
+    .description('imprime el esquema JSON de una valla, de un tipo o de la configuracion')
+    .argument('[que]', 'diagram | chart | architecture | config | un nombre de tipo', 'diagram')
+    .option(
+      '--strict',
+      'marca tambien los campos que el tipo no declara; util si conoces el catalogo, ruidoso si no',
+      false,
+    )
+    .action((que: string, opts: { strict?: boolean }) => {
+      const estricto = opts.strict === true;
+      if (que === 'config' || que === 'configuracion') {
+        process.stdout.write(`${JSON.stringify(esquemaDeConfiguracion(themeNames()), null, 2)}\n`);
+        return;
+      }
+      if (que === 'diagram' || que === 'chart' || que === 'architecture') {
+        process.stdout.write(`${JSON.stringify(esquemaDeValla(que, estricto), null, 2)}\n`);
+        return;
+      }
+      const spec = findType(que);
+      if (spec === undefined) {
+        process.stderr.write(
+          `"${que}" no es una valla ni un tipo\n\n` +
+            'vallas: diagram, chart, architecture\n' +
+            'configuracion: config\n' +
+            `tipos: ${TYPE_CATALOG.map((t) => t.type).sort().join(', ')}\n`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      process.stdout.write(
+        `${JSON.stringify({ $schema: 'https://json-schema.org/draft/2020-12/schema', ...esquemaDeTipo(spec, estricto) }, null, 2)}\n`,
       );
     });
 

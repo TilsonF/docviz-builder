@@ -85,6 +85,7 @@ and explains how to point at one.
 | `docviz verify` | Checks the result has no broken images |
 | `docviz preview` | Serves the result in a local viewer, with `--watch` |
 | `docviz types` | Lists the DSL types and the themes |
+| `docviz schema` | Prints the JSON Schema of a fence, a type or the config |
 | `docviz suggest "..."` | Recommends a type from a sentence |
 | `docviz setup` | Downloads `plantuml.jar` inside the package |
 | `docviz skill` | Installs the DocViz contract as a skill for your agent |

@@ -30,6 +30,16 @@ export interface WatchOptions {
   onChange: (archivo: string) => void | Promise<void>;
   /** Receptor de avisos del propio observador. */
   onLog?: (mensaje: string) => void;
+  /**
+   * Sustituye a `fs.watch`. Solo se usa en pruebas.
+   *
+   * En macOS la observacion recursiva va sobre FSEvents, que entrega los avisos
+   * con latencia y bajo carga tarda mas que cualquier margen razonable. Probar
+   * el agrupado y el manejo de errores contra eso convierte la suite en una
+   * apuesta; con el observador inyectado son deterministas, y queda una sola
+   * prueba tocando el sistema de archivos de verdad.
+   */
+  watchImpl?: typeof watch;
 }
 
 export interface Watcher {
@@ -55,8 +65,10 @@ export function watchSource(dir: string, options: WatchOptions): Watcher {
   let pendiente: string | undefined;
   let trabajando = false;
   let repetir = false;
+  let cerrado = false;
 
   const lanzar = async (): Promise<void> => {
+    if (cerrado) return;
     // Una recompilacion en curso no se interrumpe: se anota que hay que volver
     // a hacerla al terminar. Guardar tres veces seguidas no encadena tres
     // builds solapados sobre el mismo directorio de salida.
@@ -79,9 +91,13 @@ export function watchSource(dir: string, options: WatchOptions): Watcher {
     }
   };
 
+  const observar = options.watchImpl ?? watch;
   let watcher: FSWatcher;
   try {
-    watcher = watch(raiz, { recursive: true }, (_evento, nombre) => {
+    watcher = observar(raiz, { recursive: true }, (_evento, nombre) => {
+      // Un aviso ya en vuelo puede llegar despues de cerrar: sin esta guarda,
+      // pulsar Ctrl+C dejaria una ultima recompilacion programada.
+      if (cerrado) return;
       if (nombre === null || nombre === undefined) return;
       const relativo = String(nombre);
       if (!esRelevante(relativo)) return;
@@ -100,6 +116,7 @@ export function watchSource(dir: string, options: WatchOptions): Watcher {
 
   return {
     close: () => {
+      cerrado = true;
       if (temporizador !== undefined) clearTimeout(temporizador);
       watcher.close();
     },

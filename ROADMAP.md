@@ -42,6 +42,8 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 - **PNG desde los nueve motores**, no solo PlantUML.
 - **Un modelo, varias vistas** en `architecture`: el sistema se declara una vez
   y cada bloque elige qué enseña con `include` / `exclude`.
+- **`check --json` y `docviz schema`**: salida estructurada y esquemas JSON
+  derivados del catálogo, para el editor y para un pipeline.
 
 ---
 

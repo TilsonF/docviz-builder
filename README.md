@@ -111,6 +111,7 @@ docviz build <source> --output <target>
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
 | `docviz preview` | Sirve el resultado en un visor local, con `--watch` |
 | `docviz types` | Lista los tipos del DSL y los temas |
+| `docviz schema` | Imprime el esquema JSON de una valla, un tipo o la configuración |
 | `docviz setup` | Descarga `plantuml.jar` dentro del paquete |
 | `docviz skill` | Instala el contrato de DocViz como skill de tu agente |
 | `docviz suggest "..."` | Recomienda un tipo a partir de una frase |
@@ -711,6 +712,40 @@ cambió, igual que `git diff`. En un pipeline:
 git worktree add /tmp/base origin/main
 docviz diff /tmp/base/docs-src ./docs-src --exit-code || echo "revisar los diagramas"
 ```
+
+---
+
+## En el editor
+
+Escribir un bloque es a ciegas hasta que se ejecuta `check`. Con un esquema, el
+editor avisa mientras tecleas: autocompleta los campos y dice qué valores admite
+`type`.
+
+```bash
+docviz schema config > .docviz/config.schema.json
+docviz schema diagram > .docviz/diagram.schema.json
+```
+
+Para la configuración basta una línea al principio del archivo:
+
+```yaml
+# yaml-language-server: $schema=./.docviz/config.schema.json
+source: docs-src
+```
+
+Los esquemas **se derivan del catálogo**, no se escriben a mano: uno que hubiera
+que mantener en paralelo se desfasaría el mismo día que se añade un tipo, y
+entonces engañaría en lugar de ayudar. Una prueba comprueba que los 57 ejemplos
+canónicos validen contra su propio esquema.
+
+Por defecto no marcan los campos que no conocen, porque el ejemplo de cada tipo
+es el esqueleto mínimo y no la lista completa de lo que admite: un editor
+estricto avisaría de campos legítimos. `--strict` invierte esa decisión. El
+análisis exacto de campos sobrantes lo hace `docviz check`, que sí sabe cuáles
+llegó a leer el compilador.
+
+`docviz check --json` devuelve los hallazgos, los avisos y los errores
+estructurados, con su código y su línea, para una integración o un pipeline.
 
 ---
 

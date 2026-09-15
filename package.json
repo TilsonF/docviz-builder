@@ -86,7 +86,7 @@
     "commander": "^14.0.2",
     "likec4": "^1.59.2",
     "mdast-util-to-string": "^4.0.0",
-    "mermaid": "^11.16.1",
+    "mermaid": "^12.0.0",
     "puppeteer-core": "^25.5.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",

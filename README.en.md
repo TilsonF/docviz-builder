@@ -83,6 +83,7 @@ and explains how to point at one.
 | `docviz diff` | Compares the diagrams of two versions of the documentation |
 | `docviz fix` | Fixes the typos of a block that does not compile |
 | `docviz verify` | Checks the result has no broken images |
+| `docviz bundle` | Leaves the output ready to upload to a wiki, without uploading it |
 | `docviz preview` | Serves the result in a local viewer, with `--watch` |
 | `docviz types` | Lists the DSL types and the themes |
 | `docviz schema` | Prints the JSON Schema of a fence, a type or the config |

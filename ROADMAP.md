@@ -44,6 +44,7 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   y cada bloque elige qué enseña con `include` / `exclude`.
 - **`check --json` y `docviz schema`**: salida estructurada y esquemas JSON
   derivados del catálogo, para el editor y para un pipeline.
+- **`docviz bundle`**: la salida lista para subir a un wiki, sin subirla.
 
 ---
 

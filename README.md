@@ -109,6 +109,7 @@ docviz build <source> --output <target>
 | `docviz diff` | Compara los diagramas de dos versiones de la documentación |
 | `docviz fix` | Corrige las erratas de un bloque que no compila |
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
+| `docviz bundle` | Deja la salida lista para subirla a un wiki, sin subirla |
 | `docviz preview` | Sirve el resultado en un visor local, con `--watch` |
 | `docviz types` | Lista los tipos del DSL y los temas |
 | `docviz schema` | Imprime el esquema JSON de una valla, un tipo o la configuración |
@@ -712,6 +713,57 @@ cambió, igual que `git diff`. En un pipeline:
 git worktree add /tmp/base origin/main
 docviz diff /tmp/base/docs-src ./docs-src --exit-code || echo "revisar los diagramas"
 ```
+
+---
+
+## Llevarlo a un wiki
+
+```bash
+docviz bundle docs --to paquete/
+```
+
+Llevar Markdown **con imágenes** a Outline o a Confluence es fastidioso de
+verdad: hay que subir cada recurso, reescribir su ruta por la que devuelve el
+servidor y no duplicar el documento al republicar. `bundle` deja resuelto ese
+trabajo:
+
+```
+paquete/
+  manifiesto.json
+  documentos/arquitectura.md
+  recursos/flujo-abc123.svg
+```
+
+Y el manifiesto trae lo que necesita quien publique:
+
+```json
+{
+  "id": "dsl.md",
+  "titulo": "El DSL de alto nivel",
+  "hash": "15f2c340786d7460",
+  "recursos": [
+    {
+      "ruta": "recursos/del-tipo-al-motor-eaf78e.svg",
+      "referencia": "./assets/generated/del-tipo-al-motor-eaf78e.svg",
+      "alt": "Del tipo declarado al motor",
+      "bytes": 24506,
+      "tipo": "image/svg+xml"
+    }
+  ]
+}
+```
+
+El `id` es la ruta del documento, así que republicar **actualiza en lugar de
+duplicar**. El `hash` permite saltarse lo que no ha cambiado, y combinado con
+`docviz diff` se publica solo lo que de verdad se movió. La `referencia` es el
+texto literal que aparece en el Markdown: sustituirlo por la URL del servidor es
+un `replace`, sin volver a analizar el documento.
+
+**Lo que no hace es enviar nada.** DocViz no habla con servicios externos, y su
+promesa de que la documentación tratada no sale a ninguna parte vale
+precisamente porque no lleva asterisco. Quien publica es otra cosa —un agente
+con su propio conector, un script, una tarea de CI— con credenciales que viven
+donde ya vivían.
 
 ---
 

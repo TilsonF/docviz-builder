@@ -8,6 +8,7 @@
  *   docviz skill
  *   docviz fix <archivo>
  *   docviz schema [valla]
+ *   docviz bundle [output] --to <dir>
  *   docviz verify <output>
  *   docviz preview <output> [--watch]
  *   docviz types
@@ -25,6 +26,7 @@ import { diagnosticar, formatearDiagnostico } from './build/doctor.js';
 import { init, formatearInit } from './build/init.js';
 import { startPreview } from './build/preview.js';
 import { watchSource } from './build/watch.js';
+import { bundle, formatearBundle } from './build/bundle.js';
 import { installSkill, formatearSkill } from './build/skill.js';
 import { fixBlock } from './mcp/tools.js';
 import { verify } from './build/verify.js';
@@ -203,6 +205,34 @@ export function createProgram(): Command {
         opts.json === true ? `${JSON.stringify(result, null, 2)}\n` : formatDiff(result, { all: opts.all }),
       );
       if (opts.exitCode === true && hasChanges(result)) process.exitCode = 1;
+    });
+
+  program
+    .command('bundle')
+    .description('deja la salida lista para subirla a un wiki, sin subirla')
+    .argument('[output]', 'directorio de salida compilada')
+    .option('-c, --config <file>', 'archivo de configuracion')
+    .option('--to <dir>', 'directorio donde dejar el paquete')
+    .option('--json', 'imprime solo el manifiesto', false)
+    .action(async (output: string | undefined, opts: { config?: string; to?: string; json?: boolean }) => {
+      const config = await loadConfig({
+        configPath: opts.config,
+        overrides: output !== undefined ? { output } : {},
+      });
+      const manifiesto = await bundle({
+        origen: resolveFromRoot(config, config.output),
+        version: VERSION,
+        ...(opts.to !== undefined ? { destino: path.resolve(opts.to) } : {}),
+      });
+
+      if (opts.json === true) {
+        process.stdout.write(`${JSON.stringify(manifiesto, null, 2)}\n`);
+      } else {
+        process.stdout.write(formatearBundle(manifiesto, opts.to));
+      }
+      // Una referencia rota no impide empaquetar el resto, pero no puede pasar
+      // por buena: quien publique subiria un documento con un hueco.
+      if (manifiesto.incidencias.length > 0) process.exitCode = 1;
     });
 
   program

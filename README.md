@@ -968,6 +968,15 @@ comandos:
 | `docviz_fix` | Devuelve corregido un bloque que no compila |
 | `docviz_preview` | Devuelve el Markdown compilado y sus incidencias |
 
+El SDK de MCP es una **dependencia opcional**: no se instala con `docviz-builder`.
+Arrastra un servidor HTTP completo —Express y su árbol, 88 paquetes— que solo hace
+falta si vas a exponer DocViz como servidor MCP; compilar diagramas no lo necesita, y
+el compromiso del proyecto es que el build no hable con la red. Antes de registrarlo:
+
+```bash
+npm install @modelcontextprotocol/sdk
+```
+
 Registro en un cliente MCP:
 
 ```json

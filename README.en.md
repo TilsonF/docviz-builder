@@ -435,6 +435,12 @@ only disabled as root, where Chromium refuses to start otherwise.
 npx docviz skill --lang en    # installs this contract into your agent's skills directory
 ```
 
+The MCP SDK is an **optional dependency** — it is not installed with
+`docviz-builder`. It pulls in a full HTTP server (Express and its tree, 88 packages)
+that you only need if you expose DocViz as an MCP server; compiling diagrams does not,
+and the project's promise is that the build never talks to the network. Install it
+first with `npm install @modelcontextprotocol/sdk`.
+
 DocViz ships an MCP server (`docviz_types`, `docviz_suggest`,
 `docviz_validate_document`, `docviz_render_diagram`, `docviz_build_document`,
 `docviz_diff`, `docviz_fix`, `docviz_preview`), a queryable catalog, stable

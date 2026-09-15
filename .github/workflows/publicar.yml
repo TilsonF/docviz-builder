@@ -14,6 +14,14 @@ on:
     tags: ['v*']
   workflow_dispatch:
 
+# Dos corridas del mismo tag se pisaron al publicar 0.3.0: una firmo y subio, la
+# otra murio con «E409 Cannot publish over previously staged version». El paquete
+# quedo bien, pero el tablero decia «failure» sobre una version que SI estaba
+# publicada, que es la peor forma de equivocarse. Se serializan por etiqueta.
+concurrency:
+  group: publicar-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   # Firma de procedencia: npm registra desde que commit y que workflow salio
@@ -66,6 +74,22 @@ jobs:
             exit 1
           fi
 
-      - run: npm publish --provenance --access public
+      # Serializadas ya no compiten, pero la segunda seguiria intentando publicar una
+      # version que la primera acaba de subir. Publicar es idempotente: si el registro
+      # ya tiene esta version, no hay nada que hacer y no es un fallo.
+      - name: Comprobar si la version ya esta publicada
+        id: publicada
+        run: |
+          paquete="$(node -p "require('./package.json').name")"
+          version="$(node -p "require('./package.json').version")"
+          if npm view "$paquete@$version" version >/dev/null 2>&1; then
+            echo "$paquete@$version ya esta en el registro; no se republica"
+            echo "existe=si" >> "$GITHUB_OUTPUT"
+          else
+            echo "existe=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.publicada.outputs.existe == 'no'
+        run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

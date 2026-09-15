@@ -102,11 +102,11 @@
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.125.0",
     "@fission-ai/openspec": "^1.8.0",
-    "@types/node": "^24.0.0",
+    "@types/node": "^26.5.1",
     "@vitest/coverage-v8": "^5.0.0",
     "ajv": "^8.20.0",
     "tsx": "^4.20.0",
-    "typescript": "^5.9.0",
+    "typescript": "^7.0.2",
     "vitest": "^5.0.0"
   },
   "repository": {

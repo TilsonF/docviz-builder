@@ -46,7 +46,7 @@ jobs:
       # mismo entorno que el de CI. Sin la JVM y sin el jar no fallan por un
       # error del codigo: fallan por no tener con que dibujar, que es peor,
       # porque parece lo mismo.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'

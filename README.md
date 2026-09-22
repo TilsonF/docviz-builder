@@ -983,11 +983,21 @@ Registro en un cliente MCP:
 {
   "mcpServers": {
     "docviz": {
-      "command": "node",
-      "args": ["/ruta/a/docviz-builder/bin/docviz-mcp.mjs"],
+      "command": "npx",
+      "args": ["-y", "--package=docviz-builder", "docviz-mcp"],
       "cwd": "/ruta/a/tu/proyecto"
     }
   }
+}
+```
+
+Desde un clon del repositorio, en lugar de `npx`:
+
+```json
+{
+  "command": "node",
+  "args": ["/ruta/a/docviz-builder/bin/docviz-mcp.mjs"],
+  "cwd": "/ruta/a/tu/proyecto"
 }
 ```
 

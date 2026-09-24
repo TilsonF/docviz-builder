@@ -12,6 +12,29 @@ import path from 'node:path';
 
 const require_ = createRequire(import.meta.url);
 const cache = new Map<string, string>();
+const disponibles = new Map<string, boolean>();
+
+/**
+ * Si un paquete se puede resolver desde aqui.
+ *
+ * Hace falta porque un renderer puede estar COMPILADO dentro de DocViz y aun
+ * asi no poder dibujar: `likec4` se carga con un `import()` dinamico, asi que
+ * su ausencia no se nota hasta el render, ya tarde y con un «Cannot find
+ * package» crudo en vez del respaldo que el catalogo declara.
+ */
+export function paqueteDisponible(name: string): boolean {
+  const cached = disponibles.get(name);
+  if (cached !== undefined) return cached;
+  let hay = false;
+  try {
+    require_.resolve(name);
+    hay = true;
+  } catch {
+    hay = false;
+  }
+  disponibles.set(name, hay);
+  return hay;
+}
 
 export function packageVersion(name: string, fallback = 'desconocida'): string {
   const cached = cache.get(name);

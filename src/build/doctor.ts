@@ -15,6 +15,7 @@ import { compilerEngines } from '../dsl/compile.js';
 import { buildRegistry } from '../renderers/index.js';
 import { findBrowser } from '../renderers/browser.js';
 import { resolveJarPath } from '../renderers/plantuml.js';
+import { paqueteDisponible, packageVersion } from '../core/package-version.js';
 import { resolveFromRoot } from '../config/load.js';
 import type { DocVizConfig } from '../config/types.js';
 
@@ -130,6 +131,23 @@ export async function diagnosticar(config: DocVizConfig): Promise<Diagnostico> {
       estado: 'ausente',
       detalle: 'no se encontro ningun navegador',
       remedio: 'instala Google Chrome, exporta DOCVIZ_BROWSER_PATH o ejecuta `npx playwright install chromium`',
+    });
+  }
+
+  // --- El paquete de LikeC4 ---
+  // Va aqui, con Java y Chromium, porque es lo mismo: algo que DocViz necesita
+  // y no trae consigo. La diferencia es que este NO se nota al arrancar, sino
+  // en mitad del render, asi que si no se comprueba aqui no se comprueba nunca.
+  if (!r.likec4.enabled) {
+    requisitos.push({ nombre: 'paquete likec4', estado: 'no-usado', detalle: 'LikeC4 esta deshabilitado' });
+  } else if (paqueteDisponible('likec4')) {
+    requisitos.push({ nombre: 'paquete likec4', estado: 'ok', detalle: packageVersion('likec4') });
+  } else {
+    requisitos.push({
+      nombre: 'paquete likec4',
+      estado: 'ausente',
+      detalle: 'los tipos C4 se dibujaran con su respaldo plantuml-c4, con otro aspecto',
+      remedio: 'npm install likec4',
     });
   }
 

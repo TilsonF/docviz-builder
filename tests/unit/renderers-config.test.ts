@@ -12,8 +12,9 @@ import { MermaidRenderer } from '../../src/renderers/mermaid.js';
 import { LikeC4Renderer } from '../../src/renderers/likec4.js';
 import { VegaLiteRenderer } from '../../src/renderers/vega-lite.js';
 import { browserCandidates, browserNotFoundHelp, findBrowser } from '../../src/renderers/browser.js';
-import { packageVersion } from '../../src/core/package-version.js';
+import { packageVersion, paqueteDisponible } from '../../src/core/package-version.js';
 import { buildRegistry } from '../../src/renderers/index.js';
+import { compileType } from '../../src/dsl/compile.js';
 import { motorReal } from '../../src/renderers/rasterizador.js';
 import { defaultConfig } from '../../src/config/load.js';
 import { RenderError } from '../../src/core/errors.js';
@@ -234,5 +235,50 @@ describe('buildRegistry con backend kroki', () => {
     const cfg = defaultConfig('/proyecto');
     cfg.renderers.plantuml.jar = 'vendor/mi-plantuml.jar';
     expect(() => buildRegistry(cfg)).not.toThrow();
+  });
+});
+
+describe('paqueteDisponible', () => {
+  // Un renderer puede estar COMPILADO dentro de DocViz y aun asi no poder
+  // dibujar, porque carga su motor con un `import()` dinamico. Sin esta
+  // comprobacion la ausencia no se nota hasta el render, y sale un «Cannot find
+  // package» en vez del respaldo que el catalogo declara.
+  it('reconoce un paquete que si esta', () => {
+    expect(paqueteDisponible('yaml')).toBe(true);
+  });
+
+  it('no inventa uno que no esta, y no lanza', () => {
+    expect(paqueteDisponible('este-paquete-no-existe-en-docviz')).toBe(false);
+  });
+
+  it('da la misma respuesta al repetir, que es lo que permite llamarlo por bloque', () => {
+    expect(paqueteDisponible('yaml')).toBe(paqueteDisponible('yaml'));
+  });
+});
+
+describe('los tipos C4 caen a plantuml-c4 cuando LikeC4 no esta', () => {
+  const doc = {
+    type: 'c4-context',
+    elements: [
+      { id: 'a', kind: 'person', name: 'Analista' },
+      { id: 'b', kind: 'system', name: 'Sistema' },
+    ],
+  };
+
+  it('con likec4 disponible, dibuja likec4', () => {
+    expect(compileType(doc, 'c4-context', () => true).engine).toBe('likec4');
+  });
+
+  it('sin likec4, dibuja el respaldo en vez de fallar', () => {
+    const elegido = compileType(doc, 'c4-context', (motor) => motor !== 'likec4');
+    expect(elegido.engine).toBe('plantuml-c4');
+    expect(elegido.source).toContain('@startuml');
+  });
+
+  it('los tres tipos C4 declaran ese respaldo, no solo el contexto', () => {
+    for (const tipo of ['c4-context', 'c4-container', 'c4-component']) {
+      const d = { ...doc, type: tipo };
+      expect(compileType(d, tipo, (motor) => motor !== 'likec4').engine).toBe('plantuml-c4');
+    }
   });
 });

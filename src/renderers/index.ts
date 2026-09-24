@@ -6,6 +6,8 @@
  */
 
 import path from 'node:path';
+
+import { paqueteDisponible } from '../core/package-version.js';
 import { RendererRegistry } from '../core/registry.js';
 import { createD2Renderer } from './d2.js';
 import { createGraphvizRenderer } from './graphviz.js';
@@ -118,7 +120,13 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
   }
 
   // LikeC4 es un renderer especializado; Kroki no lo cubre.
-  if (r.likec4.enabled) {
+  //
+  // Se comprueba ademas que el paquete `likec4` se resuelva: el renderer viaja
+  // compilado dentro de DocViz, asi que registrarlo a ciegas hacia creer al
+  // compilador del DSL que el motor estaba, y el bloque no caia al respaldo
+  // `plantuml-c4` que su ficha declara. Fallaba en el render con un «Cannot
+  // find package», que no se parece en nada a «este motor no esta».
+  if (r.likec4.enabled && paqueteDisponible('likec4')) {
     registry.register('likec4', conFormatos(createLikeC4Renderer()), ALIASES['likec4']);
   }
 

@@ -109,6 +109,48 @@ describe('mermaidTimeline', () => {
   });
 });
 
+describe('architectureC4 · el limite sigue a la clase del padre', () => {
+  // C4-PlantUML distingue `System_Boundary` de `Container_Boundary` y antes se
+  // emitia siempre el primero: un diagrama de componentes rotulaba su contenedor
+  // como «[system]», que es precisamente lo que ese nivel no debe decir.
+  const limite = (padre: string): string => {
+    const uml = architectureC4(
+      doc(
+        [
+          'type: c4-component',
+          'elements:',
+          '  - id: padre',
+          `    kind: ${padre}`,
+          '    name: Padre',
+          '  - id: hijo',
+          '    kind: component',
+          '    name: Hijo',
+          '    parent: padre',
+        ].join('\n'),
+      ),
+    );
+    const linea = uml.split('\n').find((l) => l.includes('Boundary'));
+    return linea ?? '';
+  };
+
+  it('un sistema con hijos es System_Boundary', () => {
+    expect(limite('system')).toContain('System_Boundary(padre, "Padre")');
+  });
+
+  it('un contenedor con hijos es Container_Boundary, no System_Boundary', () => {
+    expect(limite('container')).toContain('Container_Boundary(padre, "Padre")');
+    expect(limite('container')).not.toContain('System_Boundary');
+  });
+
+  it('una base de datos es un contenedor, y su limite tambien', () => {
+    expect(limite('database')).toContain('Container_Boundary(padre, "Padre")');
+  });
+
+  it('una persona con hijos cae al limite generico, que exige el tipo', () => {
+    expect(limite('person')).toBe('Boundary(padre, "Padre", "Person") {');
+  });
+});
+
 describe('architectureC4', () => {
   const yaml = [
     'type: c4-container',

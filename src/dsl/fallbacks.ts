@@ -169,6 +169,21 @@ const C4_MACROS: Readonly<Record<string, string>> = {
   service: 'Container',
 };
 
+/**
+ * Con que macro se dibuja el LIMITE de un elemento que tiene hijos.
+ *
+ * C4-PlantUML distingue `System_Boundary` de `Container_Boundary`, y antes se
+ * emitia siempre el primero: un `kind: container` con componentes dentro salia
+ * rotulado «[system]», que es justo lo que un diagrama de componentes NO debe
+ * decir. La clase de la caja la elige quien escribe el bloque; el limite tiene
+ * que seguirla.
+ */
+function boundaryMacro(macro: string): string {
+  if (macro.startsWith('Container')) return 'Container_Boundary';
+  if (macro.startsWith('System')) return 'System_Boundary';
+  return 'Boundary';
+}
+
 /** Vista C4 -> archivo de la biblioteca estandar que la define. */
 const C4_LIBRARY: Readonly<Record<string, string>> = {
   'c4-context': 'C4_Context',
@@ -259,8 +274,11 @@ export function architectureC4(doc: Record<string, unknown>): string {
       lines.push(`${indent}${element.macro}(${args.join(', ')})`);
       return;
     }
-    // Un elemento con hijos se dibuja como frontera del sistema.
-    lines.push(`${indent}System_Boundary(${element.id}, ${quote(element.name)}) {`);
+    // Un elemento con hijos se dibuja como frontera, del tipo que le corresponda.
+    const boundary = boundaryMacro(element.macro);
+    // `Boundary` generico exige un tercer argumento con el tipo a mostrar.
+    const extra = boundary === 'Boundary' ? `, ${quote(element.macro)}` : '';
+    lines.push(`${indent}${boundary}(${element.id}, ${quote(element.name)}${extra}) {`);
     for (const child of element.children) emit(child, `${indent}  `);
     lines.push(`${indent}}`);
   };

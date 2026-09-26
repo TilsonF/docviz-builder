@@ -230,6 +230,24 @@ npx docviz types sequence --lang en
 Native fences (`plantuml`, `mermaid`, `d2`, `graphviz`, `vega-lite`, `likec4`)
 remain available as an escape hatch.
 
+### Fields are also understood in Spanish
+
+The canonical names are English, and they are the ones the catalog and the
+examples use. But a field written in Spanish is understood too: `etiqueta`
+(label), `valor` / `cantidad` (value), `meta` / `objetivo` (target), `nombre`
+(name), `fecha` (date), `inicio` / `fin` (start / end), `duracion` (duration),
+`orden` (sort), `unidad` (unit), `descripcion` (description), `tecnologia`
+(technology), `titulo` (title), `clase` (kind), `padre` (parent), `estado`
+(status), `desde` / `hasta` (from / to), `identificador` (id).
+
+This is **tolerance, not a second DSL language**: a block compiles byte for
+byte the same either way, and the canonical field always wins when both are
+present. Two are deliberately excluded: **`no`** is a real field —the negative
+branch of a decision gateway— so it cannot alias anything, and **`tipo`** is
+not an alias of `type`, because `type` is the discriminator the scanner reads
+before compiling and accepting it here would hide the mistake instead of
+reporting it.
+
 ---
 
 ## PNG

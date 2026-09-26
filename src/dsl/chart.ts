@@ -122,12 +122,12 @@ function readPoint(raw: unknown, field: string): Point {
   if (label === undefined) {
     fail(`cada punto de ${field} necesita "label"`, 'ejemplo: - label: SP1\n  value: 42');
   }
+  // Por el accesor y no por `record['value']`: la comprobacion directa se
+  // salta la tabla de alias, y `valor: 3` acababa dando «falta value».
   const value =
-    record['value'] !== undefined
-      ? requireNumber(record, 'value', field)
-      : record['y'] !== undefined
-        ? requireNumber(record, 'y', field)
-        : fail(`cada punto de ${field} necesita "value"`, 'ejemplo: - label: SP1\n  value: 42');
+    optionalNumber(record, 'value', field) ??
+    optionalNumber(record, 'y', field) ??
+    fail(`cada punto de ${field} necesita "value"`, 'ejemplo: - label: SP1\n  value: 42');
   const point: Point = { label, value };
   const seriesName = optionalString(record, 'series') ?? optionalString(record, 'group');
   if (seriesName !== undefined) point.series = seriesName;

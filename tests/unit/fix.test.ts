@@ -173,12 +173,24 @@ describe('erratas dentro de una lista', () => {
     expect(out.cambiado).toBe(false);
   });
 
-  it('no propone nada cuando el campo no es una errata sino otra palabra', () => {
-    // `meta` es `target` en espanol, no una errata suya. Adivinarlo seria
-    // inventar: se avisa de que no se uso y ahi acaba.
-    const out = fixBlock({ lang: 'chart', source: 'type: bullet\ndata:\n  - label: A\n    value: 1\n    meta: 2\n' });
+  it('no propone nada cuando el campo no es una errata ni un alias', () => {
+    // `limite` no se parece a ningun campo de `bullet` ni esta en la tabla de
+    // alias. Adivinar cual quiso decir seria inventar: se avisa de que no se
+    // uso, se devuelve el ejemplo canonico, y ahi acaba.
+    const out = fixBlock({
+      lang: 'chart',
+      source: 'type: bullet\ndata:\n  - label: A\n    value: 1\n    limite: 2\n',
+    });
     expect(out.ok).toBe(false);
     expect(out.aplicado).toEqual([]);
     expect(out['ejemplo']).toContain('type: bullet');
+  });
+
+  it('`meta` ya no llega a fix: el DSL la acepta como alias de `target`', () => {
+    // Antes de la tabla de alias este bloque fallaba y `fix` no sabia que
+    // proponer. Ahora no hay nada que reparar.
+    const out = fixBlock({ lang: 'chart', source: 'type: bullet\ndata:\n  - label: A\n    value: 1\n    meta: 2\n' });
+    expect(out.ok).toBe(true);
+    expect(out.cambiado).toBe(false);
   });
 });

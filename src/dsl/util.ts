@@ -34,8 +34,79 @@ export function asRecord(value: unknown, field: string): Record<string, unknown>
  * `- name: 2025` el valor llega como numero, y rechazarlo obligaria al autor a
  * entrecomillar cualquier etiqueta que parezca un dato.
  */
+/**
+ * Campos de hoja en espanol, en una sola tabla.
+ *
+ * El DSL ya aceptaba espanol en los campos CONTENEDOR —`datos`, `valores`,
+ * `ejes`, `secciones`, `entidades`, `filas`…— pero cada alias estaba escrito a
+ * mano dentro del compilador que lo recordo, y ninguno alcanzaba a los campos
+ * de dentro. El resultado era arbitrario: `fecha` valia en un tipo, `etiqueta`
+ * no valia en ninguno, y `valor` colaba solo porque `docviz fix` lo confunde
+ * con una errata de `value`. Aqui estan los de hoja, una vez, para los 62.
+ *
+ * Reglas al ampliarla:
+ *
+ *   - El canonico SIEMPRE gana. El alias solo se mira si el campo ingles no
+ *     esta, asi que un tipo que use la palabra para otra cosa no se rompe.
+ *   - Fuera `no`, que es un campo canonico de las puertas de decision.
+ *   - Fuera `tipo`. Quien lo escribe quiere decir `type`, que es el
+ *     discriminador y lo lee el escaner antes de compilar; darle otro
+ *     significado aqui esconderia el error en vez de señalarlo.
+ */
+const ALIAS_ES: Readonly<Record<string, string>> = {
+  etiqueta: 'label',
+  valor: 'value',
+  meta: 'target',
+  fecha: 'date',
+  nombre: 'name',
+  inicio: 'start',
+  fin: 'end',
+  duracion: 'duration',
+  orden: 'sort',
+  unidad: 'unit',
+  descripcion: 'description',
+  tecnologia: 'technology',
+  titulo: 'title',
+  desde: 'from',
+  hasta: 'to',
+  clase: 'kind',
+  padre: 'parent',
+  estado: 'status',
+  identificador: 'id',
+  cantidad: 'value',
+  objetivo: 'target',
+};
+
+/** Canonico -> alias que lo nombran. Se construye una vez. */
+const ALIAS_DE = ((): ReadonlyMap<string, readonly string[]> => {
+  const m = new Map<string, string[]>();
+  for (const [es, en] of Object.entries(ALIAS_ES)) {
+    const lista = m.get(en);
+    if (lista === undefined) m.set(en, [es]);
+    else lista.push(es);
+  }
+  return m;
+})();
+
+/**
+ * Lee un campo por su nombre canonico o por su alias en espanol.
+ *
+ * Se lee con `record[...]` y no con `in` a proposito: el rastreador de accesos
+ * que detecta campos sin usar intercepta la lectura, asi que el alias queda
+ * marcado como usado y no se reporta como ignorado.
+ */
+export function leerCampo(record: Record<string, unknown>, key: string): unknown {
+  const propio = record[key];
+  if (propio !== undefined && propio !== null) return propio;
+  for (const alias of ALIAS_DE.get(key) ?? []) {
+    const valor = record[alias];
+    if (valor !== undefined && valor !== null) return valor;
+  }
+  return propio;
+}
+
 export function requireString(record: Record<string, unknown>, key: string, field: string): string {
-  const value = record[key];
+  const value = leerCampo(record, key);
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value !== 'string' || value.trim() === '') {
     fail(
@@ -48,7 +119,7 @@ export function requireString(record: Record<string, unknown>, key: string, fiel
 }
 
 export function optionalString(record: Record<string, unknown>, key: string): string | undefined {
-  const value = record[key];
+  const value = leerCampo(record, key);
   if (value === undefined || value === null) return undefined;
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value !== 'string') return undefined;
@@ -57,7 +128,7 @@ export function optionalString(record: Record<string, unknown>, key: string): st
 }
 
 export function optionalNumber(record: Record<string, unknown>, key: string, field: string): number | undefined {
-  const value = record[key];
+  const value = leerCampo(record, key);
   if (value === undefined || value === null) return undefined;
   const n = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(n)) {

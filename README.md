@@ -362,6 +362,33 @@ flow:
     label: mensaje
 ```
 
+### Los campos también se entienden en español
+
+Los nombres canónicos son ingleses, y son los que usan el catálogo y los
+ejemplos. Pero si escribes el campo en español, DocViz lo entiende:
+
+| en español | canónico | | en español | canónico |
+|---|---|---|---|---|
+| `etiqueta` | `label` | | `descripcion` | `description` |
+| `valor`, `cantidad` | `value` | | `tecnologia` | `technology` |
+| `meta`, `objetivo` | `target` | | `titulo` | `title` |
+| `nombre` | `name` | | `clase` | `kind` |
+| `fecha` | `date` | | `padre` | `parent` |
+| `inicio` / `fin` | `start` / `end` | | `estado` | `status` |
+| `duracion` | `duration` | | `desde` / `hasta` | `from` / `to` |
+| `orden` | `sort` | | `unidad` | `unit` |
+| `identificador` | `id` | | | |
+
+Es **tolerancia, no un segundo idioma del DSL**: el bloque compila byte a byte
+igual escrito de una forma o de la otra, y el campo canónico siempre gana si
+están los dos. Dos quedan fuera a propósito:
+
+- **`no`** es un campo real —la rama negativa de una puerta de decisión—, así
+  que no puede ser alias de nada.
+- **`tipo`** no es alias de `type`. `type` es el discriminador y lo lee el
+  escáner antes de compilar; aceptarlo aquí escondería el error en lugar de
+  señalarlo, y `docviz fix` ya propone la corrección.
+
 ---
 
 ## Lenguajes nativos

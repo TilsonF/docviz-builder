@@ -169,7 +169,7 @@ export { compileType, compileChartType, typesForEngine, compiledTypeNames, compi
 export { TYPE_CATALOG, findType, typeNames, typesFor, allTypeNames } from './catalog.js';
 export type { TypeSpec, DslLang } from './catalog.js';
 export { compileChartOfType } from './chart.js';
-export { knownFields, unknownFields, describeFieldWarnings, editDistance } from './fields.js';
+export { knownFields, unknownFields, nestedTyposFromExample, describeFieldWarnings, editDistance } from './fields.js';
 export type { FieldWarning } from './fields.js';
 export { compileArchitecture, architectureLikeC4 } from './architecture.js';
 export { resolverDatos, leerSeparado } from './datos.js';

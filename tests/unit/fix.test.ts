@@ -109,3 +109,76 @@ describe('sobre el catalogo entero', () => {
     }
   });
 });
+
+describe('erratas dentro de una lista', () => {
+  // Todos estos casos nacieron de probar `fix` contra bloques rotos de verdad,
+  // no de leer el codigo.
+
+  it('no se come el guion de la lista al renombrar', () => {
+    // Era lo peor que hacia: `- labl: A` salia como `label: A`, sin guion, y el
+    // bloque dejaba de ser YAML valido. `fix` devolvia algo peor que lo que
+    // recibio.
+    const out = fixBlock({ lang: 'chart', source: 'type: scatter\ndata:\n  - labl: A\n    x: 1\n    y: 2\n' });
+    expect(out.ok).toBe(true);
+    expect(out.source).toBe('type: scatter\ndata:\n  - label: A\n    x: 1\n    y: 2\n');
+  });
+
+  it('corrige la errata de un campo opcional anidado', () => {
+    const out = fixBlock({
+      lang: 'chart',
+      source: 'type: kpi-card\ndata:\n  - label: A\n    value: 1\n    targ3t: 2\n',
+    });
+    expect(out.ok).toBe(true);
+    expect(out.aplicado).toEqual([{ de: 'targ3t', a: 'target' }]);
+  });
+
+  it('corrige tambien cuando el campo mal escrito era obligatorio', () => {
+    // Si falta un obligatorio el compilador lanza, y entonces no hay rastreador
+    // de accesos, que es de donde salen normalmente los avisos anidados. Sin
+    // una segunda fuente, `fix` callaba justo cuando mas falta hacia.
+    const out = fixBlock({
+      lang: 'chart',
+      source: 'type: calendar-heatmap\ndata:\n  - dat3: 2026-09-01\n    value: 3\n',
+    });
+    expect(out.ok).toBe(true);
+    expect(out.aplicado).toEqual([{ de: 'dat3', a: 'date' }]);
+  });
+
+  it('llega a dos niveles de anidamiento', () => {
+    const out = fixBlock({
+      lang: 'chart',
+      source: 'type: bump\nseries:\n  - name: A\n    data:\n      - label: SP1\n        valu: 1\n',
+    });
+    expect(out.ok).toBe(true);
+    expect(out.aplicado).toEqual([{ de: 'valu', a: 'value' }]);
+  });
+
+  it('funciona igual en la valla diagram', () => {
+    const out = fixBlock({
+      lang: 'diagram',
+      source: 'type: gantt\nsections:\n  - name: S\n    tasks:\n      - name: T\n        start: 2026-09-01\n        duration: 3d\n        statu: done\n',
+    });
+    expect(out.ok).toBe(true);
+    expect(out.aplicado).toEqual([{ de: 'statu', a: 'status' }]);
+  });
+
+  it('no inventa un aviso sobre un campo valido que el ejemplo no enseña', () => {
+    // El ejemplo del catalogo muestra la forma de uso, no la lista completa de
+    // campos: `lowerIsBetter` es legitimo y no sale en el suyo.
+    const out = fixBlock({
+      lang: 'chart',
+      source: 'type: kpi-card\ndata:\n  - label: A\n    value: 9\n    target: 5\n    lowerIsBetter: true\n',
+    });
+    expect(out.ok).toBe(true);
+    expect(out.cambiado).toBe(false);
+  });
+
+  it('no propone nada cuando el campo no es una errata sino otra palabra', () => {
+    // `meta` es `target` en espanol, no una errata suya. Adivinarlo seria
+    // inventar: se avisa de que no se uso y ahi acaba.
+    const out = fixBlock({ lang: 'chart', source: 'type: bullet\ndata:\n  - label: A\n    value: 1\n    meta: 2\n' });
+    expect(out.ok).toBe(false);
+    expect(out.aplicado).toEqual([]);
+    expect(out['ejemplo']).toContain('type: bullet');
+  });
+});

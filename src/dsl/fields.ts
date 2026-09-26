@@ -222,8 +222,17 @@ export function unknownNestedFields(tracker: FieldAccessTracker<object>): FieldW
     if (registro.enumerated) continue;
     for (const field of Object.keys(registro.objetivo)) {
       if (registro.accessed.has(field)) continue;
-      const hermanas = [...registro.accessed].filter((k) => k in registro.objetivo);
-      const suggestion = nearestField(field, new Set(hermanas));
+      // Las candidatas son las claves que el compilador BUSCO y no encontro.
+      // Antes se filtraba al reves —las que si estaban— y eso descartaba
+      // justo la unica util: quien escribe `targert` hace que el compilador
+      // busque `target` y no lo halle, asi que `target` es la sugerencia, y
+      // era precisamente la que el filtro quitaba. Ninguna errata anidada
+      // recibia sugerencia, y `docviz fix` no podia arreglarlas.
+      //
+      // Sugerir una clave que YA esta en el objeto tampoco valdria: renombrar
+      // hacia ella produciria dos veces la misma clave.
+      const buscadasYAusentes = [...registro.accessed].filter((k) => !(k in registro.objetivo));
+      const suggestion = nearestField(field, new Set(buscadasYAusentes));
       const donde = registro.ruta === '' ? '' : ` en ${registro.ruta}`;
       warnings.push({
         code: ERROR_CODES.DSL_FIELD_UNKNOWN,
@@ -292,4 +301,72 @@ export function editDistance(a: string, b: string): number {
     previous = current;
   }
   return previous[b.length]!;
+}
+
+/**
+ * Erratas dentro de los mapas anidados, deducidas del ejemplo canonico.
+ *
+ * `unknownNestedFields` necesita el rastreador de accesos, y ese solo existe si
+ * el bloque llego a compilar. Justo cuando el campo mal escrito es OBLIGATORIO
+ * —`target` en un `bullet`, `date` en un `calendar-heatmap`— el compilador
+ * lanza antes, y `docviz fix` se quedaba sin nada que proponer precisamente en
+ * el caso en que mas falta hace.
+ *
+ * Aqui la referencia es el ejemplo del catalogo, la misma que usa el nivel
+ * superior. Y se emite aviso SOLO si hay sugerencia: el ejemplo enseña la forma
+ * de uso, no la lista completa de campos validos —`lowerIsBetter` en una
+ * `kpi-card` no sale en el suyo y es legitimo—, asi que llamar desconocido a
+ * todo lo que no aparezca produciria ruido. Una errata, en cambio, se reconoce
+ * por su parecido con un campo que el ejemplo si nombra.
+ */
+export function nestedTyposFromExample(
+  doc: Record<string, unknown>,
+  spec: TypeSpec | undefined,
+): FieldWarning[] {
+  if (spec === undefined) return [];
+  let ejemplo: unknown;
+  try {
+    ejemplo = parseYaml(spec.example);
+  } catch {
+    return [];
+  }
+
+  const warnings: FieldWarning[] = [];
+  const vistos = new Set<string>();
+
+  /** Recorre documento y ejemplo en paralelo; las listas comparten forma. */
+  const recorrer = (real: unknown, modelo: unknown, ruta: string, profundidad: number): void => {
+    if (profundidad > 4) return;
+    if (Array.isArray(real)) {
+      // Todos los elementos de una lista obedecen al mismo molde, que es el
+      // primero del ejemplo.
+      const molde = Array.isArray(modelo) ? modelo[0] : modelo;
+      for (const item of real) recorrer(item, molde, ruta, profundidad + 1);
+      return;
+    }
+    if (real === null || typeof real !== 'object' || modelo === null || typeof modelo !== 'object') return;
+
+    const claves = new Set(Object.keys(modelo as Record<string, unknown>));
+    for (const [clave, valor] of Object.entries(real as Record<string, unknown>)) {
+      if (claves.has(clave)) {
+        recorrer(valor, (modelo as Record<string, unknown>)[clave], `${ruta}.${clave}`, profundidad + 1);
+        continue;
+      }
+      if (profundidad === 0) continue; // el nivel superior ya lo mira `unknownFields`
+      const suggestion = nearestField(clave, claves);
+      if (suggestion === undefined) continue;
+      const firma = `${ruta}.${clave}`;
+      if (vistos.has(firma)) continue;
+      vistos.add(firma);
+      warnings.push({
+        code: ERROR_CODES.DSL_FIELD_UNKNOWN,
+        field: clave,
+        message: `el campo "${clave}" en ${spec.lang}${ruta} no existe; quiza querias "${suggestion}"`,
+        suggestion,
+      });
+    }
+  };
+
+  recorrer(doc, ejemplo, '', 0);
+  return warnings;
 }

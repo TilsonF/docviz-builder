@@ -21,6 +21,7 @@ import {
   findType,
   isDslLanguage,
   unknownFields,
+  nestedTyposFromExample,
   type FieldWarning,
 } from '../dsl/index.js';
 import { TYPE_CATALOG, type TypeSpec } from '../dsl/catalog.js';
@@ -275,7 +276,10 @@ function intentar(lang: string, source: string): Intento {
       try {
         const doc = parseYaml(source) as Record<string, unknown> | null;
         if (doc !== null && typeof doc === 'object' && !Array.isArray(doc)) {
-          salida.warnings = unknownFields(doc, spec);
+          // Tambien las erratas anidadas: si el campo mal escrito era
+          // obligatorio, el compilador lanzo y no hay rastreador de accesos,
+          // que es de donde salen normalmente.
+          salida.warnings = [...unknownFields(doc, spec), ...nestedTyposFromExample(doc, spec)];
         }
       } catch {
         // YAML invalido: no hay campos que analizar, solo el error de sintaxis.
@@ -293,10 +297,18 @@ function intentar(lang: string, source: string): Intento {
  */
 function renombrarClave(texto: string, de: string, a: string): string | undefined {
   const escapado = de.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const origen = new RegExp(`^(\\s*)(?:- )?${escapado}(\\s*:)`, 'm');
+  // El guion de lista se CAPTURA y se devuelve. Antes era un grupo sin
+  // capturar, asi que renombrar una clave dentro de una lista se lo comia:
+  // «  - labl: A» salia como «  label: A» y el bloque dejaba de ser YAML
+  // valido. `fix` devolvia algo peor que lo que recibio.
+  const origen = new RegExp(`^(\\s*)(- )?${escapado}(\\s*:)`, 'm');
   if (!origen.test(texto)) return undefined;
   if (new RegExp(`^\\s*(?:- )?${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:`, 'm').test(texto)) return undefined;
-  return texto.replace(origen, (_m, sangria: string, dosPuntos: string) => `${sangria}${a}${dosPuntos}`);
+  return texto.replace(
+    origen,
+    (_m, sangria: string, guion: string | undefined, dosPuntos: string) =>
+      `${sangria}${guion ?? ''}${a}${dosPuntos}`,
+  );
 }
 
 /**

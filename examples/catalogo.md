@@ -1744,7 +1744,7 @@ Un periodo largo en celdas: semana en horizontal, dia en vertical.
 
 **Cuando usarlo.** Para ver ritmo y huecos a lo largo de meses: ejecuciones por dia, defectos por dia.
 
-**Cuando no.** Con pocos dias: una `bar` los lee mejor.
+**Cuando no.** Con pocos dias: una `bar` los lee mejor. Y si las dos dimensiones son categoricas —dia de la semana contra hora— es un `heatmap`, no un calendario.
 
 Alias: `calendario`.
 

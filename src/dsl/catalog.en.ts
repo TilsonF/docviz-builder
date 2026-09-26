@@ -280,7 +280,7 @@ export const CATALOG_EN: Readonly<Record<string, TypeSpecEn>> = {
   'calendar-heatmap': {
     purpose: 'A long period in cells: week across, day of the week down.',
     whenToUse: 'To see rhythm and gaps over months: runs per day, defects per day.',
-    whenNotToUse: 'With few days: a `bar` reads them better.',
+    whenNotToUse: 'With few days: a `bar` reads them better. And if both dimensions are categorical —weekday against hour— it is a `heatmap`, not a calendar.',
   },
   bump: {
     purpose: 'How a ranking changes: who overtakes whom.',

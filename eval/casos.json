@@ -239,7 +239,11 @@
     "necesidad": "Comparar el gasto por departamento, y los nombres de los departamentos son largos.",
     "tipo": "horizontal-bar",
     "idioma": "es",
-    "particion": "reservado"
+    "particion": "reservado",
+    "acepta": [
+      "horizontal-bar",
+      "lollipop"
+    ]
   },
   {
     "id": "composicion",
@@ -448,7 +452,11 @@
     "idioma": "en",
     "necesidad": "Compare spend per department, and the department names are long.",
     "tipo": "horizontal-bar",
-    "particion": "entrenamiento"
+    "particion": "entrenamiento",
+    "acepta": [
+      "horizontal-bar",
+      "lollipop"
+    ]
   },
   {
     "id": "en-trend",
@@ -509,5 +517,91 @@
     "necesidad": "The deployable pieces of the system —web, API, database— and how they communicate.",
     "tipo": "c4-container",
     "particion": "entrenamiento"
+  },
+  {
+    "id": "modulos-nombres-largos",
+    "necesidad": "Comparar cuantos casos tiene cada modulo cuando los nombres de los modulos son largos y una barra gruesa llena todo el dibujo.",
+    "tipo": "lollipop",
+    "acepta": [
+      "lollipop",
+      "horizontal-bar"
+    ],
+    "idioma": "es",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "en-long-names-compare",
+    "necesidad": "Compare one value across about fifteen teams whose names are long, without the drawing turning into a wall of blocks.",
+    "tipo": "lollipop",
+    "acepta": [
+      "lollipop",
+      "horizontal-bar"
+    ],
+    "idioma": "en",
+    "particion": "reservado"
+  },
+  {
+    "id": "minigrafico-en-tabla",
+    "necesidad": "Junto a cada cifra de una tabla quiero un dibujo minusculo que diga si viene subiendo o bajando, sin ejes ni leyenda.",
+    "tipo": "sparkline",
+    "idioma": "es",
+    "particion": "reservado"
+  },
+  {
+    "id": "en-tiny-trend",
+    "necesidad": "Next to each number in a table, show the last six months as a tiny line with no axes.",
+    "tipo": "sparkline",
+    "idioma": "en",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "cabecera-cifras",
+    "necesidad": "Abrir el informe con cuatro numeros grandes —cobertura, casos disenados, bloqueados y defectos abiertos—, cada uno con la meta que deberia alcanzar.",
+    "tipo": "kpi-card",
+    "acepta": [
+      "kpi-card",
+      "bullet"
+    ],
+    "idioma": "es",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "en-header-numbers",
+    "necesidad": "A header strip with three big numbers and how far each one is from the goal it should reach.",
+    "tipo": "kpi-card",
+    "acepta": [
+      "kpi-card",
+      "bullet"
+    ],
+    "idioma": "en",
+    "particion": "reservado"
+  },
+  {
+    "id": "ejecuciones-trimestre",
+    "necesidad": "Ver cuantas ejecuciones hubo en cada jornada del ultimo trimestre, para encontrar las semanas en blanco.",
+    "tipo": "calendar-heatmap",
+    "idioma": "es",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "en-year-activity",
+    "necesidad": "Show activity for every single day of the past year so gaps and streaks are visible at a glance.",
+    "tipo": "calendar-heatmap",
+    "idioma": "en",
+    "particion": "reservado"
+  },
+  {
+    "id": "puesto-por-sprint",
+    "necesidad": "Como fue cambiando el puesto de cada modulo en el top de defectos, sprint a sprint.",
+    "tipo": "bump",
+    "idioma": "es",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "en-rank-moves",
+    "necesidad": "How the standing of five services moved across quarters, and who overtook whom.",
+    "tipo": "bump",
+    "idioma": "en",
+    "particion": "reservado"
   }
 ]

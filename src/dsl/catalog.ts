@@ -901,7 +901,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Densidad de una magnitud en dos dimensiones categoricas.',
     whenToUse: 'Para cruces: defectos por modulo y por sprint, actividad por dia y hora.',
     whenNotToUse: 'Si una dimension tiene un solo valor: usa `bar`.',
-    keywords: ['mapa de calor', 'cruce', 'matriz', 'densidad', 'concentracion', 'density', 'by day and hour', 'intensity', 'matrix of values', 'calendar heat'],
+    keywords: ['mapa de calor', 'cruce', 'matriz', 'densidad', 'concentracion', 'density', 'by day and hour', 'intensity', 'matrix of values', 'calendar heat', 'dia de la semana y hora', 'dos dimensiones', 'cruce de dos categorias'],
     example: ['type: heatmap', 'data:', '  - x: SP1', '    y: Backend', '    value: 12'].join('\n'),
   }),
   t({
@@ -957,7 +957,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Comparacion entre categorias con menos tinta que una barra.',
     whenToUse: 'Con muchas categorias o nombres largos: la regla fina las separa sin llenar el dibujo.',
     whenNotToUse: 'Si hay que sumar partes de un total: usa `stacked-bar`.',
-    keywords: ['lollipop', 'piruleta', 'ranking', 'comparar categorias', 'nombres largos', 'top', 'dot plot', 'cleveland'],
+    keywords: ['lollipop', 'piruleta', 'comparar categorias', 'nombres largos', 'poca tinta', 'sin barras gruesas', 'muchas categorias', 'dot plot', 'cleveland', 'long names', 'many long category names', 'less ink', 'wall of blocks', 'thin rule'],
     example: [
       'type: lollipop',
       'title: Casos por modulo',
@@ -977,7 +977,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'El gesto de una serie, sin ejes y en el tamano de una frase.',
     whenToUse: 'Junto a un numero, para decir si viene subiendo o bajando sin abrir un grafico.',
     whenNotToUse: 'Si hay que leer valores concretos: usa `line`.',
-    keywords: ['sparkline', 'minigrafico', 'tendencia', 'evolucion breve', 'inline', 'micro grafico', 'trend'],
+    keywords: ['sparkline', 'minigrafico', 'micro grafico', 'diminuto', 'en una celda', 'junto a un numero', 'dentro de una tabla', 'sin ejes', 'tendencia breve', 'inline', 'tiny line', 'next to each number', 'in a table cell', 'no axes', 'thumbnail chart'],
     example: [
       'type: sparkline',
       'baseline: mean',
@@ -998,7 +998,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Una fila de numeros grandes, cada uno con su etiqueta y su meta.',
     whenToUse: 'Para abrir un informe con las tres o cuatro cifras que resumen el estado.',
     whenNotToUse: 'Para comparar entre si muchas categorias: usa `bar` o `lollipop`.',
-    keywords: ['kpi', 'tarjeta', 'scorecard', 'resumen', 'cifras', 'indicadores', 'cabecera de informe', 'big number'],
+    keywords: ['kpi', 'tarjeta', 'scorecard', 'resumen', 'cifras', 'numeros grandes', 'indicadores', 'cabecera de informe', 'big number', 'header strip', 'three big numbers', 'how far from the goal', 'summary figures', 'headline metrics'],
     example: [
       'type: kpi-card',
       'data:',
@@ -1017,8 +1017,8 @@ const CHARTS: readonly TypeSpec[] = [
     aliases: ['calendario'],
     purpose: 'Un periodo largo en celdas: semana en horizontal, dia en vertical.',
     whenToUse: 'Para ver ritmo y huecos a lo largo de meses: ejecuciones por dia, defectos por dia.',
-    whenNotToUse: 'Con pocos dias: una `bar` los lee mejor.',
-    keywords: ['calendario', 'calendar heatmap', 'por dia', 'actividad diaria', 'ritmo', 'racha', 'github contributions'],
+    whenNotToUse: 'Con pocos dias: una `bar` los lee mejor. Y si las dos dimensiones son categoricas —dia de la semana contra hora— es un `heatmap`, no un calendario.',
+    keywords: ['calendario', 'calendar heatmap', 'cada dia', 'dia a dia', 'jornada', 'un cuadro por dia', 'dia por dia del ano', 'semanas en blanco', 'racha', 'actividad diaria', 'github contributions', 'every single day', 'day by day', 'gaps and streaks', 'daily activity', 'per day cell'],
     example: [
       'type: calendar-heatmap',
       'title: Ejecuciones por dia',
@@ -1037,7 +1037,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Como cambia una clasificacion: quien adelanta a quien.',
     whenToUse: 'Cuando importa la posicion relativa y no la magnitud: top de modulos por sprint.',
     whenNotToUse: 'Si lo que cambia es la magnitud: usa `line`.',
-    keywords: ['bump', 'ranking', 'posicion', 'clasificacion', 'quien sube', 'evolucion del top', 'rank over time'],
+    keywords: ['bump', 'ranking', 'posicion', 'puesto', 'clasificacion', 'quien sube', 'quien adelanta', 'top', 'sprint a sprint', 'cambio de puesto', 'evolucion del top', 'rank over time', 'standing moved', 'who overtook whom', 'moved up the ranking', 'position over time'],
     example: [
       'type: bump',
       'title: Puesto por sprint',

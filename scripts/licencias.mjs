@@ -98,7 +98,13 @@ for (const ruta of rutas) {
   if (typeof pkg.name !== 'string' || pkg.name === propio || paquetes.has(pkg.name)) continue;
   const { valor, origen } = licenciaDe(pkg, ruta);
   const familia = FAMILIAS.find((f) => f.patron.test(valor));
-  paquetes.set(pkg.name, { version: pkg.version, licencia: valor, origen, familia });
+  // Un paquete con restriccion de `os`/`cpu` es el binario de UNA plataforma:
+  // en macOS se instala el de darwin y en Linux el de linux, asi que incluirlo
+  // hacia que este documento dependiera de la maquina que lo genero y CI lo
+  // viera desfasado. Se clasifica igual —una licencia rara ahi tambien tiene
+  // que saltar— pero no se lista: su licencia es la de su paquete padre.
+  const porPlataforma = Array.isArray(pkg.os) || Array.isArray(pkg.cpu);
+  paquetes.set(pkg.name, { version: pkg.version, licencia: valor, origen, familia, porPlataforma });
 }
 
 const sinClasificar = [...paquetes].filter(([, d]) => d.familia === undefined);
@@ -111,10 +117,11 @@ if (sinClasificar.length > 0) {
   process.exit(1);
 }
 
+const estables = [...paquetes].filter(([, d]) => !d.porPlataforma);
 const porFamilia = new Map();
-for (const [, d] of paquetes) porFamilia.set(d.familia.familia, (porFamilia.get(d.familia.familia) ?? 0) + 1);
+for (const [, d] of estables) porFamilia.set(d.familia.familia, (porFamilia.get(d.familia.familia) ?? 0) + 1);
 
-const destacados = [...paquetes]
+const destacados = estables
   .filter(([, d]) => d.familia.familia !== 'permisiva' && d.familia.familia !== 'dominio publico')
   .sort();
 
@@ -129,7 +136,11 @@ const lineas = [
   '> script no sepa clasificar hace fallar la comprobación, para que nadie la',
   '> apruebe por descuido.',
   '',
-  `Dependencias de producción: **${paquetes.size}**.`,
+  `Dependencias de producción: **${estables.length}**, sin contar los binarios`,
+  'por plataforma —`esbuild`, `lightningcss`, `rolldown`, `fsevents`— de los que',
+  'cada máquina instala el suyo. Esos se clasifican igual, pero no se listan:',
+  'su licencia es la de su paquete padre, y listarlos haría que este documento',
+  'dependiera del ordenador que lo generó.',
   '',
   '| Familia | Paquetes | Qué obliga |',
   '|---|---|---|',
@@ -177,9 +188,12 @@ if (comprobar) {
     process.stderr.write('LICENCIAS.md esta desfasado: ejecuta node scripts/licencias.mjs\n');
     process.exit(1);
   }
-  process.stdout.write(`licencias al dia · ${paquetes.size} paquetes\n`);
+  process.stdout.write(`licencias al dia · ${estables.length} paquetes\n`);
   process.exit(0);
 }
 
 writeFileSync(destino, salida, 'utf8');
-process.stdout.write(`escrito LICENCIAS.md · ${paquetes.size} paquetes, ${destacados.length} con condiciones propias\n`);
+process.stdout.write(
+  `escrito LICENCIAS.md · ${estables.length} paquetes (+${paquetes.size - estables.length} binarios por plataforma), ` +
+    `${destacados.length} con condiciones propias\n`,
+);

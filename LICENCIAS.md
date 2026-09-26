@@ -8,12 +8,16 @@ DocViz es MIT, pero un paquete no se instala solo. Esto es lo que entra en
 > script no sepa clasificar hace fallar la comprobación, para que nadie la
 > apruebe por descuido.
 
-Dependencias de producción: **309**.
+Dependencias de producción: **305**, sin contar los binarios
+por plataforma —`esbuild`, `lightningcss`, `rolldown`, `fsevents`— de los que
+cada máquina instala el suyo. Esos se clasifican igual, pero no se listan:
+su licencia es la de su paquete padre, y listarlos haría que este documento
+dependiera del ordenador que lo generó.
 
 | Familia | Paquetes | Qué obliga |
 |---|---|---|
-| permisiva | 304 | Conservar el aviso de copyright. Nada más. |
-| copyleft debil | 3 | Por archivo. Ver abajo. |
+| permisiva | 301 | Conservar el aviso de copyright. Nada más. |
+| copyleft debil | 2 | Por archivo. Ver abajo. |
 | con clausula propia | 1 | No es estándar. Ver abajo. |
 | dominio publico | 1 | Nada. |
 
@@ -28,10 +32,6 @@ por archivo: usarla como libreria sin modificarla es compatible con distribuir M
 hay que leer su archivo de licencia: no es una licencia estandar
 
 ### `lightningcss` — MPL-2.0
-
-por archivo: usarla como libreria sin modificarla es compatible con distribuir MIT; si se modifica un archivo suyo, ese archivo sigue siendo MPL
-
-### `lightningcss-darwin-arm64` — MPL-2.0
 
 por archivo: usarla como libreria sin modificarla es compatible con distribuir MIT; si se modifica un archivo suyo, ese archivo sigue siendo MPL
 

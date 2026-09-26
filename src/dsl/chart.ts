@@ -65,6 +65,21 @@ export function compileChartOfType(doc: Record<string, unknown>, type: string): 
     case 'funnel':
       Object.assign(spec, funnel(doc, xTitle));
       break;
+    case 'lollipop':
+      Object.assign(spec, lollipop(doc, xTitle));
+      break;
+    case 'sparkline':
+      Object.assign(spec, sparkline(doc));
+      break;
+    case 'kpi-card':
+      Object.assign(spec, kpiCard(doc));
+      break;
+    case 'calendar-heatmap':
+      Object.assign(spec, calendarHeatmap(doc));
+      break;
+    case 'bump':
+      Object.assign(spec, bump(doc, xTitle));
+      break;
     default:
       Object.assign(spec, cartesian(type, doc, xTitle, yTitle));
       break;
@@ -502,6 +517,371 @@ function funnel(doc: Record<string, unknown>, xTitle: string | undefined): Recor
           y: { field: 'label', type: 'nominal', sort: { field: 'order' } },
           x: { field: 'value', type: 'quantitative' },
           text: { field: 'porcentaje', type: 'quantitative', format: '.1f' },
+        },
+      },
+    ],
+  };
+}
+
+// --------------------------------------------------------------------------
+// Tipos tomados del catalogo de plantillas de Flint (Microsoft Research, MIT).
+//
+// Se reescriben aqui en vez de depender de la libreria: `flint-chart` pesa
+// 42 MB, y de su valor —layout automatico y un mismo spec para cinco
+// backends— no usamos nada, porque solo emitimos SVG por Vega-Lite. Lo que si
+// se aprovecha es su eleccion de canales y su geometria, que estan pensadas
+// para que un agente acierte a la primera. Escritas asi, ademas, nacen con el
+// tema y el titulo del proyecto, que una spec ajena pisa.
+// --------------------------------------------------------------------------
+
+/** Mismo dato que una barra, menos tinta: una linea hasta el punto. */
+function lollipop(doc: Record<string, unknown>, xTitle: string | undefined): Record<string, unknown> {
+  const { points } = readPoints(doc);
+  const values = points.map((p) => ({ label: p.label, value: p.value }));
+  // El orden lo decide quien escribe salvo que pida ordenar por valor: una
+  // lista de modulos tiene un orden propio que alfabetizar destruiria.
+  const sort = optionalString(doc, 'sort');
+  const ejeY = {
+    field: 'label',
+    type: 'nominal',
+    title: null,
+    sort: sort === 'value' ? { field: 'value', order: 'descending' } : null,
+  };
+  return {
+    data: { values },
+    encoding: {
+      x: { field: 'value', type: 'quantitative', title: xTitle ?? null },
+      y: ejeY,
+    },
+    // Dos capas, como en Flint: la regla lleva el ojo y el circulo marca donde
+    // termina. Una barra gruesa para el mismo dato es tinta que no informa.
+    layer: [
+      { mark: { type: 'rule', strokeWidth: 1.5 } },
+      { mark: { type: 'circle', size: 110, opacity: 1 } },
+    ],
+  };
+}
+
+/** Barras en el tiempo: cada fila ocupa de su inicio a su fin. */
+function gantt(doc: Record<string, unknown>, xTitle: string | undefined): Record<string, unknown> {
+  const filas = requireArray(doc['data'] ?? doc['tareas'], 'chart.data').map((raw) => {
+    const record = asRecord(raw, 'chart.data');
+    const fila: Record<string, unknown> = {
+      label: requireString(record, 'label', 'chart.data'),
+      start: requireString(record, 'start', 'chart.data'),
+      end: requireString(record, 'end', 'chart.data'),
+    };
+    const estado = optionalString(record, 'status') ?? optionalString(record, 'estado');
+    if (estado !== undefined) fila['status'] = estado;
+    return fila;
+  });
+  const conEstado = filas.some((f) => f['status'] !== undefined);
+
+  const encoding: Record<string, unknown> = {
+    // `sort: null` mantiene el orden del documento: un cronograma se lee en el
+    // orden en que se escribio, no alfabeticamente.
+    y: { field: 'label', type: 'nominal', title: null, sort: null },
+    x: { field: 'start', type: 'temporal', title: xTitle ?? null },
+    x2: { field: 'end' },
+  };
+  if (conEstado) encoding['color'] = { field: 'status', type: 'nominal', title: null };
+
+  return {
+    data: { values: filas },
+    // `band: 0.7` deja aire entre filas; pegadas se leen como un bloque.
+    mark: { type: 'bar', cornerRadius: 2, height: { band: 0.7 } },
+    encoding,
+  };
+}
+
+/** Una linea minima, sin ejes: el gesto de la serie, no sus valores. */
+function sparkline(doc: Record<string, unknown>): Record<string, unknown> {
+  const { points } = readPoints(doc);
+  const values = points.map((p, i) => ({ i, label: p.label, value: p.value }));
+  const conBase = optionalString(doc, 'baseline');
+  const base =
+    conBase === 'median'
+      ? mediana(values.map((v) => v.value))
+      : conBase === 'mean' || conBase === undefined
+        ? values.reduce((a, v) => a + v.value, 0) / Math.max(1, values.length)
+        : Number(conBase);
+
+  const ejes = {
+    x: { field: 'i', type: 'quantitative', axis: null },
+    y: { field: 'value', type: 'quantitative', axis: null, scale: { zero: false } },
+  };
+  return {
+    data: { values },
+    // Sin titulo a proposito, ademas de sin ejes: un titulo encima de una
+    // linea de 40 px de alto pesa mas que el propio dato.
+    title: null,
+    // Deliberadamente pequena: va dentro de una frase o una celda, no ocupa el
+    // ancho de un grafico.
+    width: 180,
+    height: 40,
+    layer: [
+      { mark: { type: 'line', strokeWidth: 1.5, interpolate: 'monotone' }, encoding: ejes },
+      // El ultimo punto ancla la lectura: sin el no se sabe donde termina.
+      {
+        transform: [{ filter: `datum.i === ${values.length - 1}` }],
+        mark: { type: 'circle', size: 45, opacity: 1 },
+        encoding: ejes,
+      },
+      ...(conBase === 'none'
+        ? []
+        : [
+            {
+              mark: { type: 'rule', strokeDash: [3, 3], opacity: 0.45 },
+              encoding: { y: { datum: Number(base.toFixed(4)), type: 'quantitative' } },
+            },
+          ]),
+    ],
+  };
+}
+
+function mediana(xs: number[]): number {
+  const s = [...xs].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 === 0 ? ((s[m - 1] ?? 0) + (s[m] ?? 0)) / 2 : (s[m] ?? 0);
+}
+
+/** Un numero grande con su etiqueta, y su meta si la hay. */
+function kpiCard(doc: Record<string, unknown>): Record<string, unknown> {
+  const tarjetas = requireArray(doc['data'] ?? doc['indicadores'], 'chart.data').map((raw) => {
+    const record = asRecord(raw, 'chart.data');
+    const valor = requireNumber(record, 'value', 'chart.data');
+    const meta = optionalNumber(record, 'target', 'chart.data');
+    const unidad = optionalString(record, 'unit') ?? '';
+    const fila: Record<string, unknown> = {
+      label: requireString(record, 'label', 'chart.data'),
+      value: valor,
+      texto: `${formatearNumero(valor)}${unidad}`,
+    };
+    // El estado sale del dato, no de un color escrito a mano: asi el tema
+    // decide como se ve «por debajo de la meta» en claro y en oscuro.
+    // Cadena vacia y no `undefined`: una marca de texto sobre un campo ausente
+    // pinta literalmente «undefined» en el SVG.
+    fila['nota'] = meta !== undefined ? `meta ${formatearNumero(meta)}${unidad}` : '';
+    // Hacia donde es bueno moverse. Sin esto, «9 bloqueados sobre una meta de
+    // 5» se pintaba como cumplida, porque 9 es mayor que 5: en la mitad de los
+    // indicadores de un informe de QA lo bueno es el numero BAJO.
+    const menorEsMejor = record['lowerIsBetter'] === true;
+    if (meta !== undefined) {
+      const bien = menorEsMejor ? valor <= meta : valor >= meta;
+      fila['estado'] = bien ? 'cumple' : 'no cumple';
+      // Avance acotado a 1: una barra que se sale de su carril no se lee.
+      fila['avance'] = Math.min(1, menorEsMejor ? (meta === 0 ? 0 : meta / Math.max(valor, 1e-9)) : valor / meta);
+    } else {
+      fila['estado'] = 'sin meta';
+      fila['avance'] = 0;
+    }
+    return fila;
+  });
+  const conMeta = tarjetas.some((t) => t['nota'] !== '');
+  // El orden es el que escribio el autor. Sin este indice Vega-Lite ordena las
+  // facetas alfabeticamente, y una fila de indicadores tiene un orden pensado.
+  tarjetas.forEach((t, i) => {
+    t['orden'] = i;
+  });
+
+  const capas: Record<string, unknown>[] = [
+    {
+      mark: { type: 'text', fontSize: 34, fontWeight: 700, dy: -8 },
+      encoding: { text: { field: 'texto', type: 'nominal' } },
+    },
+    {
+      mark: { type: 'text', fontSize: 11, dy: 22, opacity: 0.75 },
+      encoding: { text: { field: 'label', type: 'nominal' } },
+    },
+  ];
+  if (conMeta) {
+    capas.push({
+      mark: { type: 'text', fontSize: 10, dy: 38, opacity: 0.6 },
+      encoding: { text: { field: 'nota', type: 'nominal' } },
+    });
+    // La barra de avance es de Flint, y se la copio porque resuelve algo que el
+    // numero solo no dice: a que distancia de la meta esta. El carril va
+    // siempre; encima, la parte cumplida.
+    const barra = {
+      x: { field: 'x0', type: 'quantitative', axis: null, scale: { domain: [0, 1] } },
+      x2: { field: 'x1' },
+      y: { datum: 0, type: 'quantitative', axis: null, scale: { domain: [0, 1] } },
+    };
+    capas.push({
+      transform: [{ calculate: '0', as: 'x0' }, { calculate: '1', as: 'x1' }],
+      mark: { type: 'rule', strokeWidth: 4, opacity: 0.15, yOffset: 32 },
+      encoding: barra,
+    });
+    capas.push({
+      transform: [{ filter: 'datum.nota !== ""' }, { calculate: '0', as: 'x0' }, { calculate: 'datum.avance', as: 'x1' }],
+      mark: { type: 'rule', strokeWidth: 4, yOffset: 32 },
+      encoding: barra,
+    });
+  }
+  if (conMeta) {
+    for (const capa of capas) {
+      const enc = capa['encoding'] as Record<string, unknown>;
+      enc['color'] = { field: 'estado', type: 'nominal', legend: null };
+    }
+  }
+
+
+  return {
+    data: { values: tarjetas },
+    // `title: null` explicito: si no, el escaner inyecta «Grafico» como titulo
+    // por defecto, y una fila de indicadores no lleva encabezado.
+    title: null,
+    // Una columna por tarjeta: es una fila de indicadores, no un grafico.
+    facet: {
+      column: {
+        field: 'label',
+        type: 'nominal',
+        title: null,
+        header: null,
+        sort: { field: 'orden', op: 'min' },
+      },
+    },
+    spec: { width: 150, height: 96, layer: capas },
+  };
+}
+
+function formatearNumero(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
+}
+
+/** Un ano en celdas: semana en horizontal, dia de la semana en vertical. */
+function calendarHeatmap(doc: Record<string, unknown>): Record<string, unknown> {
+  const filas = requireArray(doc['data'], 'chart.data').map((raw) => {
+    const record = asRecord(raw, 'chart.data');
+    const fecha = optionalString(record, 'date') ?? optionalString(record, 'fecha');
+    if (fecha === undefined) {
+      fail('cada punto de chart.data necesita "date"', 'ejemplo: - date: 2026-09-01\n  value: 12');
+    }
+    return { date: fecha, value: requireNumber(record, 'value', 'chart.data') };
+  });
+
+  return {
+    data: { values: filas },
+    mark: { type: 'rect', cornerRadius: 2 },
+    encoding: {
+      // La semana del ano en horizontal y el dia en vertical es lo que hace
+      // legible un ano entero en una franja; con la fecha cruda saldrian 365
+      // columnas de un pixel.
+      x: {
+        field: 'date',
+        type: 'ordinal',
+        timeUnit: 'yearweek',
+        title: null,
+        // Sin `labelExpr` cada semana rotula su mes y sale «Jul Jul Jul Jul Ago…».
+        // Solo escribe el mes la primera semana que cae en el.
+        axis: {
+          labelAngle: 0,
+          labelExpr: "month(datum.value) !== month(datum.value - 604800000) ? timeFormat(datum.value, '%b') : ''",
+        },
+      },
+      y: { field: 'date', type: 'ordinal', timeUnit: 'day', title: null, axis: { format: '%a' } },
+      color: { field: 'value', type: 'quantitative', title: null },
+    },
+  };
+}
+
+/** Quien adelanta a quien: posiciones en el tiempo, el 1 arriba. */
+function bump(doc: Record<string, unknown>, xTitle: string | undefined): Record<string, unknown> {
+  const { points } = readPoints(doc);
+  if (!points.some((p) => p.series !== undefined)) {
+    fail(
+      'un grafico bump necesita varias series',
+      'declara `series:` con un nombre por elemento, o `series:` en cada punto',
+    );
+  }
+  const values = points.map((p) => ({ label: p.label, value: p.value, series: p.series }));
+  const ejes = {
+    x: { field: 'label', type: 'ordinal', title: xTitle ?? null, sort: null },
+    // Invertido: en una clasificacion el 1 va arriba, y un eje normal lo
+    // pondria abajo, que es justo lo contrario de lo que el lector espera.
+    // Dominio explicito desde 1: una clasificacion no tiene puesto cero, y
+    // dejarselo elegir a Vega-Lite pone un 0 arriba que no significa nada.
+    y: {
+      field: 'value',
+      type: 'quantitative',
+      title: null,
+      scale: { reverse: true, domain: [1, Math.max(...points.map((p) => p.value))], nice: false },
+      axis: { tickMinStep: 1 },
+    },
+    color: { field: 'series', type: 'nominal', title: null },
+  };
+  return {
+    data: { values },
+    layer: [
+      { mark: { type: 'line', strokeWidth: 2.5, interpolate: 'monotone' }, encoding: ejes },
+      { mark: { type: 'circle', size: 90, opacity: 1 }, encoding: ejes },
+    ],
+  };
+}
+
+/** Varios ejes que salen de un centro: el perfil de un conjunto de medidas. */
+function radar(doc: Record<string, unknown>): Record<string, unknown> {
+  const { points } = readPoints(doc);
+  const ejes = [...new Set(points.map((p) => p.label))];
+  if (ejes.length < 3) {
+    fail('un radar necesita al menos tres ejes', `declarados: ${ejes.length}`);
+  }
+  const maximo = optionalNumber(doc, 'max', 'chart.max') ?? Math.max(...points.map((p) => p.value));
+  const R = 120;
+
+  // Vega-Lite no dibuja coordenadas polares, asi que el angulo se resuelve
+  // aqui: cada eje recibe su posicion en el circulo y el punto se proyecta a
+  // x/y. Es lo mismo que hace Flint, y por eso su radar es un `point` con las
+  // coordenadas ya calculadas.
+  const proyectar = (indice: number, valor: number): { x: number; y: number } => {
+    const angulo = (indice / ejes.length) * 2 * Math.PI - Math.PI / 2;
+    const r = (valor / maximo) * R;
+    return { x: Number((r * Math.cos(angulo)).toFixed(2)), y: Number((r * Math.sin(angulo)).toFixed(2)) };
+  };
+
+  const values = points.map((p) => {
+    const i = ejes.indexOf(p.label);
+    return { ...proyectar(i, p.value), label: p.label, value: p.value, series: p.series ?? '', orden: i };
+  });
+  // La malla: un poligono por cada anillo de referencia.
+  const malla = [0.25, 0.5, 0.75, 1].flatMap((f, anillo) =>
+    ejes.map((label, i) => ({ ...proyectar(i, maximo * f), anillo, orden: i, label })),
+  );
+  const etiquetas = ejes.map((label, i) => ({ ...proyectar(i, maximo * 1.18), label }));
+
+  const oculto = { axis: null, scale: { domain: [-R * 1.45, R * 1.45] } };
+  const pos = {
+    x: { field: 'x', type: 'quantitative', ...oculto },
+    y: { field: 'y', type: 'quantitative', ...oculto },
+    order: { field: 'orden', type: 'quantitative' },
+  };
+
+  return {
+    width: 300,
+    height: 300,
+    layer: [
+      {
+        data: { values: malla },
+        mark: { type: 'line', strokeWidth: 0.7, opacity: 0.35, interpolate: 'linear-closed' },
+        encoding: { ...pos, detail: { field: 'anillo', type: 'nominal' } },
+      },
+      {
+        data: { values },
+        mark: { type: 'line', strokeWidth: 2, interpolate: 'linear-closed', fillOpacity: 0.18, filled: true },
+        encoding: { ...pos, ...(points.some((p) => p.series) ? { color: { field: 'series', type: 'nominal', title: null } } : {}) },
+      },
+      {
+        data: { values },
+        mark: { type: 'circle', size: 55, opacity: 1 },
+        encoding: { ...pos, ...(points.some((p) => p.series) ? { color: { field: 'series', type: 'nominal', title: null } } : {}) },
+      },
+      {
+        data: { values: etiquetas },
+        mark: { type: 'text', fontSize: 11 },
+        encoding: {
+          x: { field: 'x', type: 'quantitative', ...oculto },
+          y: { field: 'y', type: 'quantitative', ...oculto },
+          text: { field: 'label', type: 'nominal' },
         },
       },
     ],

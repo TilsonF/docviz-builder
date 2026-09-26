@@ -62,6 +62,11 @@ el compilador admite de verdad.
 | `histogram` | Distribucion de una variable continua. | vega-lite |
 | `box-plot` | Mediana, dispersion y valores atipicos por grupo. | vega-lite |
 | `bullet` | Valor real frente a su objetivo. | vega-lite |
+| `lollipop` | Comparacion entre categorias con menos tinta que una barra. | vega-lite |
+| `sparkline` | El gesto de una serie, sin ejes y en el tamano de una frase. | vega-lite |
+| `kpi-card` | Una fila de numeros grandes, cada uno con su etiqueta y su meta. | vega-lite |
+| `calendar-heatmap` | Un periodo largo en celdas: semana en horizontal, dia en vertical. | vega-lite |
+| `bump` | Como cambia una clasificacion: quien adelanta a quien. | vega-lite |
 | `slope` | Cambio entre dos momentos, elemento a elemento. | vega-lite |
 | `funnel` | Caida de volumen a lo largo de etapas sucesivas. | vega-lite |
 | `pie` | Reparto de un total entre pocas partes. | vega-lite |
@@ -555,7 +560,7 @@ Tareas situadas en el calendario.
 
 **Cuando no.** Si no hay fechas concretas: usa `roadmap` o `timeline`.
 
-Alias: `cronograma`. Si falta mermaid, se dibuja con plantuml.
+Alias: `cronograma`. Si falta mermaid, se dibuja con plantuml o vega-lite.
 
 ````md
 ```diagram
@@ -815,7 +820,7 @@ Perfil de varias dimensiones a la vez.
 
 **Cuando no.** Con mas de siete ejes o si las dimensiones no son comparables entre si.
 
-Alias: `spider`, `madurez`.
+Alias: `spider`, `madurez`. Si falta mermaid, se dibuja con vega-lite.
 
 ````md
 ```diagram
@@ -1627,6 +1632,190 @@ data:
   - label: Cobertura
     value: 74
     target: 80
+```
+
+### `lollipop`
+
+Comparacion entre categorias con menos tinta que una barra.
+
+**Cuando usarlo.** Con muchas categorias o nombres largos: la regla fina las separa sin llenar el dibujo.
+
+**Cuando no.** Si hay que sumar partes de un total: usa `stacked-bar`.
+
+Alias: `dot-plot`.
+
+````md
+```chart
+type: lollipop
+title: Casos por modulo
+sort: value
+data:
+  - label: SAR_Perfil_De_Riesgo
+    value: 42
+  - label: UAS_Gestion_De_Usuarios
+    value: 27
+```
+````
+
+```chart title="lollipop"
+type: lollipop
+title: Casos por modulo
+sort: value
+data:
+  - label: SAR_Perfil_De_Riesgo
+    value: 42
+  - label: UAS_Gestion_De_Usuarios
+    value: 27
+```
+
+### `sparkline`
+
+El gesto de una serie, sin ejes y en el tamano de una frase.
+
+**Cuando usarlo.** Junto a un numero, para decir si viene subiendo o bajando sin abrir un grafico.
+
+**Cuando no.** Si hay que leer valores concretos: usa `line`.
+
+Alias: `minigrafico`.
+
+````md
+```chart
+type: sparkline
+baseline: mean
+data:
+  - label: S1
+    value: 12
+  - label: S2
+    value: 19
+  - label: S3
+    value: 15
+```
+````
+
+```chart title="sparkline"
+type: sparkline
+baseline: mean
+data:
+  - label: S1
+    value: 12
+  - label: S2
+    value: 19
+  - label: S3
+    value: 15
+```
+
+### `kpi-card`
+
+Una fila de numeros grandes, cada uno con su etiqueta y su meta.
+
+**Cuando usarlo.** Para abrir un informe con las tres o cuatro cifras que resumen el estado.
+
+**Cuando no.** Para comparar entre si muchas categorias: usa `bar` o `lollipop`.
+
+Alias: `tarjeta-kpi`, `scorecard`.
+
+````md
+```chart
+type: kpi-card
+data:
+  - label: Cobertura
+    value: 74
+    unit: " %"
+    target: 80
+  - label: Casos disenados
+    value: 312
+```
+````
+
+```chart title="kpi-card"
+type: kpi-card
+data:
+  - label: Cobertura
+    value: 74
+    unit: " %"
+    target: 80
+  - label: Casos disenados
+    value: 312
+```
+
+### `calendar-heatmap`
+
+Un periodo largo en celdas: semana en horizontal, dia en vertical.
+
+**Cuando usarlo.** Para ver ritmo y huecos a lo largo de meses: ejecuciones por dia, defectos por dia.
+
+**Cuando no.** Con pocos dias: una `bar` los lee mejor.
+
+Alias: `calendario`.
+
+````md
+```chart
+type: calendar-heatmap
+title: Ejecuciones por dia
+data:
+  - date: 2026-09-01
+    value: 12
+  - date: 2026-09-02
+    value: 31
+```
+````
+
+```chart title="calendar-heatmap"
+type: calendar-heatmap
+title: Ejecuciones por dia
+data:
+  - date: 2026-09-01
+    value: 12
+  - date: 2026-09-02
+    value: 31
+```
+
+### `bump`
+
+Como cambia una clasificacion: quien adelanta a quien.
+
+**Cuando usarlo.** Cuando importa la posicion relativa y no la magnitud: top de modulos por sprint.
+
+**Cuando no.** Si lo que cambia es la magnitud: usa `line`.
+
+Alias: `ranking-en-el-tiempo`.
+
+````md
+```chart
+type: bump
+title: Puesto por sprint
+series:
+  - name: SARLAFT
+    data:
+      - label: SP1
+        value: 1
+      - label: SP2
+        value: 3
+  - name: UAS
+    data:
+      - label: SP1
+        value: 2
+      - label: SP2
+        value: 1
+```
+````
+
+```chart title="bump"
+type: bump
+title: Puesto por sprint
+series:
+  - name: SARLAFT
+    data:
+      - label: SP1
+        value: 1
+      - label: SP2
+        value: 3
+  - name: UAS
+    data:
+      - label: SP1
+        value: 2
+      - label: SP2
+        value: 1
 ```
 
 ### `slope`

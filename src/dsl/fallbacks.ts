@@ -400,3 +400,210 @@ function numeroDe(valor: unknown, field: string): number {
   if (!Number.isFinite(n)) fail(`${field} debe ser numerico`, `valor recibido: ${String(valor)}`);
   return n;
 }
+
+// --------------------------------------------------------------------------
+// Respaldos Vega-Lite de dos tipos que hoy solo dibuja Mermaid.
+//
+// La geometria viene del catalogo de plantillas de Flint (Microsoft Research,
+// MIT), reescrita aqui para consumir la MISMA forma de documento que la
+// version Mermaid: un respaldo que exigiera otra sintaxis no seria un
+// respaldo, seria otro tipo. Importan porque Mermaid necesita un Chromium y
+// Vega-Lite no: en una maquina sin navegador estos dos pasaban de dibujarse a
+// no dibujarse, y ahora se dibujan con otro aspecto.
+// --------------------------------------------------------------------------
+
+/** Cuantos dias dura «5d», «2w», «3h». */
+function diasDe(duracion: string, campo: string): number {
+  const m = /^\s*(\d+(?:\.\d+)?)\s*(h|d|w|m)?\s*$/i.exec(duracion);
+  if (m === null) fail(`no se entiende la duracion "${duracion}" en ${campo}`, 'formatos: 5d, 2w, 8h');
+  const n = Number(m[1]);
+  switch ((m[2] ?? 'd').toLowerCase()) {
+    case 'h':
+      return n / 24;
+    case 'w':
+      return n * 7;
+    case 'm':
+      return n * 30;
+    default:
+      return n;
+  }
+}
+
+const DIA_MS = 86_400_000;
+
+function fechaIso(t: number): string {
+  return new Date(t).toISOString().slice(0, 10);
+}
+
+/** Gantt sin navegador: una barra por tarea, de su inicio a su fin. */
+export function vegaGantt(doc: Record<string, unknown>): string {
+  const sections = requireArray(doc['sections'], 'diagram.sections');
+  const filas: Record<string, unknown>[] = [];
+  // `after` encadena tareas, asi que hay que resolver las fechas en orden y
+  // recordar donde termino cada una; Mermaid lo hace por nosotros y aqui no.
+  const finDe = new Map<string, number>();
+
+  for (const rawSection of sections) {
+    const section = asRecord(rawSection, 'diagram.sections');
+    const seccion = requireString(section, 'name', 'diagram.sections');
+    for (const rawTask of requireArray(section['tasks'], 'diagram.sections[].tasks')) {
+      const task = asNamedRecord(rawTask, 'diagram.sections[].tasks', 'name');
+      const name = requireString(task, 'name', 'diagram.sections[].tasks');
+      const after = optionalString(task, 'after');
+      const start = optionalString(task, 'start');
+
+      let inicio: number;
+      if (after !== undefined) {
+        const previo = finDe.get(after);
+        if (previo === undefined) {
+          fail(`la tarea "${after}" referida en "after" no existe todavia`, `tareas conocidas: ${[...finDe.keys()].join(', ')}`);
+        }
+        inicio = previo;
+      } else if (start !== undefined) {
+        inicio = Date.parse(start);
+        if (Number.isNaN(inicio)) fail(`la fecha "${start}" de "${name}" no es valida`, 'formato: 2026-09-01');
+      } else {
+        fail(`la tarea "${name}" necesita "start" o "after"`);
+      }
+
+      const duration = optionalString(task, 'duration');
+      const end = optionalString(task, 'end');
+      let fin: number;
+      if (duration !== undefined) fin = inicio + diasDe(duration, `la tarea "${name}"`) * DIA_MS;
+      else if (end !== undefined) {
+        fin = Date.parse(end);
+        if (Number.isNaN(fin)) fail(`la fecha "${end}" de "${name}" no es valida`, 'formato: 2026-09-30');
+      } else if (optionalString(task, 'status') === 'milestone') fin = inicio;
+      else fail(`la tarea "${name}" necesita "duration" o "end"`);
+
+      finDe.set(name, fin);
+      const fila: Record<string, unknown> = {
+        tarea: name,
+        seccion,
+        inicio: fechaIso(inicio),
+        // Un hito dura cero, y una barra de ancho cero no se ve: se le da un
+        // dia para que exista como marca.
+        fin: fechaIso(fin === inicio ? fin + DIA_MS : fin),
+      };
+      const status = optionalString(task, 'status');
+      if (status !== undefined) fila['estado'] = status;
+      filas.push(fila);
+    }
+  }
+
+  const conEstado = filas.some((f) => f['estado'] !== undefined);
+  const variasSecciones = new Set(filas.map((f) => f['seccion'])).size > 1;
+  const encoding: Record<string, unknown> = {
+    y: { field: 'tarea', type: 'nominal', title: null, sort: null },
+    x: { field: 'inicio', type: 'temporal', title: null },
+    x2: { field: 'fin' },
+  };
+  if (conEstado) encoding['color'] = { field: 'estado', type: 'nominal', title: null };
+
+  const spec: Record<string, unknown> = {
+    data: { values: filas },
+    // `band: 0.7` deja aire entre filas; pegadas se leen como un bloque.
+    mark: { type: 'bar', cornerRadius: 2, height: { band: 0.7 } },
+    encoding,
+  };
+  const title = optionalString(doc, 'title');
+  if (title !== undefined) spec['title'] = title;
+  // Las secciones se vuelven filas del grafico, que es como Mermaid las separa.
+  if (variasSecciones) {
+    return JSON.stringify(
+      {
+        ...(title !== undefined ? { title } : {}),
+        data: { values: filas },
+        facet: { row: { field: 'seccion', type: 'nominal', title: null, sort: null, header: { labelAngle: 0, labelAlign: 'left' } } },
+        resolve: { scale: { y: 'independent' } },
+        spec: { mark: spec['mark'], encoding },
+      },
+      null,
+      2,
+    );
+  }
+  return JSON.stringify(spec, null, 2);
+}
+
+/** Radar sin navegador: los ejes se proyectan a coordenadas cartesianas. */
+export function vegaRadar(doc: Record<string, unknown>): string {
+  const axes = requireArray(doc['axes'] ?? doc['ejes'], 'diagram.axes');
+  const nombres = axes.map((a) => nameOf(a, 'diagram.axes'));
+  if (nombres.length < 3) fail('un radar necesita al menos tres ejes', `se recibieron ${nombres.length}`);
+
+  const series = optionalArray(doc['series'], 'diagram.series');
+  const sueltos = optionalArray(doc['values'] ?? doc['valores'], 'diagram.values');
+  if (series.length === 0 && sueltos.length === 0) {
+    fail('radar necesita series o values', 'ejemplo: values: [3, 4, 2]');
+  }
+  const curvas =
+    series.length > 0
+      ? series.map((raw) => {
+          const s = asRecord(raw, 'diagram.series');
+          return {
+            name: requireString(s, 'name', 'diagram.series'),
+            values: requireArray(s['values'], 'diagram.series[].values').map(Number),
+          };
+        })
+      : [{ name: optionalString(doc, 'seriesName') ?? 'Actual', values: sueltos.map(Number) }];
+
+  const declarado = doc['max'];
+  const maximo =
+    typeof declarado === 'number' ? declarado : Math.max(...curvas.flatMap((c) => c.values), 1);
+  const R = 120;
+
+  // Vega-Lite no dibuja en coordenadas polares, asi que el angulo se resuelve
+  // aqui y el punto llega ya proyectado. Es lo mismo que hace Flint: su radar
+  // es una linea cerrada sobre coordenadas calculadas, no una marca polar.
+  const proyectar = (indice: number, valor: number): { x: number; y: number } => {
+    const angulo = (indice / nombres.length) * 2 * Math.PI - Math.PI / 2;
+    const r = (Math.max(0, valor) / maximo) * R;
+    return { x: Number((r * Math.cos(angulo)).toFixed(2)), y: Number((r * Math.sin(angulo)).toFixed(2)) };
+  };
+
+  const puntos = curvas.flatMap((c) =>
+    nombres.map((eje, i) => ({ ...proyectar(i, c.values[i] ?? 0), eje, serie: c.name, orden: i })),
+  );
+  const malla = [0.25, 0.5, 0.75, 1].flatMap((f, anillo) =>
+    nombres.map((eje, i) => ({ ...proyectar(i, maximo * f), anillo, orden: i, eje })),
+  );
+  const etiquetas = nombres.map((eje, i) => ({ ...proyectar(i, maximo * 1.2), eje }));
+
+  const oculto = { axis: null, scale: { domain: [-R * 1.5, R * 1.5] } };
+  const pos = {
+    x: { field: 'x', type: 'quantitative', ...oculto },
+    y: { field: 'y', type: 'quantitative', ...oculto },
+    order: { field: 'orden', type: 'quantitative' },
+  };
+  const color = { field: 'serie', type: 'nominal', title: null };
+
+  const spec: Record<string, unknown> = {
+    width: 300,
+    height: 300,
+    layer: [
+      {
+        data: { values: malla },
+        mark: { type: 'line', strokeWidth: 0.7, opacity: 0.3, interpolate: 'linear-closed' },
+        encoding: { ...pos, detail: { field: 'anillo', type: 'nominal' } },
+      },
+      {
+        data: { values: puntos },
+        mark: { type: 'line', strokeWidth: 2, interpolate: 'linear-closed', filled: true, fillOpacity: 0.15 },
+        encoding: { ...pos, color },
+      },
+      {
+        data: { values: puntos },
+        mark: { type: 'circle', size: 50, opacity: 1 },
+        encoding: { ...pos, color },
+      },
+      {
+        data: { values: etiquetas },
+        mark: { type: 'text', fontSize: 11 },
+        encoding: { x: pos.x, y: pos.y, text: { field: 'eje', type: 'nominal' } },
+      },
+    ],
+  };
+  const title = optionalString(doc, 'title');
+  if (title !== undefined) spec['title'] = title;
+  return JSON.stringify(spec, null, 2);
+}

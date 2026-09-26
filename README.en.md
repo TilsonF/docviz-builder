@@ -166,14 +166,14 @@ npx docviz types sequence --lang en
 | The shape of a YAML drawn as a tree | `yaml` | plantuml |
 | The hierarchical breakdown of a project | `wbs` | plantuml (or d2) |
 | A simple end-to-end flow | `flow` | mermaid (or d2) |
-| Tasks placed on the calendar | `gantt` | mermaid (or plantuml) |
+| Tasks placed on the calendar | `gantt` | mermaid (or plantuml / vega-lite) |
 | A person walking through a process, with how they feel at each step | `journey` | mermaid (or d2) |
 | The history of branches, commits and merges | `git-graph` | mermaid |
 | Cards spread across status columns | `kanban` | mermaid (or d2) |
 | Items placed on two continuous axes | `quadrant` | mermaid (or vega-lite) |
 | How a quantity splits as it moves from one state to another | `sankey` | mermaid |
 | The composition of a total by proportional area | `treemap` | mermaid |
-| A profile across several dimensions at once | `radar` | mermaid |
+| A profile across several dimensions at once | `radar` | mermaid (or vega-lite) |
 | Exploring a topic in free branches | `mindmap` | mermaid (or plantuml) |
 | Blocks laid out on a grid, with no flow semantics | `block` | mermaid (or d2) |
 | Breaking an objective down into lines of action | `strategy-tree` | d2 |
@@ -207,6 +207,11 @@ npx docviz types sequence --lang en
 | The distribution of a continuous variable | `histogram` | vega-lite |
 | Median, spread and outliers per group | `box-plot` | vega-lite |
 | The actual value against its target | `bullet` | vega-lite |
+| A comparison between categories with less ink than a bar | `lollipop` | vega-lite |
+| The gesture of a series, with no axes and the size of a sentence | `sparkline` | vega-lite |
+| A row of big numbers, each with its label and its target | `kpi-card` | vega-lite |
+| A long period in cells: week across, day of the week down | `calendar-heatmap` | vega-lite |
+| How a ranking changes: who overtakes whom | `bump` | vega-lite |
 | The change between two moments, item by item | `slope` | vega-lite |
 | How volume drops along successive stages | `funnel` | vega-lite |
 | How a total splits between a few parts | `pie` | vega-lite |

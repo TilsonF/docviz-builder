@@ -51,7 +51,9 @@ import {
   treemap,
 } from './diagram-product.js';
 import { asciiArt, bpmn } from './diagram-bpmn.js';
-import { architectureC4, d2Flow, mermaidErd, mermaidTimeline, vegaQuadrant } from './fallbacks.js';
+import { architectureC4, d2Flow, mermaidErd, mermaidTimeline, vegaQuadrant,
+  vegaGantt,
+  vegaRadar } from './fallbacks.js';
 import {
   d2Activity,
   d2Block,
@@ -93,14 +95,14 @@ const COMPILERS: Readonly<Record<string, Readonly<Record<string, Compiler>>>> = 
 
   // Flujos, tiempo y producto
   flow: { mermaid: flowchart, d2: d2Flow },
-  gantt: { mermaid: gantt, plantuml: plantUmlGantt },
+  gantt: { mermaid: gantt, plantuml: plantUmlGantt, 'vega-lite': vegaGantt },
   journey: { mermaid: journey, d2: d2Journey },
   'git-graph': { mermaid: gitGraph },
   kanban: { mermaid: kanban, d2: d2Kanban },
   quadrant: { mermaid: quadrant, 'vega-lite': vegaQuadrant },
   sankey: { mermaid: sankey },
   treemap: { mermaid: treemap },
-  radar: { mermaid: radar },
+  radar: { mermaid: radar, 'vega-lite': vegaRadar },
   mindmap: { mermaid: mindmap, plantuml: plantUmlMindmap },
   block: { mermaid: block, d2: d2Block },
 

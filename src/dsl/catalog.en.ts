@@ -262,6 +262,31 @@ export const CATALOG_EN: Readonly<Record<string, TypeSpecEn>> = {
     whenToUse: 'For indicators with a goal: coverage against 80 %, availability against the SLA.',
     whenNotToUse: 'If there is no defined target: use `bar`.',
   },
+  lollipop: {
+    purpose: 'A comparison between categories with less ink than a bar.',
+    whenToUse: 'With many categories or long names: the thin rule separates them without filling the drawing.',
+    whenNotToUse: 'If parts of a total must add up: use `stacked-bar`.',
+  },
+  sparkline: {
+    purpose: 'The gesture of a series, with no axes and the size of a sentence.',
+    whenToUse: 'Next to a number, to say whether it has been rising or falling without opening a chart.',
+    whenNotToUse: 'If concrete values must be read: use `line`.',
+  },
+  'kpi-card': {
+    purpose: 'A row of big numbers, each with its label and its target.',
+    whenToUse: 'To open a report with the three or four figures that summarise the state.',
+    whenNotToUse: 'To compare many categories against each other: use `bar` or `lollipop`.',
+  },
+  'calendar-heatmap': {
+    purpose: 'A long period in cells: week across, day of the week down.',
+    whenToUse: 'To see rhythm and gaps over months: runs per day, defects per day.',
+    whenNotToUse: 'With few days: a `bar` reads them better.',
+  },
+  bump: {
+    purpose: 'How a ranking changes: who overtakes whom.',
+    whenToUse: 'When relative position matters and magnitude does not: top modules per sprint.',
+    whenNotToUse: 'If what changes is the magnitude: use `line`.',
+  },
   slope: {
     purpose: 'The change between two moments, item by item.',
     whenToUse: 'To show who improved and who got worse between two measurements.',

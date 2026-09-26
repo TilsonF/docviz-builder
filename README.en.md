@@ -230,6 +230,33 @@ npx docviz types sequence --lang en
 Native fences (`plantuml`, `mermaid`, `d2`, `graphviz`, `vega-lite`, `likec4`)
 remain available as an escape hatch.
 
+### If you would rather not install LikeC4
+
+`likec4` is a regular dependency, so it comes with DocViz: **`npm remove likec4`
+does not drop it**, because npm keeps it while DocViz declares it. The only way
+to do without it is to delete it after installing —what you do when slimming an
+image— and it comes back on the next `npm install`:
+
+```bash
+rm -rf node_modules/likec4 node_modules/@likec4
+```
+
+DocViz keeps working: the three C4 types fall back to `plantuml-c4` and nothing
+else notices. `docviz doctor` says so rather than leaving you to guess.
+
+**Measure before you do it**, though, because the saving is not what it looks
+like. Measured on a clean 0.5.1 install: 401 MB complete, 357 MB without
+`likec4`, and 382 MB without `likec4` but with the PlantUML jar the fallback
+needs. That fallback wants **a JVM and a 27 MB jar** (`npx docviz setup`). If
+you already use PlantUML —and you do if you draw any of the thirty-odd types
+that prefer it— you save the full 44 MB at no cost. If you do not, you trade
+44 MB of packages for 27 MB of jar plus a system dependency, and the net is
+19 MB.
+
+The drawings also change: `plantuml-c4` labels with stereotypes (`«person»`,
+`«system»`) where LikeC4 uses shape. Both are valid C4, but they are not
+interchangeable halfway through a repository that is already published.
+
 ### Fields are also understood in Spanish
 
 The canonical names are English, and they are the ones the catalog and the

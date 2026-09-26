@@ -1,0 +1,212 @@
+[
+  {
+    "id": "clave-de-primer-nivel",
+    "lang": "chart",
+    "roto": "type: bar\ndat:\n  - label: A\n    value: 3\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "dat",
+        "data"
+      ]
+    ]
+  },
+  {
+    "id": "clave-en-lista",
+    "lang": "chart",
+    "roto": "type: scatter\ndata:\n  - labl: A\n    x: 1\n    y: 2\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "labl",
+        "label"
+      ]
+    ]
+  },
+  {
+    "id": "opcional-anidado",
+    "lang": "chart",
+    "roto": "type: kpi-card\ndata:\n  - label: A\n    value: 1\n    targ3t: 2\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "targ3t",
+        "target"
+      ]
+    ]
+  },
+  {
+    "id": "obligatorio-anidado",
+    "lang": "chart",
+    "roto": "type: calendar-heatmap\ndata:\n  - dat3: 2026-09-01\n    value: 3\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "dat3",
+        "date"
+      ]
+    ]
+  },
+  {
+    "id": "dos-niveles",
+    "lang": "chart",
+    "roto": "type: bump\nseries:\n  - name: A\n    data:\n      - label: SP1\n        valu: 1\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "valu",
+        "value"
+      ]
+    ]
+  },
+  {
+    "id": "en-la-valla-diagram",
+    "lang": "diagram",
+    "roto": "type: gantt\nsections:\n  - name: S\n    tasks:\n      - name: T\n        start: 2026-09-01\n        duration: 3d\n        statu: done\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "statu",
+        "status"
+      ]
+    ]
+  },
+  {
+    "id": "en-architecture",
+    "lang": "architecture",
+    "roto": "type: c4-context\nelements:\n  - id: a\n    kin: system\n    name: A\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "kin",
+        "kind"
+      ]
+    ]
+  },
+  {
+    "id": "letra-de-mas",
+    "lang": "chart",
+    "roto": "type: bullet\ndata:\n  - label: A\n    value: 1\n    targett: 2\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "targett",
+        "target"
+      ]
+    ]
+  },
+  {
+    "id": "letra-de-menos",
+    "lang": "chart",
+    "roto": "type: lollipop\nsor: value\ndata:\n  - label: A\n    value: 1\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "sor",
+        "sort"
+      ]
+    ]
+  },
+  {
+    "id": "letras-cambiadas",
+    "lang": "chart",
+    "roto": "type: sparkline\nbaselien: mean\ndata:\n  - label: a\n    value: 1\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "baselien",
+        "baseline"
+      ]
+    ]
+  },
+  {
+    "id": "ya-compilaba",
+    "lang": "chart",
+    "roto": "type: bar\ndata:\n  - label: A\n    value: 3\n",
+    "espera": "ya-estaba-bien"
+  },
+  {
+    "id": "alias-espanol",
+    "lang": "chart",
+    "roto": "type: bullet\ndata:\n  - etiqueta: A\n    valor: 1\n    meta: 2\n",
+    "espera": "ya-estaba-bien"
+  },
+  {
+    "id": "campo-opcional-no-declarado",
+    "lang": "chart",
+    "roto": "type: kpi-card\ndata:\n  - label: A\n    value: 9\n    target: 5\n    lowerIsBetter: true\n",
+    "espera": "ya-estaba-bien"
+  },
+  {
+    "id": "palabra-ajena",
+    "lang": "chart",
+    "roto": "type: bullet\ndata:\n  - label: A\n    value: 1\n    limite: 2\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "tipo-inexistente",
+    "lang": "chart",
+    "roto": "type: pastel3d\ndata:\n  - label: A\n    value: 1\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "falta-un-obligatorio",
+    "lang": "chart",
+    "roto": "type: bullet\ndata:\n  - label: A\n    value: 1\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "yaml-invalido",
+    "lang": "chart",
+    "roto": "type: bar\ndata:\n  - label: A\n   value: 3\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "valla-equivocada",
+    "lang": "chart",
+    "roto": "type: sequence\nparticipants: [A, B]\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "misma-errata-repetida",
+    "lang": "chart",
+    "roto": "type: scatter\ndata:\n  - labl: A\n    x: 1\n    y: 2\n  - labl: B\n    x: 2\n    y: 3\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "labl",
+        "label"
+      ]
+    ]
+  },
+  {
+    "id": "uno-mal-entre-varios-bien",
+    "lang": "chart",
+    "roto": "type: scatter\ndata:\n  - label: A\n    x: 1\n    y: 2\n  - labl: B\n    x: 2\n    y: 3\n",
+    "espera": "repara",
+    "aplicado": [
+      [
+        "labl",
+        "label"
+      ]
+    ]
+  },
+  {
+    "id": "colision-en-el-mismo-mapa",
+    "lang": "chart",
+    "roto": "type: bar\ndata:\n  - label: A\n    value: 3\n    valu: 9\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "acento-no-es-errata",
+    "lang": "chart",
+    "roto": "type: bar\ndata:\n  - etiquéta: A\n    value: 1\n",
+    "espera": "no-adivina"
+  },
+  {
+    "id": "destino-ya-existe-arriba",
+    "lang": "diagram",
+    "roto": "type: sequence\ntitle: A\ntitulo: B\nparticipants: [X]\nflow:\n  - X -> X: eco\n",
+    "espera": "no-adivina"
+  }
+]

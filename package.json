@@ -45,15 +45,16 @@
     "./package.json": "./package.json"
   },
   "files": [
+    "AGENTS.md",
+    "LICENCIAS.md",
+    "LICENSE",
+    "README.md",
     "bin",
     "dist",
-    "scripts",
     "eval",
+    "scripts",
     "skills",
-    "vendor/.gitkeep",
-    "README.md",
-    "AGENTS.md",
-    "LICENSE"
+    "vendor/.gitkeep"
   ],
   "scripts": {
     "setup": "node scripts/fetch-plantuml.mjs",
@@ -77,7 +78,8 @@
     "docs:sync:check": "node scripts/sync-docs.mjs --check",
     "check:github": "node scripts/check-github.mjs docs",
     "test:coverage": "vitest run --coverage",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "licencias": "node scripts/licencias.mjs"
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1.28.0",

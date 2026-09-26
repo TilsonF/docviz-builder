@@ -362,6 +362,48 @@ flow:
     label: mensaje
 ```
 
+### Si no quieres instalar LikeC4
+
+`likec4` es una dependencia normal, así que se instala con DocViz: **`npm remove
+likec4` no lo saca**, porque npm lo mantiene mientras DocViz lo declare. La
+única forma de prescindir de él es borrarlo después de instalar —lo que se hace
+al adelgazar una imagen—, y vuelve en el siguiente `npm install`:
+
+```bash
+rm -rf node_modules/likec4 node_modules/@likec4
+```
+
+DocViz sigue funcionando: los tres tipos C4 caen a `plantuml-c4` y el resto no
+se entera. `docviz doctor` lo dice sin que haya que adivinarlo:
+
+```
+  FALTA  paquete likec4  los tipos C4 se dibujaran con su respaldo plantuml-c4
+                         -> npm install likec4
+Tipos
+   59  se dibujan con su motor preferido
+    3  usaran su respaldo:
+         c4-context (likec4 -> plantuml-c4)
+```
+
+**Pero mide antes de hacerlo**, porque el ahorro no es el que parece. Medido
+sobre una instalación limpia de la 0.5.1:
+
+| | peso |
+|---|---|
+| instalación completa | 401 MB |
+| sin `likec4` | 357 MB |
+| sin `likec4`, con el jar de PlantUML que el respaldo necesita | 382 MB |
+
+El respaldo de los tipos C4 es PlantUML, que pide **una JVM y un jar de 27 MB**
+(`npx docviz setup`). Si ya usas PlantUML —y lo usas si dibujas cualquiera de
+los treinta y tantos tipos que lo prefieren— el ahorro es de los 44 MB
+completos y no cuesta nada. Si no, cambias 44 MB de paquetes por 27 MB de jar
+más una dependencia de sistema, y el saldo son 19 MB.
+
+Y los dibujos cambian de aspecto: `plantuml-c4` rotula con estereotipos
+(`«person»`, `«system»`) donde LikeC4 usa la forma. Los dos son C4 válido; no
+son intercambiables a mitad de un repositorio ya publicado.
+
 ### Los campos también se entienden en español
 
 Los nombres canónicos son ingleses, y son los que usan el catálogo y los

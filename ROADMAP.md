@@ -61,6 +61,17 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   lista se comía el guion. Y ninguna errata anidada recibía sugerencia.
 - **Los campos de hoja se entienden en español**, con una tabla central en vez
   de alias sueltos donde cada autor se acordó.
+- **`docviz fix` tiene banco**: 23 casos repartidos en tres resultados
+  —repara, ya estaba bien, no adivina—. Escribirlo encontró dos defectos más:
+  con la misma errata repetida corregía solo la primera y devolvía un bloque a
+  medio arreglar diciendo que estaba corregido, y se negaba a reparar cuando
+  la clave correcta existía en OTRO elemento de la lista, que es el caso más
+  común.
+- **LICENCIAS.md generado**: qué hereda quien instala, con los 309 paquetes
+  clasificados. Una licencia que el script no sepa clasificar hace fallar la
+  comprobación, para que ninguna pase inadvertida.
+- **Cómo prescindir de LikeC4**, medido: `npm remove` no lo saca, y el ahorro
+  real son 19 MB y no 44, porque su respaldo pide una JVM y un jar de 27 MB.
 
 ---
 
@@ -77,19 +88,7 @@ hipótesis sin medir.
 La parte determinista sí corre en CI: **89,6 %** de acierto en la primera
 propuesta, **90,0 %** sobre los casos reservados.
 
-### 2. Nada mide `docviz fix`
-
-`suggest` tiene 77 casos y una partición reservada. `fix` no tiene ninguno, y
-esa asimetría ya costó cara: dos defectos serios —devolvía YAML corrupto al
-renombrar dentro de una lista, y ninguna errata anidada recibía sugerencia—
-sobrevivieron hasta que alguien los probó **a mano**. Las pruebas unitarias que
-tiene son las de los casos que se me ocurrieron, no una medida.
-
-Un banco de bloques rotos con su reparación esperada convertiría «fix funciona»
-en un número, y diría cuánto vale de verdad: cuántos reintentos del modelo
-ahorra.
-
-### 3. Los mensajes de error en inglés
+### 2. Los mensajes de error en inglés
 
 La documentación ya existe en los dos idiomas, con las tablas generadas desde
 el catálogo. Lo que sigue en español son **los mensajes de error y la salida de
@@ -99,7 +98,7 @@ Va junto con la decisión sobre el idioma por defecto, que
 [COMPATIBILIDAD.md](./COMPATIBILIDAD.md) marca como condición para la 1.0:
 cambiarlo después sería incompatible para quien analice la salida.
 
-### 4. El build degrada en silencio
+### 3. El build degrada en silencio
 
 Si falta un motor, el bloque cae a su respaldo y **se dibuja con otro aspecto
 sin decir nada**. Solo `doctor` lo cuenta, y hay que ir a preguntárselo. Quien
@@ -110,7 +109,7 @@ El canal de avisos del build es por bloque (`archivo:línea`) y un motor ausente
 no encaja ahí, así que hace falta decidir dónde va: una línea en el resumen, un
 aviso por bloque afectado, o un código de salida distinto con `--strict`.
 
-### 5. Los siete tipos que aún dependen de su motor
+### 4. Los siete tipos que aún dependen de su motor
 
 Sin Java caen `wireframe`, `json` y `yaml`: los tres son árboles o bocetos que
 PlantUML dibuja de una forma sin equivalente razonable. Sin Chromium caen
@@ -124,7 +123,7 @@ que documentarlos como dependientes de su motor y dejarlo dicho.
 
 ## Medio plazo
 
-### 6. Aislar `likec4`
+### 5. Aislar `likec4`
 
 Está medido, no estimado: instalar `docviz-builder` en un proyecto limpio deja
 **401 MB y 315 paquetes**. Sacando `likec4` quedan **289 MB y 270**, y con ello
@@ -137,33 +136,26 @@ Para una herramienta cuyo compromiso es que el build no toca la red, que
 instalarla no ejecute nada ni compile nada es un cambio de categoría.
 
 El respaldo ya está listo para soportarlo: los tres tipos C4 se dibujan con
-`plantuml-c4` cuando el paquete no está. El precio es que, en una instalación
-limpia, esos tres cambian de aspecto hasta que el usuario haga
-`npm install likec4`.
+`plantuml-c4` cuando el paquete no está, y `doctor` lo dice.
 
-### 7. Qué licencias hereda quien nos use
+El precio hay que decirlo entero, porque medirlo cambió la conclusión: ese
+respaldo es PlantUML, que pide **una JVM y un jar de 27 MB**. Quien ya use
+PlantUML —y lo usa si dibuja cualquiera de los treinta y tantos tipos que lo
+prefieren— se ahorra los 44 MB completos. Quien no, cambia 44 MB de paquetes
+por 27 de jar más una dependencia de sistema: el saldo real son **19 MB**.
 
-Dos dependencias imponen condiciones que se transmiten río abajo y que hoy no
-están dichas en ninguna parte:
+Así que el argumento fuerte para aislarlo no es el peso, es que desaparecen el
+único script de instalación y los binarios nativos. El README ya explica cómo
+prescindir de él hoy, con esos números delante.
 
-- **`bpmn-js`** es MIT *más una cláusula*: el código que muestra la marca de
-  agua de bpmn.io no se puede quitar ni cambiar. Nosotros cumplimos —usamos su
-  `saveSVG()`, que no la incluye por diseño propio—, pero la obligación viaja
-  con el paquete.
-- **`@terrastruct/d2`**, el motor de D2, es **MPL-2.0**. Copyleft débil, por
-  archivo; compatible con distribuir MIT, pero no es permisiva.
-
-Un `docviz licenses`, o un `LICENSES.md` generado, que diga qué hereda quien
-instala. Es información que hoy solo se obtiene auditando el árbol a mano.
-
-### 8. Caracterizar el bloqueo en macOS
+### 6. Caracterizar el bloqueo en macOS
 
 Una prueba de la CLI que aquí tarda menos de un segundo agota los 180 s en el
 runner, y no se reproduce en local pese a que esta máquina también es macOS.
 El job es informativo: reporta sin bloquear. Bloquear cada PR con un fallo que
 no se entiende cuesta más de lo que avisa.
 
-### 9. Determinismo entre plataformas
+### 7. Determinismo entre plataformas
 
 El caché es direccionable por contenido y su hash incluye la versión del motor,
 pero **nadie comprueba que el mismo bloque produzca los mismos bytes en Linux y

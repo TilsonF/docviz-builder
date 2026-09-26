@@ -297,18 +297,62 @@ function intentar(lang: string, source: string): Intento {
  */
 function renombrarClave(texto: string, de: string, a: string): string | undefined {
   const escapado = de.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  // El guion de lista se CAPTURA y se devuelve. Antes era un grupo sin
-  // capturar, asi que renombrar una clave dentro de una lista se lo comia:
-  // «  - labl: A» salia como «  label: A» y el bloque dejaba de ser YAML
-  // valido. `fix` devolvia algo peor que lo que recibio.
-  const origen = new RegExp(`^(\\s*)(- )?${escapado}(\\s*:)`, 'm');
+  // El guion de lista se CAPTURA y se devuelve. Como grupo sin capturar se lo
+  // comia —«  - labl: A» salia «  label: A»— y el bloque dejaba de ser YAML.
+  //
+  // Y con bandera `g`: la misma errata suele repetirse en varios elementos de
+  // la misma lista, y corregir solo la primera devolvia un bloque a medio
+  // arreglar que seguia sin compilar, diciendo que estaba corregido.
+  const origen = new RegExp(`^(\\s*)(- )?${escapado}(\\s*:)`, 'gm');
   if (!origen.test(texto)) return undefined;
-  if (new RegExp(`^\\s*(?:- )?${a.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*:`, 'm').test(texto)) return undefined;
-  return texto.replace(
+  origen.lastIndex = 0;
+
+  const corregido = texto.replace(
     origen,
     (_m, sangria: string, guion: string | undefined, dosPuntos: string) =>
       `${sangria}${guion ?? ''}${a}${dosPuntos}`,
   );
+
+  // Renombrar puede dejar dos veces la misma clave en el mismo mapa, y ahi YAML
+  // se queda con una: se perderia un dato en silencio. Se detecta contando las
+  // claves antes y despues en vez de con una expresion regular, porque «existe
+  // `label` en algun sitio del texto» tambien era cierto cuando el `label`
+  // bueno estaba en OTRO elemento de la lista, y eso hacia rechazar justo el
+  // caso mas comun: uno mal escrito entre varios bien.
+  // Si antes parseaba y ahora no, el renombrado lo rompio: el parser lanza
+  // ante dos claves iguales en el mismo mapa, que es justo lo que hay que
+  // evitar. Y si parsea pero con menos claves, se perdio un dato en silencio.
+  // Cubrir los dos casos con la misma regla protege ademas de cualquier otra
+  // forma de corromper el bloque, no solo de la que se penso.
+  const antes = contarClaves(texto);
+  const despues = contarClaves(corregido);
+  if (antes !== undefined && (despues === undefined || despues < antes)) return undefined;
+
+  return corregido;
+}
+
+/** Numero total de claves del documento, o `undefined` si no es YAML. */
+function contarClaves(texto: string): number | undefined {
+  let doc: unknown;
+  try {
+    doc = parseYaml(texto);
+  } catch {
+    return undefined;
+  }
+  let n = 0;
+  const recorrer = (valor: unknown, profundidad: number): void => {
+    if (profundidad > 12 || valor === null || typeof valor !== 'object') return;
+    if (Array.isArray(valor)) {
+      for (const item of valor) recorrer(item, profundidad + 1);
+      return;
+    }
+    for (const [, v] of Object.entries(valor as Record<string, unknown>)) {
+      n += 1;
+      recorrer(v, profundidad + 1);
+    }
+  };
+  recorrer(doc, 0);
+  return n;
 }
 
 /**

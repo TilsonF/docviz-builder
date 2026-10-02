@@ -1,7 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rootDir": ".",
@@ -10,6 +12,15 @@
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
     "noImplicitOverride": true,
+    // Codigo muerto: `gantt` y `radar` sobrevivieron 99 lineas en chart.ts
+    // despues de que se quitara su despacho, y nada aviso. Esto lo detecta en
+    // el typecheck, que ya corria en CI.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    // Las dos que el compilador sabe comprobar y no estaban: un `case` que se
+    // cuela en el siguiente, y una rama de funcion que olvida devolver.
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
@@ -18,8 +29,21 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "verbatimModuleSyntax": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.mjs"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*.ts",
+    "tests/**/*.ts",
+    "scripts/**/*.mjs"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

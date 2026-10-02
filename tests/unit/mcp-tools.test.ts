@@ -5,7 +5,7 @@
  * expone al agente.
  */
 
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
@@ -261,5 +261,75 @@ describe('docviz_types con metadatos', () => {
     const result = listTypes({ detailed: false });
     expect(result['diagram']).toContain('sequence');
     expect(result['types']).toBeUndefined();
+  });
+});
+
+describe('docviz_render_diagram · las ramas que faltaban', () => {
+  it('con outputDir escribe el recurso y devuelve su ruta, no su contenido', async () => {
+    // Es el camino que usa un agente que va a enlazar la imagen desde un
+    // documento: devolver el SVG entero ahi solo gastaria contexto.
+    const root = await project();
+    const result = await renderDiagram({
+      cwd: root,
+      type: 'bar',
+      source: 'data:\n  - label: A\n    value: 1',
+      title: 'Mi grafico',
+      outputDir: 'salida',
+    });
+    expect(result.ok).toBe(true);
+    expect(result['path']).toBe('salida/mi-grafico.svg');
+    expect(result['content']).toBeUndefined();
+    expect(Number(result['bytes'])).toBeGreaterThan(0);
+    const escrito = await readFile(path.join(root, 'salida', 'mi-grafico.svg'), 'utf8');
+    expect(escrito).toContain('<svg');
+  });
+
+  it('sin titulo, el archivo toma el nombre del motor', async () => {
+    const root = await project();
+    const result = await renderDiagram({
+      cwd: root,
+      type: 'bar',
+      source: 'data:\n  - label: A\n    value: 1',
+      outputDir: 'salida',
+    });
+    expect(result['path']).toBe('salida/vega-lite.svg');
+  });
+
+  it('acepta el nombre de la valla en vez del tipo, con el `type:` dentro', async () => {
+    // Un agente que ya escribio el bloque entero no deberia tener que partirlo.
+    const root = await project();
+    const result = await renderDiagram({
+      cwd: root,
+      type: 'chart',
+      source: 'type: bar\ndata:\n  - label: A\n    value: 1',
+    });
+    expect(result.ok).toBe(true);
+    expect(result['engine']).toBe('vega-lite');
+  });
+
+  it('un tipo que no existe se reporta, no se intenta dibujar', async () => {
+    const root = await project();
+    const result = await renderDiagram({ cwd: root, type: 'pastel3d', source: 'data: []' });
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe('docviz_suggest · bordes', () => {
+  it('una necesidad vacia pide una frase en vez de proponer cualquier cosa', () => {
+    // Devolver los tres primeros del catalogo seria peor que no responder: el
+    // agente los tomaria por una recomendacion.
+    const r = suggestType({ need: '   ' });
+    expect(r.ok).toBe(false);
+    expect(String(r['error'])).toContain('describe en una frase');
+  });
+
+  it('`limit` acota la lista', () => {
+    const r = suggestType({ need: 'comparar categorias', limit: 2 });
+    expect((r['matches'] as unknown[]).length).toBe(2);
+  });
+
+  it('sin `limit` devuelve mas de uno, para que el agente pueda elegir', () => {
+    const r = suggestType({ need: 'comparar categorias' });
+    expect((r['matches'] as unknown[]).length).toBeGreaterThan(1);
   });
 });

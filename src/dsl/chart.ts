@@ -562,37 +562,6 @@ function lollipop(doc: Record<string, unknown>, xTitle: string | undefined): Rec
   };
 }
 
-/** Barras en el tiempo: cada fila ocupa de su inicio a su fin. */
-function gantt(doc: Record<string, unknown>, xTitle: string | undefined): Record<string, unknown> {
-  const filas = requireArray(doc['data'] ?? doc['tareas'], 'chart.data').map((raw) => {
-    const record = asRecord(raw, 'chart.data');
-    const fila: Record<string, unknown> = {
-      label: requireString(record, 'label', 'chart.data'),
-      start: requireString(record, 'start', 'chart.data'),
-      end: requireString(record, 'end', 'chart.data'),
-    };
-    const estado = optionalString(record, 'status') ?? optionalString(record, 'estado');
-    if (estado !== undefined) fila['status'] = estado;
-    return fila;
-  });
-  const conEstado = filas.some((f) => f['status'] !== undefined);
-
-  const encoding: Record<string, unknown> = {
-    // `sort: null` mantiene el orden del documento: un cronograma se lee en el
-    // orden en que se escribio, no alfabeticamente.
-    y: { field: 'label', type: 'nominal', title: null, sort: null },
-    x: { field: 'start', type: 'temporal', title: xTitle ?? null },
-    x2: { field: 'end' },
-  };
-  if (conEstado) encoding['color'] = { field: 'status', type: 'nominal', title: null };
-
-  return {
-    data: { values: filas },
-    // `band: 0.7` deja aire entre filas; pegadas se leen como un bloque.
-    mark: { type: 'bar', cornerRadius: 2, height: { band: 0.7 } },
-    encoding,
-  };
-}
 
 /** Una linea minima, sin ejes: el gesto de la serie, no sus valores. */
 function sparkline(doc: Record<string, unknown>): Record<string, unknown> {
@@ -819,71 +788,3 @@ function bump(doc: Record<string, unknown>, xTitle: string | undefined): Record<
   };
 }
 
-/** Varios ejes que salen de un centro: el perfil de un conjunto de medidas. */
-function radar(doc: Record<string, unknown>): Record<string, unknown> {
-  const { points } = readPoints(doc);
-  const ejes = [...new Set(points.map((p) => p.label))];
-  if (ejes.length < 3) {
-    fail('un radar necesita al menos tres ejes', `declarados: ${ejes.length}`);
-  }
-  const maximo = optionalNumber(doc, 'max', 'chart.max') ?? Math.max(...points.map((p) => p.value));
-  const R = 120;
-
-  // Vega-Lite no dibuja coordenadas polares, asi que el angulo se resuelve
-  // aqui: cada eje recibe su posicion en el circulo y el punto se proyecta a
-  // x/y. Es lo mismo que hace Flint, y por eso su radar es un `point` con las
-  // coordenadas ya calculadas.
-  const proyectar = (indice: number, valor: number): { x: number; y: number } => {
-    const angulo = (indice / ejes.length) * 2 * Math.PI - Math.PI / 2;
-    const r = (valor / maximo) * R;
-    return { x: Number((r * Math.cos(angulo)).toFixed(2)), y: Number((r * Math.sin(angulo)).toFixed(2)) };
-  };
-
-  const values = points.map((p) => {
-    const i = ejes.indexOf(p.label);
-    return { ...proyectar(i, p.value), label: p.label, value: p.value, series: p.series ?? '', orden: i };
-  });
-  // La malla: un poligono por cada anillo de referencia.
-  const malla = [0.25, 0.5, 0.75, 1].flatMap((f, anillo) =>
-    ejes.map((label, i) => ({ ...proyectar(i, maximo * f), anillo, orden: i, label })),
-  );
-  const etiquetas = ejes.map((label, i) => ({ ...proyectar(i, maximo * 1.18), label }));
-
-  const oculto = { axis: null, scale: { domain: [-R * 1.45, R * 1.45] } };
-  const pos = {
-    x: { field: 'x', type: 'quantitative', ...oculto },
-    y: { field: 'y', type: 'quantitative', ...oculto },
-    order: { field: 'orden', type: 'quantitative' },
-  };
-
-  return {
-    width: 300,
-    height: 300,
-    layer: [
-      {
-        data: { values: malla },
-        mark: { type: 'line', strokeWidth: 0.7, opacity: 0.35, interpolate: 'linear-closed' },
-        encoding: { ...pos, detail: { field: 'anillo', type: 'nominal' } },
-      },
-      {
-        data: { values },
-        mark: { type: 'line', strokeWidth: 2, interpolate: 'linear-closed', fillOpacity: 0.18, filled: true },
-        encoding: { ...pos, ...(points.some((p) => p.series) ? { color: { field: 'series', type: 'nominal', title: null } } : {}) },
-      },
-      {
-        data: { values },
-        mark: { type: 'circle', size: 55, opacity: 1 },
-        encoding: { ...pos, ...(points.some((p) => p.series) ? { color: { field: 'series', type: 'nominal', title: null } } : {}) },
-      },
-      {
-        data: { values: etiquetas },
-        mark: { type: 'text', fontSize: 11 },
-        encoding: {
-          x: { field: 'x', type: 'quantitative', ...oculto },
-          y: { field: 'y', type: 'quantitative', ...oculto },
-          text: { field: 'label', type: 'nominal' },
-        },
-      },
-    ],
-  };
-}

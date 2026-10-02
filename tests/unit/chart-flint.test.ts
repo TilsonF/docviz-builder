@@ -208,3 +208,187 @@ describe('respaldo Vega-Lite de gantt y radar', () => {
     ).toThrow(DslValidationError);
   });
 });
+
+describe('respaldo Vega-Lite de gantt · las ramas que la primera tanda no toco', () => {
+  const sinMermaid = (motor: string): boolean => motor !== 'mermaid' && motor !== 'plantuml';
+  const gantt = (tarea: string): Record<string, unknown> =>
+    JSON.parse(
+      compileDsl('diagram', `type: gantt\nsections:\n  - name: S\n    tasks:\n${tarea}`, sinMermaid).source,
+    ) as Record<string, unknown>;
+  const filas = (spec: Record<string, unknown>): Array<Record<string, unknown>> => {
+    const datos = (spec['data'] ?? (spec['spec'] as Record<string, unknown>)?.['data']) as Record<string, unknown>;
+    return datos['values'] as Array<Record<string, unknown>>;
+  };
+
+  it('entiende las unidades de duracion: horas, semanas y meses', () => {
+    // Mermaid las acepta todas, asi que el respaldo tambien tiene que hacerlo:
+    // si solo entendiera dias, el mismo bloque daria cronogramas distintos
+    // segun hubiera navegador o no.
+    const dia = (t: string): number => {
+      const f = filas(gantt(`      - name: T\n        start: 2026-01-01\n        duration: ${t}\n`))[0]!;
+      return (Date.parse(String(f['fin'])) - Date.parse(String(f['inicio']))) / 86_400_000;
+    };
+    expect(dia('24h')).toBe(1);
+    expect(dia('2w')).toBe(14);
+    expect(dia('1m')).toBe(30);
+    expect(dia('3')).toBe(3);
+  });
+
+  it('rechaza una duracion que no se entiende, en vez de inventarse una', () => {
+    expect(() => gantt('      - name: T\n        start: 2026-01-01\n        duration: un rato\n')).toThrow(
+      DslValidationError,
+    );
+  });
+
+  it('rechaza una fecha invalida en start y en end', () => {
+    expect(() => gantt('      - name: T\n        start: ayer\n        duration: 2d\n')).toThrow(DslValidationError);
+    expect(() => gantt('      - name: T\n        start: 2026-01-01\n        end: pasado\n')).toThrow(
+      DslValidationError,
+    );
+  });
+
+  it('exige start o after, y duration o end', () => {
+    expect(() => gantt('      - name: T\n        duration: 2d\n')).toThrow(DslValidationError);
+    expect(() => gantt('      - name: T\n        start: 2026-01-01\n')).toThrow(DslValidationError);
+  });
+
+  it('`after` de una tarea que no existe se reporta con las que si', () => {
+    expect(() => gantt('      - name: T\n        after: Fantasma\n        duration: 2d\n')).toThrow(
+      DslValidationError,
+    );
+  });
+
+  it('acepta `end` en lugar de `duration`', () => {
+    const f = filas(gantt('      - name: T\n        start: 2026-01-01\n        end: 2026-01-10\n'))[0]!;
+    expect(f['fin']).toBe('2026-01-10');
+  });
+
+  it('con varias secciones las separa en filas del grafico', () => {
+    // Mermaid dibuja las secciones como bandas; aqui se vuelven facetas, que es
+    // el equivalente mas cercano sin reinventar el trazado.
+    const spec = JSON.parse(
+      compileDsl(
+        'diagram',
+        [
+          'type: gantt',
+          'sections:',
+          '  - name: Analisis',
+          '    tasks:',
+          '      - name: A',
+          '        start: 2026-01-01',
+          '        duration: 2d',
+          '  - name: Diseno',
+          '    tasks:',
+          '      - name: B',
+          '        start: 2026-01-03',
+          '        duration: 2d',
+        ].join('\n'),
+        sinMermaid,
+      ).source,
+    ) as Record<string, unknown>;
+    expect(spec['facet']).toBeDefined();
+    expect(JSON.stringify(spec['facet'])).toContain('seccion');
+  });
+});
+
+describe('respaldo Vega-Lite de radar · las ramas que faltaban', () => {
+  const sinMermaid = (motor: string): boolean => motor !== 'mermaid';
+  const radar = (yaml: string): Record<string, unknown> =>
+    JSON.parse(compileDsl('diagram', yaml, sinMermaid).source) as Record<string, unknown>;
+
+  it('acepta `values` suelto, sin series', () => {
+    const spec = radar('type: radar\naxes: [A, B, C]\nvalues: [1, 2, 3]\n');
+    const puntos = ((spec['layer'] as Array<Record<string, unknown>>)[1]!['data'] as Record<string, unknown>)[
+      'values'
+    ] as Array<Record<string, unknown>>;
+    expect(puntos).toHaveLength(3);
+    expect(puntos[0]!['serie']).toBe('Actual');
+  });
+
+  it('sin `max` lo deduce del mayor valor declarado', () => {
+    // Sin esto el radar se dibujaria siempre pegado al borde o diminuto.
+    const spec = radar('type: radar\naxes: [A, B, C]\nvalues: [2, 4, 8]\n');
+    const puntos = ((spec['layer'] as Array<Record<string, unknown>>)[1]!['data'] as Record<string, unknown>)[
+      'values'
+    ] as Array<Record<string, unknown>>;
+    // El valor maximo cae en el radio completo: 8/8 * 120.
+    expect(Math.hypot(Number(puntos[2]!['x']), Number(puntos[2]!['y']))).toBeCloseTo(120, 1);
+  });
+
+  it('un eje sin valor cuenta como cero y no rompe el poligono', () => {
+    const spec = radar('type: radar\naxes: [A, B, C, D]\nmax: 10\nvalues: [5, 5]\n');
+    const puntos = ((spec['layer'] as Array<Record<string, unknown>>)[1]!['data'] as Record<string, unknown>)[
+      'values'
+    ] as Array<Record<string, unknown>>;
+    expect(puntos).toHaveLength(4);
+    expect(puntos[3]).toMatchObject({ x: 0, y: 0 });
+  });
+
+  it('sin series ni values no se dibuja nada y se dice', () => {
+    expect(() => radar('type: radar\naxes: [A, B, C]\n')).toThrow(DslValidationError);
+  });
+
+  it('acepta `seriesName` para nombrar la curva suelta', () => {
+    const spec = radar('type: radar\naxes: [A, B, C]\nseriesName: Objetivo\nvalues: [1, 2, 3]\n');
+    expect(JSON.stringify(spec)).toContain('Objetivo');
+  });
+});
+
+describe('los bordes de sparkline y kpi-card', () => {
+  const datos = (spec: Record<string, unknown>): Array<Record<string, unknown>> =>
+    (spec['data'] as Record<string, unknown>)['values'] as Array<Record<string, unknown>>;
+
+  it('la mediana de un numero PAR de puntos es el promedio de los dos centrales', () => {
+    // Con cuatro puntos la mediana cae entre el segundo y el tercero. Un
+    // `Math.floor` mal puesto daria el tercero y la linea de referencia saldria
+    // desplazada sin que nada fallara.
+    const spec = chart(
+      ['type: sparkline', 'baseline: median', 'data:', ...[1, 2, 10, 20].map((v, i) => `  - label: s${i}\n    value: ${v}`)].join('\n'),
+    );
+    const regla = (spec['layer'] as Array<Record<string, unknown>>)[2]!;
+    const y = ((regla['encoding'] as Record<string, unknown>)['y'] as Record<string, unknown>);
+    expect(y['datum']).toBe(6);
+  });
+
+  it('un `baseline` numerico se toma tal cual', () => {
+    const spec = chart('type: sparkline\nbaseline: 7\ndata:\n  - label: a\n    value: 1\n  - label: b\n    value: 5\n');
+    const regla = (spec['layer'] as Array<Record<string, unknown>>)[2]!;
+    expect(((regla['encoding'] as Record<string, unknown>)['y'] as Record<string, unknown>)['datum']).toBe(7);
+  });
+
+  it('un valor decimal se muestra con un decimal, no con quince', () => {
+    const spec = chart('type: kpi-card\ndata:\n  - label: Media\n    value: 3.14159\n');
+    expect(datos(spec)[0]!['texto']).toBe('3.1');
+  });
+
+  it('una meta de cero no divide entre cero', () => {
+    // `Bloqueados: meta 0` es una meta legitima —ninguno— y antes habria dado
+    // Infinity o NaN en el avance.
+    const spec = chart('type: kpi-card\ndata:\n  - label: Bloqueados\n    value: 0\n    target: 0\n    lowerIsBetter: true\n');
+    const fila = datos(spec)[0]!;
+    expect(Number.isFinite(Number(fila['avance']))).toBe(true);
+    expect(fila['estado']).toBe('cumple');
+  });
+
+  it('sin meta no hay barra de avance ni nota', () => {
+    const spec = chart('type: kpi-card\ndata:\n  - label: Casos\n    value: 312\n');
+    expect(datos(spec)[0]!['nota']).toBe('');
+    // Dos capas: el numero y su etiqueta. Nada mas.
+    expect((spec['spec'] as Record<string, unknown>)['layer']).toHaveLength(2);
+  });
+
+  it('acepta `indicadores` como sinonimo de `data`', () => {
+    const spec = chart('type: kpi-card\nindicadores:\n  - label: A\n    value: 1\n');
+    expect(datos(spec)).toHaveLength(1);
+  });
+});
+
+describe('funnel con la primera etapa en cero', () => {
+  it('no divide entre cero al calcular el porcentaje', () => {
+    // Un embudo que arranca en cero es un dato raro pero valido —nadie entro
+    // todavia—, y la division lo habria vuelto NaN en todas las etapas.
+    const spec = chart('type: funnel\ndata:\n  - label: Visitas\n    value: 0\n  - label: Altas\n    value: 0\n');
+    const filas = ((spec['data'] as Record<string, unknown>)['values'] as Array<Record<string, unknown>>);
+    expect(filas.every((f) => f['porcentaje'] === 0)).toBe(true);
+  });
+});

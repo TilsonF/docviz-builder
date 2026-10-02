@@ -9,7 +9,7 @@
  */
 
 import { fail } from './util.js';
-import { asRecord, optionalArray, optionalString, requireArray, requireString } from './util.js';
+import { asRecord, optionalArray, optionalString, requireArray } from './util.js';
 
 const START_SIZE = 36;
 const END_SIZE = 36;

@@ -211,7 +211,7 @@ function stripMermaidIds(svg: string, id: string): string {
 function estabilizarCommits(svg: string): string {
   const aleatorio = /\b(\d+)-([0-9a-f]{7})\b/g;
   const vistos = new Map<string, string>();
-  return svg.replace(aleatorio, (completo, indice: string, hash: string) => {
+  return svg.replace(aleatorio, (_coincidencia, indice: string, hash: string) => {
     const clave = `${indice}-${hash}`;
     const existente = vistos.get(clave);
     if (existente !== undefined) return existente;

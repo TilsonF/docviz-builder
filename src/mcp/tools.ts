@@ -26,7 +26,7 @@ import {
 } from '../dsl/index.js';
 import { TYPE_CATALOG, type TypeSpec } from '../dsl/catalog.js';
 import { buildRegistry } from '../renderers/index.js';
-import { getTheme, resolveTheme, themeNames } from '../themes/index.js';
+import { resolveTheme, themeNames } from '../themes/index.js';
 import { toPosix } from '../core/paths.js';
 
 export interface ToolResult {

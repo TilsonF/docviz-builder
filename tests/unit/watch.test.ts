@@ -38,11 +38,6 @@ function observadorFalso() {
 const temps: string[] = [];
 let watcher: Watcher | undefined;
 
-async function proyecto(): Promise<string> {
-  const dir = await mkdtemp(path.join(tmpdir(), 'docviz-watch-'));
-  temps.push(dir);
-  return dir;
-}
 
 afterEach(async () => {
   watcher?.close();

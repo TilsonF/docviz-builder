@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Hace falta el historial completo para comprobar que la etiqueta
           # cuelgue de la rama por defecto; el clon superficial no lo trae.

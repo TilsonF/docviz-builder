@@ -87,6 +87,11 @@ jobs:
       - name: Comprobar tipos
         run: npm run typecheck
 
+      # Lo que el compilador no ve: una promesa sin esperar, un `String()`
+      # sobre algo que podria ser un objeto, un `catch` que pierde la causa.
+      - name: Lint
+        run: npm run lint
+
       # Falla si la documentacion quedo desfasada del catalogo de tipos.
       - name: Comprobar la documentacion
         run: npm run docs:check

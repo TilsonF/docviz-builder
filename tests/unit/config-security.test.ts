@@ -180,3 +180,61 @@ describe('seguridad de Kroki', () => {
     expect(() => assertSafeKrokiUrl('no-es-una-url', base)).toThrow(/no es una URL valida/);
   });
 });
+
+describe('la configuracion falla al cargar, no a mitad del dibujo', () => {
+  // Un error de configuracion que aparece en el diagrama veintitres, despues
+  // de tres minutos de render, cuesta mucho mas que el mismo error al arrancar.
+
+  const con = async (yaml: string): Promise<ReturnType<typeof defaultConfig>> => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'docviz-cfg-'));
+    temps.push(dir);
+    await writeFile(path.join(dir, 'docviz.config.yaml'), yaml, 'utf8');
+    return loadConfig({ cwd: dir });
+  };
+
+  it('un YAML roto dice que archivo es y por que', async () => {
+    await expect(con('source: [sin cerrar\n')).rejects.toThrow(/docviz.config.yaml/);
+  });
+
+  it('un campo que deberia ser un mapa y es una lista se reporta', async () => {
+    await expect(con('renderers:\n  - mermaid\n')).rejects.toThrow(/debe ser un mapa/);
+  });
+
+  it('un backend que no existe se reporta con los validos', async () => {
+    await expect(con('renderers:\n  mermaid:\n    backend: nube\n')).rejects.toThrow(/local.*kroki/s);
+  });
+
+  it('un tema que no existe se reporta con la lista', async () => {
+    await expect(con('theme: neon\n')).rejects.toThrow(/no existe/);
+  });
+
+  it('un tema base inexistente en un tema de marca tambien', async () => {
+    await expect(
+      con('theme:\n  base: neon\n  palette:\n    primary: "#112233"\n'),
+    ).rejects.toThrow(/tema base/);
+  });
+
+  it('lee las opciones de PNG y se queda con las validas', async () => {
+    const cfg = await con('renderers:\n  png:\n    enabled: true\n    scale: 3\n    scheme: dark\n');
+    expect(cfg.renderers.png).toMatchObject({ enabled: true, scale: 3, scheme: 'dark' });
+  });
+
+  it('un `scheme` que no es claro ni oscuro se ignora en vez de romper', async () => {
+    // Es una preferencia, no una ruta: equivocarse ahi no justifica no compilar.
+    const cfg = await con('renderers:\n  png:\n    scheme: sepia\n');
+    expect(cfg.renderers.png.scheme).toBe('light');
+  });
+
+  it('un renderer declarado como booleano lo habilita o lo apaga', async () => {
+    const cfg = await con('renderers:\n  mermaid: false\n  d2: true\n');
+    expect(cfg.renderers.mermaid.enabled).toBe(false);
+    expect(cfg.renderers.d2.enabled).toBe(true);
+  });
+
+  it('los limites de render se leen del archivo', async () => {
+    const cfg = await con('renderers:\n  timeoutMs: 45000\n  maxOutputBytes: 1234\n  noSandbox: true\n');
+    expect(cfg.renderers.timeoutMs).toBe(45000);
+    expect(cfg.renderers.maxOutputBytes).toBe(1234);
+    expect(cfg.renderers.noSandbox).toBe(true);
+  });
+});

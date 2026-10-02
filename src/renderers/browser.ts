@@ -90,15 +90,23 @@ function puppeteerCandidates(): string[] {
   return found;
 }
 
-/** Orden de busqueda, de mas explicito a mas implicito. */
-export function browserCandidates(explicit?: string): string[] {
+/**
+ * Orden de busqueda, de mas explicito a mas implicito.
+ *
+ * La plataforma se recibe en vez de leerse aqui porque, si no, dos de sus tres
+ * ramas son inalcanzables en cada maquina: en Linux nadie ejecuta nunca la de
+ * macOS. Eso dejaba sin probar el codigo que decide donde buscar el navegador
+ * —justo el que falla cuando alguien dice «no me lo encuentra»— y ademas hacia
+ * que la cobertura diera un numero distinto segun quien la midiera.
+ */
+export function browserCandidates(explicit?: string, plataforma: NodeJS.Platform = os.platform()): string[] {
   const list: (string | undefined)[] = [
     explicit,
     process.env['DOCVIZ_BROWSER_PATH'],
     process.env['PUPPETEER_EXECUTABLE_PATH'],
     process.env['CHROME_PATH'],
   ];
-  const platform = os.platform();
+  const platform = plataforma;
   if (platform === 'darwin') list.push(...MAC_APPS);
   else if (platform === 'win32') list.push(...WINDOWS_BINS);
   else list.push(...LINUX_BINS);

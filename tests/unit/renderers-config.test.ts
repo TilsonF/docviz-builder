@@ -282,3 +282,56 @@ describe('los tipos C4 caen a plantuml-c4 cuando LikeC4 no esta', () => {
     }
   });
 });
+
+describe('donde se busca el navegador, en las tres plataformas', () => {
+  // La plataforma se inyecta justamente para poder probar las tres desde una:
+  // antes, dos de cada tres ramas eran inalcanzables en cada maquina, asi que
+  // el codigo que decide donde buscar —el que falla cuando alguien dice «no me
+  // lo encuentra»— solo se ejecutaba en el sistema de quien corriera la suite.
+  const sinEntorno = <T,>(fn: () => T): T => {
+    const guardadas = ['DOCVIZ_BROWSER_PATH', 'PUPPETEER_EXECUTABLE_PATH', 'CHROME_PATH'].map(
+      (k) => [k, process.env[k]] as const,
+    );
+    for (const [k] of guardadas) delete process.env[k];
+    try {
+      return fn();
+    } finally {
+      for (const [k, v] of guardadas) if (v !== undefined) process.env[k] = v;
+    }
+  };
+
+  // Se compara contra la lista FIJA de cada sistema y no contra el conjunto
+  // entero: la cola la aportan los caches de Playwright y Puppeteer de ESTA
+  // maquina, que enumeran los tres diseños —`chrome-win`, `chrome-mac-arm64`,
+  // `chrome-linux`— sea cual sea la plataforma que se simule.
+  const MAC = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  const LINUX = '/usr/bin/google-chrome';
+
+  it('en macOS busca la aplicacion y no los binarios de Linux', () => {
+    const rutas = sinEntorno(() => browserCandidates(undefined, 'darwin'));
+    expect(rutas).toContain(MAC);
+    expect(rutas).not.toContain(LINUX);
+  });
+
+  it('en Windows busca ejecutables .exe', () => {
+    const rutas = sinEntorno(() => browserCandidates(undefined, 'win32'));
+    expect(rutas.some((r) => r.endsWith('.exe'))).toBe(true);
+  });
+
+  it('en Linux busca binarios del PATH y no aplicaciones de macOS', () => {
+    const rutas = sinEntorno(() => browserCandidates(undefined, 'linux'));
+    expect(rutas).toContain(LINUX);
+    expect(rutas).not.toContain(MAC);
+  });
+
+  it('cualquier plataforma desconocida cae en la lista de Linux', () => {
+    // `freebsd` no tiene lista propia; quedarse sin candidatos seria peor que
+    // probar los de Linux, que es donde suele estar el binario.
+    expect(sinEntorno(() => browserCandidates(undefined, 'freebsd'))).toContain(LINUX);
+  });
+
+  it('la ruta explicita va primero, por delante de todo lo demas', () => {
+    const rutas = browserCandidates('/mi/chrome', 'linux');
+    expect(rutas[0]).toBe('/mi/chrome');
+  });
+});

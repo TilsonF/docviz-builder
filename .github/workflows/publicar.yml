@@ -35,6 +35,32 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Hace falta el historial completo para comprobar que la etiqueta
+          # cuelgue de la rama por defecto; el clon superficial no lo trae.
+          fetch-depth: 0
+
+      # La procedencia que npm firma cita el commit, y npm lo resuelve contra
+      # la rama por defecto. Una etiqueta que no cuelgue de `main` publica un
+      # paquete cuyo origen nadie puede verificar: npm muestra «taking too
+      # long to fetch the source commit» y queda como sospechoso.
+      #
+      # Paso tres veces seguidas sin que nada avisara. La causa fue trivial
+      # —un `git checkout <sha>` para medir algo, y nunca volver a la rama, de
+      # modo que los commits siguientes cayeron en un HEAD desacoplado y
+      # `git push origin main` no tenia nada que enviar— y por eso conviene
+      # que lo compruebe la maquina.
+      - name: Comprobar que la etiqueta cuelga de la rama por defecto
+        run: |
+          rama="$(git remote show origin | sed -n 's/.*HEAD branch: //p')"
+          git fetch --quiet origin "$rama"
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" "origin/$rama"; then
+            echo "la etiqueta $GITHUB_REF_NAME no es alcanzable desde origin/$rama." >&2
+            echo "El paquete se publicaria con una procedencia que nadie puede verificar." >&2
+            echo "Lleva el commit a $rama antes de etiquetar." >&2
+            exit 1
+          fi
+          echo "$GITHUB_REF_NAME cuelga de $rama"
 
       - uses: actions/setup-node@v4
         with:

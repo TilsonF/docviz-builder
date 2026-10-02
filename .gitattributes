@@ -1,0 +1,15 @@
+# Los finales de linea son LF en el repositorio y en el arbol de trabajo, en
+# todos los sistemas.
+#
+# Sin esto, Windows convierte a CRLF al sacar los archivos y ocho archivos de
+# prueba fallan alli: `sync-docs --check` compara byte a byte contra lo que
+# genera —que usa LF— y una asercion tan simple como `startsWith('---\n')` deja
+# de cumplirse. Era un fallo de la suite, no del codigo, pero invisible porque
+# el job de Windows es informativo.
+* text=auto eol=lf
+
+# Binarios: que nadie los toque.
+*.png binary
+*.jpg binary
+*.jar binary
+*.wasm binary

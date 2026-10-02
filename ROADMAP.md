@@ -72,6 +72,13 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   comprobación, para que ninguna pase inadvertida.
 - **Cómo prescindir de LikeC4**, medido: `npm remove` no lo saca, y el ahorro
   real son 19 MB y no 44, porque su respaldo pide una JVM y un jar de 27 MB.
+- **Lint con información de tipos** en CI, que no había ninguno. 139 hallazgos
+  al empezar, 0 al terminar, y cinco fallos reales por el camino — entre ellos
+  una `note:` escrita como mapa que dibujaba «[object Object]» en el diagrama.
+- **La cobertura dejó de depender del sistema que la mide.** `browserCandidates`
+  leía `os.platform()` por dentro, así que dos de sus tres ramas eran
+  inalcanzables en cada máquina: 85,06 % en un Mac y 84,94 % en Linux, a los
+  dos lados del umbral. La plataforma es ahora un parámetro.
 
 ---
 

@@ -79,10 +79,32 @@ function licenciaDe(pkg, dir) {
   return { valor: '(sin declarar)', origen: 'ninguno' };
 }
 
-const rutas = execSync('npm ls --omit=dev --all --parseable 2>/dev/null', { maxBuffer: 1e9 })
-  .toString()
-  .trim()
-  .split('\n');
+/**
+ * Rutas de todos los paquetes de produccion.
+ *
+ * Sin `2>/dev/null`: esa redireccion es sintaxis de shell de Unix y en
+ * `cmd.exe` se interpreta como un archivo llamado `/dev/null`, asi que el
+ * comando fallaba entero en Windows. El silencio se pide por `stdio`, que es
+ * portable.
+ *
+ * Y se tolera un codigo de salida distinto de cero: `npm ls` lo devuelve
+ * cuando encuentra algo que no le gusta —una peer dependency sin cumplir, por
+ * ejemplo— y aun asi imprime el arbol, que es lo unico que se necesita aqui.
+ */
+function rutasDeProduccion() {
+  try {
+    return execSync('npm ls --omit=dev --all --parseable', {
+      maxBuffer: 1e9,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).toString();
+  } catch (err) {
+    const salida = err?.stdout?.toString() ?? '';
+    if (salida.trim() === '') throw err;
+    return salida;
+  }
+}
+
+const rutas = rutasDeProduccion().trim().split(/\r?\n/);
 
 const propio = JSON.parse(readFileSync(path.join(raiz, 'package.json'), 'utf8')).name;
 const paquetes = new Map();

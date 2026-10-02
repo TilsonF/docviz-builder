@@ -204,7 +204,7 @@ function analizarFilas(texto: string, separador: string): string[][] {
   let actual = '';
   let entreComillas = false;
 
-  const sinBom = texto.replace(/^﻿/, '');
+  const sinBom = texto.replace(/^\uFEFF/, '');
   for (let i = 0; i < sinBom.length; i += 1) {
     const c = sinBom[i]!;
     if (entreComillas) {

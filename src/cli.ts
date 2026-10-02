@@ -348,9 +348,10 @@ export function createProgram(): Command {
       for (const c of (result['aplicado'] ?? []) as Array<{ de: string; a: string }>) {
         process.stderr.write(`corregido: "${c.de}" -> "${c.a}"\n`);
       }
-      process.stdout.write(`${String(result['source'] ?? source)}\n`);
+      process.stdout.write(`${texto(result['source']) ?? source}\n`);
       if (!result.ok) {
-        process.stderr.write(`\n${String(result['detail'] ?? result['error'] ?? 'sigue sin compilar')}\n`);
+        const motivo = texto(result['detail']) ?? texto(result['error']) ?? 'sigue sin compilar';
+        process.stderr.write(`\n${motivo}\n`);
         for (const p2 of (result['pendientes'] ?? []) as string[]) process.stderr.write(`  ${p2}\n`);
         process.exitCode = 1;
       }
@@ -661,6 +662,16 @@ interface BuildCliOptions {
   backend?: RendererBackend;
   continueOnError?: boolean;
   watch?: boolean;
+}
+
+/**
+ * Texto de un campo de `ToolResult`, que indexa a `unknown`.
+ *
+ * Imprimir con `String()` lo que podria ser un objeto escribe
+ * «[object Object]» en la terminal, que no ayuda a nadie a corregir nada.
+ */
+function texto(valor: unknown): string | undefined {
+  return typeof valor === 'string' ? valor : undefined;
 }
 
 export async function run(argv: readonly string[] = process.argv): Promise<number> {

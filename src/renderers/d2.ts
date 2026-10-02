@@ -41,7 +41,7 @@ export class D2Renderer implements DiagramRenderer {
   private async instance(): Promise<D2Instance> {
     this.instancePromise ??= (async () => {
       const mod = await import('@terrastruct/d2');
-      return new mod.D2() as unknown as D2Instance;
+      return new mod.D2();
     })();
     return this.instancePromise;
   }

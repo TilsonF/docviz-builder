@@ -23,6 +23,7 @@ import {
   requireArray,
   requireString,
   toEdge,
+  textoEscalar,
 } from './util.js';
 
 /** `sequence` con D2, que tiene diagramas de secuencia propios. */
@@ -373,8 +374,9 @@ function emitir(
 
     // Una nota no es un paso del flujo: se dibuja al margen y no encadena.
     if (record['note'] !== undefined) {
-      const nota = ids.id(`nota:${String(record['note'])}`);
-      lines.push(`${nota}: ${d2Label(String(record['note']))} {shape: page; style.stroke-dash: 3}`);
+      const texto = textoEscalar(record['note'], `${field}[].note`);
+      const nota = ids.id(`nota:${texto}`);
+      lines.push(`${nota}: ${d2Label(texto)} {shape: page; style.stroke-dash: 3}`);
       continue;
     }
 

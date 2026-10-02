@@ -177,9 +177,9 @@ export function conPng(renderer: DiagramRenderer, rasterizador: Rasterizador): D
 
 const defaultLaunch: NonNullable<RasterOptions['launch']> = async (executablePath, opciones) => {
   const puppeteer = await import('puppeteer-core');
-  return (await puppeteer.default.launch({
+  return await puppeteer.default.launch({
     executablePath,
     headless: true,
     args: chromiumLaunchArgs(opciones?.noSandbox === true),
-  })) as unknown as RasterBrowser;
+  });
 };

@@ -130,7 +130,7 @@ export class BpmnRenderer implements DiagramRenderer {
       page.on('request', ((req: { url(): string; continue(): void; abort(): void }) => {
         if (req.url().startsWith('data:') || req.url() === 'about:blank') req.continue();
         else req.abort();
-      }) as never);
+      }));
 
       await page.setContent(
         `<!doctype html><html><head><meta charset="utf-8"></head><body style="margin:0">` +

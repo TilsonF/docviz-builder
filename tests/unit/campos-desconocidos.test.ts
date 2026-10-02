@@ -94,7 +94,7 @@ describe('campos que admite una valla entera', () => {
 
 describe('observacion de accesos', () => {
   it('registra las claves leidas sin alterar los valores', () => {
-    const tracker = trackFieldAccess({ a: 1, b: 2 } as Record<string, unknown>);
+    const tracker = trackFieldAccess({ a: 1, b: 2 });
     expect(tracker.doc['a']).toBe(1);
     expect('b' in tracker.doc).toBe(true);
     expect([...tracker.accessed].sort()).toEqual(['a', 'b']);
@@ -102,7 +102,7 @@ describe('observacion de accesos', () => {
   });
 
   it('se abstiene si alguien enumera el mapa completo', () => {
-    const tracker = trackFieldAccess({ a: 1, sobra: 2 } as Record<string, unknown>);
+    const tracker = trackFieldAccess({ a: 1, sobra: 2 });
     expect(Object.keys(tracker.doc)).toEqual(['a', 'sobra']);
     expect(tracker.enumerated()).toBe(true);
     expect(unknownFields({ a: 1, sobra: 2 }, findType('sequence'), tracker)).toEqual([]);
@@ -262,7 +262,7 @@ describe('el escaneo no se detiene en el primer bloque roto', () => {
         lang: 'chart',
         code: ERROR_CODES.DSL_FIELD_UNKNOWN,
         field: 'notas',
-        message: expect.stringContaining('"notas"') as unknown as string,
+        message: expect.stringContaining('"notas"'),
       },
     ]);
   });

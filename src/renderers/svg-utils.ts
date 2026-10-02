@@ -153,6 +153,7 @@ function decodeEntities(value: string): string {
 
 /** Un enlace solo puede apuntar a un fragmento, a una ruta relativa o a http(s). */
 function urlSegura(valor: string): boolean {
+  // eslint-disable-next-line no-control-regex -- quitar caracteres de control es justamente lo que hace esta linea
   const limpio = decodeEntities(valor).replace(/[\s\u0000-\u001f]/g, '');
   if (limpio === '') return true;
   if (PELIGROSO_EN_URL.test(limpio)) return false;
@@ -451,7 +452,7 @@ export function ensureNamespace(svg: string): string {
 
 /** Pipeline completo aplicado a todo SVG antes de escribirlo a disco. */
 export function finalizeSvg(svg: string, title?: string): string {
-  let out = svg.replace(/^﻿/, '').trim();
+  let out = svg.replace(/^\uFEFF/, '').trim();
   // PlantUML antepone un PI propio (`<?plantuml ...?>`) que confunde a algunos visores.
   out = out.replace(/^<\?plantuml[^>]*\?>/i, '');
   out = sanitizeSvg(out);

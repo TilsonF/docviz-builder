@@ -44,7 +44,7 @@ function formaDe(valor: unknown): Record<string, unknown> {
     return { type: 'array', items: formas.length === 1 ? formas[0]! : { anyOf: formas } };
   }
   if (valor !== null && typeof valor === 'object') {
-    const claves = Object.keys(valor as Record<string, unknown>);
+    const claves = Object.keys(valor);
     // `- Usuario -> API: Login` es un **mapa** en YAML, no un texto: el ejemplo
     // llega con la flecha convertida en clave. Describirlo tal cual pondria
     // "Usuario -> API" como si fuera un campo del tipo, que es lo contrario de

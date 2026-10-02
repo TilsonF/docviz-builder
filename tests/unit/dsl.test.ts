@@ -271,11 +271,15 @@ describe('chart', () => {
       'type: bar\ntitle: Defectos por Sprint\ndata:\n  - label: SP1\n    value: 42\n  - label: SP2\n    value: 28\n  - label: SP3\n    value: 15',
     );
     expect(result.rendererType).toBe('vega-lite');
-    const spec = JSON.parse(result.source) as Record<string, any>;
-    expect(spec['title']).toBe('Defectos por Sprint');
-    expect(spec['mark'].type).toBe('bar');
-    expect(spec['data'].values).toHaveLength(3);
-    expect(spec['data'].values[0]).toEqual({ label: 'SP1', value: 42 });
+    const spec = JSON.parse(result.source) as {
+      title: string;
+      mark: { type: string };
+      data: { values: Array<Record<string, unknown>> };
+    };
+    expect(spec.title).toBe('Defectos por Sprint');
+    expect(spec.mark.type).toBe('bar');
+    expect(spec.data.values).toHaveLength(3);
+    expect(spec.data.values[0]).toEqual({ label: 'SP1', value: 42 });
   });
 
   it('line y area cambian la marca', () => {

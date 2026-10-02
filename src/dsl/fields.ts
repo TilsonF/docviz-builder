@@ -108,7 +108,7 @@ export function trackFieldAccess<T extends object>(doc: T): FieldAccessTracker<T
         if (registro !== undefined) registro.enumerated = true;
         return Reflect.ownKeys(t);
       },
-    }) as O;
+    });
 
   const raiz: RegistroObservado = {
     ruta: '',
@@ -340,13 +340,13 @@ export function nestedTyposFromExample(
     if (Array.isArray(real)) {
       // Todos los elementos de una lista obedecen al mismo molde, que es el
       // primero del ejemplo.
-      const molde = Array.isArray(modelo) ? modelo[0] : modelo;
+      const molde: unknown = Array.isArray(modelo) ? (modelo as unknown[])[0] : modelo;
       for (const item of real) recorrer(item, molde, ruta, profundidad + 1);
       return;
     }
     if (real === null || typeof real !== 'object' || modelo === null || typeof modelo !== 'object') return;
 
-    const claves = new Set(Object.keys(modelo as Record<string, unknown>));
+    const claves = new Set(Object.keys(modelo));
     for (const [clave, valor] of Object.entries(real as Record<string, unknown>)) {
       if (claves.has(clave)) {
         recorrer(valor, (modelo as Record<string, unknown>)[clave], `${ruta}.${clave}`, profundidad + 1);

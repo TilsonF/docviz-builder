@@ -95,7 +95,7 @@ describe('observacion', () => {
     });
 
     // Un editor no guarda una vez: escribe, renombra y vuelve a tocar.
-    for (const _ of [1, 2, 3, 4]) falso.cambia('a.md');
+    for (let i = 0; i < 4; i += 1) falso.cambia('a.md');
     await vi.waitFor(() => expect(veces).toBe(1));
 
     await new Promise((r) => setTimeout(r, 120));

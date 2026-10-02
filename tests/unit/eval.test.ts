@@ -26,9 +26,7 @@ interface Caso {
 const casos = JSON.parse(await readFile(path.join(raiz, 'eval', 'casos.json'), 'utf8')) as Caso[];
 
 // El extractor del script del eval: se importa para no tener dos copias.
-const { extraerBloque } = (await import('../../scripts/eval.mjs')) as {
-  extraerBloque: (texto: string) => { lang: string; source: string } | undefined;
-};
+const { extraerBloque } = (await import('../../scripts/eval.mjs'));
 
 describe('banco de casos', () => {
   it('tiene un volumen suficiente para que el porcentaje signifique algo', () => {

@@ -30,7 +30,7 @@ export function paqueteDisponible(name: string): boolean {
     require_.resolve(name);
     hay = true;
   } catch {
-    hay = false;
+    // Ya vale `false`: no resolverse ES la respuesta, no un fallo que tratar.
   }
   disponibles.set(name, hay);
   return hay;

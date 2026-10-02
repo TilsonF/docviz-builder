@@ -7,7 +7,7 @@
  * nombres y relaciones, y el compilador se encarga de la sintaxis del motor.
  */
 
-import { fail } from './util.js';
+import { fail, esEscalar } from './util.js';
 import {
   asNamedRecord,
   asRecord,
@@ -357,7 +357,9 @@ function toYaml(value: unknown, depth: number): string {
 
 function scalar(value: unknown): string {
   if (value === null || value === undefined) return 'null';
-  const text = String(value);
+  // Los llamadores ya descartan objetos y listas —recursan— pero decirlo aqui
+  // evita que un camino nuevo escriba «[object Object]» dentro del arbol.
+  const text = esEscalar(value) ? String(value) : JSON.stringify(value);
   return /^[\w .,\-/]*$/.test(text) && text.trim() !== '' ? text : JSON.stringify(text);
 }
 

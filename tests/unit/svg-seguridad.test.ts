@@ -33,6 +33,7 @@ function inerte(svg: string): boolean {
   const normalizado = svg
     .replace(/&#x([0-9a-f]+);?/gi, (_m, h: string) => String.fromCodePoint(Number.parseInt(h, 16)))
     .replace(/&#(\d+);?/g, (_m, d: string) => String.fromCodePoint(Number.parseInt(d, 10)))
+    // eslint-disable-next-line no-control-regex -- quitar caracteres de control es justamente lo que hace esta linea
     .replace(/[\s\u0000-\u001f]/g, '');
 
   if (/<\s*(script|iframe|object|embed|handler|animate|set)\b/i.test(svg)) return false;

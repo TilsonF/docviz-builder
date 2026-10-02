@@ -310,9 +310,36 @@ export function asArrowShorthand(
   const [key, value] = entries[0]!;
   if (!ARROW_IN_KEY.test(key)) return undefined;
   // `from`/`to` explicitos nunca llevan flecha en la clave: no hay ambiguedad.
-  if (value !== null && typeof value === 'object') return undefined;
-  const label = value === null || value === undefined ? undefined : String(value).trim();
+  if (!esEscalar(value) && value !== null && value !== undefined) return undefined;
+  const label = esEscalar(value) ? String(value).trim() : undefined;
   return label === undefined || label === '' ? { expression: key } : { expression: key, label };
+}
+
+/** Un valor que se puede convertir a texto sin perder nada. */
+export function esEscalar(value: unknown): value is string | number | boolean | bigint {
+  const t = typeof value;
+  return t === 'string' || t === 'number' || t === 'boolean' || t === 'bigint';
+}
+
+/**
+ * Texto de un campo que debe ser un escalar.
+ *
+ * `String(valor)` sobre un mapa escribe «[object Object]», y en un diagrama eso
+ * se dibuja: el bloque compila, la imagen sale, y dice una cosa que nadie
+ * escribio. Mejor fallar y decir donde.
+ */
+export function textoEscalar(value: unknown, field: string): string {
+  if (value === null || value === undefined) {
+    fail(`${field} no puede estar vacio`, undefined, ERROR_CODES.DSL_FIELD_MISSING);
+  }
+  if (!esEscalar(value)) {
+    fail(
+      `${field} debe ser un texto, no una lista ni un mapa`,
+      `valor recibido: ${preview(value)}`,
+      ERROR_CODES.DSL_FIELD_TYPE,
+    );
+  }
+  return String(value);
 }
 
 export function parseEdgeExpression(expression: string, field: string): ParsedEdge {

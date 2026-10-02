@@ -105,7 +105,7 @@ export function resolverModelo(doc: Record<string, unknown>, contexto?: Contexto
   for (const raw of visibles) {
     const record = asRecord(raw, `${ruta}.elements`);
     const padre = optionalString(record, 'parent');
-    if (padre !== undefined && !idsVisibles.has(padre)) delete (record as Record<string, unknown>)['parent'];
+    if (padre !== undefined && !idsVisibles.has(padre)) delete (record)['parent'];
   }
 }
 

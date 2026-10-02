@@ -107,9 +107,11 @@ export function watchSource(dir: string, options: WatchOptions): Watcher {
       temporizador.unref?.();
     });
   } catch (err) {
-    throw new Error(
-      `no se pudo observar ${raiz}: ${err instanceof Error ? err.message : String(err)}`,
-    );
+    // `cause` conserva el error original: sin el, el motivo real —permisos,
+    // limite de descriptores— se pierde y solo queda «no se pudo observar».
+    throw new Error(`no se pudo observar ${raiz}: ${err instanceof Error ? err.message : String(err)}`, {
+      cause: err,
+    });
   }
 
   watcher.on('error', (err) => log(`el observador fallo: ${err.message}`));

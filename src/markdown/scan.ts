@@ -67,7 +67,7 @@ const processor = unified()
   .use(remarkGfm);
 
 export function parseMarkdown(text: string): Root {
-  return processor.parse(text) as Root;
+  return processor.parse(text);
 }
 
 /**

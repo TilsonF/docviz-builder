@@ -5,7 +5,7 @@
  * `compile.ts`; aqui solo esta la traduccion al lenguaje de cada motor.
  */
 
-import { fail } from './util.js';
+import { fail, textoEscalar } from './util.js';
 import {
   asNamedRecord,
   asRecord,
@@ -239,7 +239,7 @@ function emitActivitySteps(steps: unknown[], lines: string[], indent: string, fi
       continue;
     }
     if (record['note'] !== undefined) {
-      lines.push(`${indent}note right`, `${indent}  ${plantUmlText(String(record['note']))}`, `${indent}end note`);
+      lines.push(`${indent}note right`, `${indent}  ${plantUmlText(textoEscalar(record['note'], `${field}[].note`))}`, `${indent}end note`);
       continue;
     }
     lines.push(`${indent}:${plantUmlText(nameOf(record, field))};`);

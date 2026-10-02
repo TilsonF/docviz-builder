@@ -42,7 +42,10 @@ export interface LikeC4Edge {
   points: Array<[number, number]>;
   labelBBox?: { x: number; y: number; width: number; height: number } | null;
   color?: string;
-  line?: 'solid' | 'dashed' | 'dotted' | string;
+  // LikeC4 puede emitir otros valores, asi que el tipo es abierto. Enumerar
+  // los tres conocidos JUNTO a `string` no documentaba nada —TypeScript colapsa
+  // la union a `string`— y hacia creer que estaban comprobados.
+  line?: string;
   head?: string;
   tail?: string;
 }

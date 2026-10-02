@@ -60,7 +60,7 @@ export class VegaLiteRenderer implements DiagramRenderer {
       height: theme.vegaLite.height,
       ...spec,
       // El `config` del tema se mezcla debajo del que traiga el autor.
-      config: { ...theme.vegaLite.config, ...((spec['config'] as object) ?? {}) },
+      config: { ...theme.vegaLite.config, ...((spec['config']) ?? {}) },
     };
     if (options.title !== undefined && themed['title'] === undefined) {
       themed['title'] = options.title;
@@ -74,7 +74,7 @@ export class VegaLiteRenderer implements DiagramRenderer {
       const view = new vega.View(runtime, { renderer: 'none' });
       // `loader` nulo: cualquier intento residual de cargar datos externos falla.
       const svg = await view.toSVG();
-      await view.finalize();
+      view.finalize();
       return svgResult(TYPE, svg, options);
     } catch (err) {
       throw asRenderError(TYPE, err, 'Vega-Lite no pudo generar el grafico');

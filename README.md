@@ -2,28 +2,54 @@
 
 *This document in English: [README.en.md](./README.en.md)*
 
-Compila bloques declarativos de diagramas escritos dentro de Markdown y devuelve
-**Markdown estándar y portable**: el visor final no necesita conocer PlantUML,
-Mermaid, D2, Vega-Lite, Graphviz ni LikeC4, solo saber mostrar una imagen.
+**DocViz dibuja.** Recibe la descripción de un diagrama escrita como datos y
+devuelve una imagen: un SVG determinista, con el tema del proyecto y un nombre
+que depende solo de su contenido. Eso es el producto.
 
-```md
-## Flujo de autenticación
-
-```plantuml
-@startuml
-Usuario -> API: Login
-API --> Usuario: Token
-@enduml
+````md
+```diagram
+type: sequence
+title: Flujo de autenticación
+flow:
+  - Usuario -> API: Login
+  - API --> Usuario: Token
 ```
+````
+
+produce `flujo-de-autenticacion-a4f93d12c7b1.svg` y deja la referencia puesta
+donde estaba el bloque. El visor final no necesita conocer PlantUML, Mermaid,
+D2, Vega-Lite, Graphviz ni LikeC4: solo saber mostrar una imagen.
+
+## Lo difícil no es dibujar, es elegir el dibujo
+
+Nueve motores saben dibujar. Ninguno sabe **qué** dibujar, y ahí es donde un
+agente se equivoca: pide un gráfico de barras para una serie temporal, un
+diagrama de secuencia para algo que son estados, un `flow` para un proceso con
+cinco decisiones anidadas. El resultado compila y es una imagen correcta de la
+cosa equivocada.
+
+Por eso el centro de DocViz no son los motores sino el catálogo. Cada tipo
+declara **para qué sirve, cuándo usarlo y cuándo no**, y eso es lo que se
+consulta:
+
+```
+$ docviz suggest "ver donde se pierde la gente en el alta de clientes"
+
+funnel  (chart, vega-lite)
+  Caida de volumen a lo largo de etapas sucesivas.
+  cuando: Para conversiones o filtros: candidatos por fase, incidencias por estado.
+  cuando no: Si las etapas no son sucesivas: usa `bar`.
 ```
 
-se convierte en
+Que eso funcione no se supone, **se mide**: 78 necesidades escritas como las
+escribiría una persona, partidas en entrenamiento y reservado. El acierto sobre
+los casos reservados —los que nunca se usaron para ajustar nada— es del
+**90,0 %** a la primera propuesta. El ejemplo de arriba es uno de esos casos:
+entró al banco porque fallaba.
 
-```md
-## Flujo de autenticación
-
-![Flujo de autenticación](./assets/generated/flujo-de-autenticacion-a4f93d12c7b1.svg)
-```
+Y cuando el bloque sale mal, `docviz fix` lo corrige sin adivinar, `docviz
+check` dice qué campo sobra y los códigos de error son estables para que un
+agente decida sin leer prosa.
 
 Todo ocurre **en local**: sin servicios externos, sin claves y sin enviar
 documentación confidencial a ningún sitio.
@@ -34,7 +60,7 @@ documentación confidencial a ningún sitio.
 
 - [Instalación](#instalación)
 - [Uso](#uso)
-- [El DSL de alto nivel](#el-dsl-de-alto-nivel)
+- [El DSL: describes qué quieres ver](#el-dsl-describes-qué-quieres-ver-no-cómo-dibujarlo)
 - [Lenguajes nativos](#lenguajes-nativos)
 - [Configuración](#configuración)
 - [Temas](#temas)
@@ -185,16 +211,25 @@ y sigue apuntando a una ruta relativa. No necesita publicar el repositorio.
 
 ---
 
-## El DSL de alto nivel
+## El DSL: describes qué quieres ver, no cómo dibujarlo
 
-Un autor —humano o agente— no debería memorizar seis sintaxis. DocViz ofrece
-tres vallas y elige el motor por ti:
+Un autor —humano o agente— no debería memorizar seis sintaxis, y sobre todo no
+debería estar eligiendo entre ellas. Lo que declara es **el tipo**; el motor lo
+elige DocViz: si no hay navegador, un `flow` se dibuja con D2 en lugar de
+Mermaid y el bloque no se toca. El dibujo cambia de aspecto, así que conviene
+preguntarle a `docviz doctor` qué motor se está usando de verdad.
 
-| Valla | Para qué |
+Tres vallas, según la pregunta que responde la imagen:
+
+| Valla | La pregunta que responde |
 |---|---|
-| `diagram` | Interacción, flujo, estados, dependencias, análisis estratégico |
-| `chart` | Comparación cuantitativa, tendencia, distribución |
-| `architecture` | Modelo C4 |
+| `diagram` | ¿Cómo funciona? Interacción, flujo, estados, dependencias, decisiones |
+| `chart` | ¿Cuánto? Comparación, tendencia, distribución, reparto |
+| `architecture` | ¿De qué está hecho? Modelo C4, declarado una vez y mirado desde varias vistas |
+
+Dentro de cada una, el `type` es la decisión que importa. Las tablas de abajo
+están ordenadas por **necesidad**, no por nombre, porque es así como se busca:
+primero qué quieres enseñar, después cómo se llama.
 
 ````md
 ```diagram

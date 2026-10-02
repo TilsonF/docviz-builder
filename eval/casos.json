@@ -603,5 +603,12 @@
     "tipo": "bump",
     "idioma": "en",
     "particion": "reservado"
+  },
+  {
+    "id": "donde-se-pierde-la-gente",
+    "necesidad": "Ver en que punto se pierde la gente durante el alta de clientes, cuantos empiezan y cuantos terminan.",
+    "tipo": "funnel",
+    "idioma": "es",
+    "particion": "entrenamiento"
   }
 ]

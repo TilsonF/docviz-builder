@@ -2,45 +2,60 @@
 
 *Este documento en español: [README.md](./README.md)*
 
-Compiles declarative diagram blocks written **inside Markdown** and returns
-**standard, portable Markdown**: the final viewer does not need to know about
-PlantUML, Mermaid, D2, Vega-Lite, Graphviz or LikeC4 — only how to show an
-image.
+**DocViz draws.** It takes a diagram described as data and returns an image: a
+deterministic SVG, themed, named after its own content. That is the product.
 
 ````md
-## Authentication flow
-
-```plantuml
-@startuml
-User -> API: Login
-API --> User: Token
-@enduml
+```diagram
+type: sequence
+title: Authentication flow
+flow:
+  - User -> API: Login
+  - API --> User: Token
 ```
 ````
 
-becomes
+produces `authentication-flow-a4f93d12c7b1.svg` and leaves the reference where
+the block was. The final viewer does not need to know about PlantUML, Mermaid,
+D2, Vega-Lite, Graphviz or LikeC4 — only how to show an image.
 
-```md
-## Authentication flow
+## The hard part is not drawing, it is choosing the drawing
 
-![Authentication flow](./assets/generated/authentication-flow-a4f93d12c7b1.svg)
+Nine engines know how to draw. None of them knows **what** to draw, and that is
+where an agent goes wrong: a bar chart for a time series, a sequence diagram
+for something that is really states, a `flow` for a process with five nested
+decisions. It compiles, and it is a correct picture of the wrong thing.
+
+So the centre of DocViz is not the engines but the catalog. Every type declares
+**what it is for, when to use it and when not to**, and that is what gets
+asked:
+
 ```
+$ docviz suggest "see where people drop out while signing up"
+funnel  (chart, vega-lite)
+
+$ docviz types funnel --lang en
+funnel  (chart, vega-lite)
+  How volume drops along successive stages.
+  when to use:  For conversions or filters: candidates per stage, incidents per status.
+```
+
+The catalog is bilingual and `suggest` scores against both languages, so an
+English need finds the right type. Its own prose output is still Spanish —
+`docviz types --lang en` is the English view, and moving the rest of the CLI is
+[on the roadmap](./ROADMAP.md).
+
+That this works is not assumed, it is **measured**: 78 needs written the way a
+person would write them, split into training and held-out. Accuracy on the
+held-out cases —the ones never used to tune anything— is **90.0 %** on the
+first suggestion.
+
+And when a block comes out wrong, `docviz fix` repairs it without guessing,
+`docviz check` names the offending field, and the error codes are stable so an
+agent can act without parsing prose.
 
 Everything happens **locally**: no external services, no keys, and no
 confidential documentation leaving the machine.
-
----
-
-## Why
-
-AI agents write documentation with embedded diagrams, but every viewer supports
-a different subset: GitHub renders Mermaid but not D2, a corporate portal
-probably renders neither, and a PDF renders nothing. The documentation ends up
-depending on where it is read.
-
-And forcing an agent to master six syntaxes produces errors: it writes PlantUML
-where D2 was needed, or invents a directive that does not exist. The high-level
-DSL (`diagram`, `chart`, `architecture`) moves that decision to the compiler.
 
 ---
 
@@ -66,7 +81,7 @@ documentation does not download anything on its own without being asked.
 D2, Graphviz, Vega-Lite, LikeC4 and svgbob need nothing else: they ship as
 WebAssembly or plain JavaScript. Most types declare a fallback engine, so a
 machine without a browser or without Java still compiles what it can instead of
-failing whole: **without Java only 4 of 57 types are lost.**
+failing whole: **without Java only 3 of 62 types are lost, and 4 without a browser.**
 
 DocViz **never downloads browsers**. It uses the system Chrome, or whatever
 Chromium Playwright or Puppeteer already cached. If it finds none, it says so

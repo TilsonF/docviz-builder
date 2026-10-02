@@ -1084,7 +1084,7 @@ const CHARTS: readonly TypeSpec[] = [
     purpose: 'Caida de volumen a lo largo de etapas sucesivas.',
     whenToUse: 'Para conversiones o filtros: candidatos por fase, incidencias por estado.',
     whenNotToUse: 'Si las etapas no son sucesivas: usa `bar`.',
-    keywords: ['embudo', 'conversion', 'etapas', 'caida', 'filtro', 'abandono', 'conversion', 'drop off', 'stages of signup', 'how many survive each step', 'attrition', 'sobreviven', 'cuantos llegan', 'de la visita a la compra', 'drop-off by step', 'how many reach each step'],
+    keywords: ['embudo', 'conversion', 'etapas', 'caida', 'filtro', 'abandono', 'conversion', 'drop off', 'stages of signup', 'how many survive each step', 'attrition', 'sobreviven', 'cuantos llegan', 'de la visita a la compra', 'drop-off by step', 'how many reach each step', 'donde se pierde la gente', 'en que punto se van', 'cuantos empiezan y cuantos terminan', 'where people drop out'],
     example: [
       'type: funnel',
       'title: Conversion',

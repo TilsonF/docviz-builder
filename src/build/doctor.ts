@@ -10,6 +10,7 @@
 import { access, constants } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { invocacion } from '../core/ejecutable.js';
 import { TYPE_CATALOG } from '../dsl/index.js';
 import { compilerEngines } from '../dsl/compile.js';
 import { buildRegistry } from '../renderers/index.js';
@@ -63,7 +64,8 @@ async function existe(ruta: string): Promise<boolean> {
 async function versionDeJava(ejecutable: string): Promise<string | undefined> {
   try {
     // Java escribe su version en stderr, no en stdout.
-    const { stderr } = await run(ejecutable, ['-version'], { timeout: 20_000 });
+    const cmd = invocacion(ejecutable, ['-version']);
+    const { stderr } = await run(cmd.file, cmd.args, { timeout: 20_000, ...cmd.opciones });
     return stderr.split('\n')[0]?.trim();
   } catch {
     return undefined;

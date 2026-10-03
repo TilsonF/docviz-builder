@@ -7,6 +7,7 @@
  */
 
 import { spawn } from 'node:child_process';
+import { invocacion } from '../core/ejecutable.js';
 import { access, constants } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -169,17 +170,20 @@ export class PlantUmlRenderer implements DiagramRenderer {
     timeoutMs: number,
   ): Promise<{ stdout: Buffer; stderr: Buffer; code: number }> {
     return new Promise((resolve, reject) => {
+      // En Windows `java` puede ser un envoltorio `.cmd`, y Node se niega a
+      // ejecutarlo directamente desde la correccion de CVE-2024-27980.
+      const cmd = invocacion(this.javaPath, [
+        '-Djava.awt.headless=true',
+        '-Dfile.encoding=UTF-8',
+        `-Xmx${this.maxHeap}`,
+        '-jar',
+        this.jarPath,
+        ...jarArgs,
+      ]);
       const child = spawn(
-        this.javaPath,
-        [
-          '-Djava.awt.headless=true',
-          '-Dfile.encoding=UTF-8',
-          `-Xmx${this.maxHeap}`,
-          '-jar',
-          this.jarPath,
-          ...jarArgs,
-        ],
-        { stdio: ['pipe', 'pipe', 'pipe'] },
+        cmd.file,
+        cmd.args,
+        { stdio: ['pipe', 'pipe', 'pipe'], ...cmd.opciones },
       );
 
       const out: Buffer[] = [];

@@ -186,8 +186,19 @@ describe('localizacion del navegador', () => {
     vi.unstubAllEnvs();
   });
 
-  it('incluye rutas del sistema', () => {
-    expect(browserCandidates().length).toBeGreaterThan(3);
+  it('incluye las rutas del sistema, no solo las variables de entorno', () => {
+    // Antes esto asertaba «mas de 3 candidatos», y en Windows hay
+    // exactamente 3: la lista fija tiene tres entradas y los caches de
+    // Playwright y Puppeteer no existen en un runner limpio. El numero
+    // dependia de la maquina; lo que la funcion garantiza es que la lista
+    // del sistema entre, y eso es comprobable en las tres.
+    expect(browserCandidates(undefined, 'linux')).toContain('/usr/bin/google-chrome');
+    expect(browserCandidates(undefined, 'darwin')).toContain(
+      '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+    );
+    expect(browserCandidates(undefined, 'win32')).toContain(
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+    );
   });
 
   it('el texto de ayuda menciona las tres alternativas', () => {

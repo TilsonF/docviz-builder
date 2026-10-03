@@ -38,17 +38,26 @@ describe('invocacion', () => {
     expect(out.opciones.windowsVerbatimArguments).toBe(true);
   });
 
+  it('la linea ENTERA va dentro de otro par de comillas', () => {
+    // La parte que no es obvia, y la que faltaba en mi primer intento: con
+    // `/s`, cmd.exe quita la primera y la ultima comilla de lo que sigue a
+    // `/c` y toma el resto literal. Sin ese par exterior la linea se parte
+    // por el medio y el comando no existe, que es por lo que Windows siguio
+    // sin encontrar Java despues del arreglo.
+    expect(invocacion('a.cmd', ['-x'], 'win32').args[3]).toBe('""a.cmd" "-x""');
+  });
+
   it('la linea va citada, para que una ruta con espacios no se parta', () => {
     // `C:\\Program Files\\...` es la ruta por defecto de media Windows.
     const out = invocacion('C:\\Program Files\\Java\\java.cmd', ['-jar', 'C:\\mis cosas\\p.jar'], 'win32');
-    expect(out.args[3]).toBe('"C:\\Program Files\\Java\\java.cmd" "-jar" "C:\\mis cosas\\p.jar"');
+    expect(out.args[3]).toBe('""C:\\Program Files\\Java\\java.cmd" "-jar" "C:\\mis cosas\\p.jar""');
   });
 
   it('una comilla dentro de un argumento se escapa duplicandola', () => {
     // Es como cita `cmd.exe`, y sin ello un argumento con comillas cerraria la
     // linea antes de tiempo: ahi es donde empiezan las inyecciones.
     const out = invocacion('a.cmd', ['di "hola"'], 'win32');
-    expect(out.args[3]).toBe('"a.cmd" "di ""hola"""');
+    expect(out.args[3]).toBe('""a.cmd" "di ""hola""""');
   });
 
   it('`.BAT` en mayusculas cuenta igual', () => {

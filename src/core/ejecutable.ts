@@ -36,7 +36,14 @@ export function invocacion(
   }
   return {
     file: process.env['COMSPEC'] ?? 'cmd.exe',
-    args: ['/d', '/s', '/c', [citar(ejecutable), ...args.map(citar)].join(' ')],
+    // La linea entera va dentro de OTRO par de comillas, ademas de las de
+    // cada argumento. Es la parte que no es obvia: con `/s`, `cmd.exe` quita
+    // la primera y la ultima comilla de lo que sigue a `/c` y toma el resto
+    // literal. Sin ese par exterior, `"ruta" "-version"` se convierte en
+    // `ruta" "-version` y el comando no existe. Es la forma que usa
+    // `cross-spawn`, y la aprendi fallando: el primer intento de este
+    // arreglo no la llevaba y Windows siguio sin encontrar Java.
+    args: ['/d', '/s', '/c', `"${[citar(ejecutable), ...args.map(citar)].join(' ')}"`],
     // `verbatim` porque la linea ya va citada: dejar que Node la vuelva a
     // citar la romperia.
     opciones: { windowsVerbatimArguments: true },

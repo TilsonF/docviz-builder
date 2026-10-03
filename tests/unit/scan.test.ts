@@ -218,3 +218,55 @@ describe('scanDocument — DSL de alto nivel', () => {
     expect(blocks[0]!.source).toContain('views {');
   });
 });
+
+describe('cuando un bloque se dibuja con su respaldo, se dice', () => {
+  /**
+   * Un respaldo dibuja la misma informacion con otro aspecto. Antes eso solo
+   * lo contaba `doctor`, y habia que ir a preguntarselo: quien compilaba en
+   * otra maquina obtenia dibujos distintos y no se enteraba.
+   */
+  const conMotores = (disponibles: readonly string[]) => ({
+    resolveLanguage: (lang: string): string | undefined =>
+      disponibles.includes(lang) ? lang : undefined,
+    compileDsl: (lang: string, source: string) => {
+      const out = compileDsl(lang, source, (motor) => disponibles.includes(motor));
+      return {
+        ...out,
+        ...(out.spec !== undefined ? { preferredEngine: out.spec.engine, typeName: out.spec.type } : {}),
+      };
+    },
+    dslLanguages: DSL_LANGUAGES,
+  });
+
+  const FLUJO = '```diagram\ntype: flow\ntitle: F\nflow:\n  - A -> B\n```\n';
+
+  it('con el motor preferido disponible no avisa de nada', () => {
+    const { warnings } = scanDocument(FLUJO, conMotores(['mermaid', 'd2']));
+    expect(warnings).toEqual([]);
+  });
+
+  it('sin el preferido, avisa de que el dibujo tendra otro aspecto', () => {
+    const { warnings, blocks } = scanDocument(FLUJO, conMotores(['d2']));
+    expect(blocks[0]?.rendererType).toBe('d2');
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toMatchObject({ code: 'DV107', line: 1, field: 'type' });
+    expect(warnings[0]?.message).toContain('d2 en lugar de mermaid');
+    // Remite a donde se ve QUE falta, que es la pregunta siguiente.
+    expect(warnings[0]?.message).toContain('doctor');
+  });
+
+  it('el aviso lleva la linea del bloque, no la del documento', () => {
+    const doc = `# Titulo\n\ntexto\n\n${FLUJO}`;
+    const { warnings } = scanDocument(doc, conMotores(['d2']));
+    expect(warnings[0]?.line).toBe(5);
+  });
+
+  it('no se confunde con los avisos de campos desconocidos', () => {
+    // Los dos llegan por el mismo canal; si se mezclaran, `fix` intentaria
+    // renombrar un motor.
+    const conErrata = '```diagram\ntype: flow\ntitulazo: F\nflow:\n  - A -> B\n```\n';
+    const { warnings } = scanDocument(conErrata, conMotores(['d2']));
+    const codigos = warnings.map((w) => w.code).sort();
+    expect(codigos).toEqual(['DV104', 'DV107']);
+  });
+});

@@ -13,6 +13,7 @@ import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import { toString as mdastToString } from 'mdast-util-to-string';
 import type { Code, Heading, Root } from 'mdast';
+import { ERROR_CODES } from '../core/errors.js';
 import type { DiagramBlock, OutputFormat } from '../core/types.js';
 
 export interface CompiledBlock {
@@ -21,6 +22,16 @@ export interface CompiledBlock {
   title?: string;
   /** Campos declarados que el compilador no uso. */
   warnings?: ReadonlyArray<{ code: string; field: string; message: string }>;
+  /**
+   * Motor que el catalogo prefiere para este tipo, si difiere del que dibuja.
+   *
+   * Lo pone quien compila, no el escaner: este modulo no conoce el catalogo a
+   * proposito —solo sabe de bloques en un Markdown— y acoplarlo para esto
+   * seria pagar demasiado por un aviso.
+   */
+  preferredEngine?: string;
+  /** Nombre del tipo resuelto, para poder nombrarlo en ese aviso. */
+  typeName?: string;
 }
 
 export interface ScanContext {
@@ -125,6 +136,22 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
       dslTitle = compiled.title;
       for (const w of compiled.warnings ?? []) {
         warnings.push({ line, lang, code: w.code, field: w.field, message: w.message });
+      }
+      // Un respaldo dibuja la misma informacion con otro aspecto. Callarlo
+      // significa que el documento cambia de pinta segun la maquina que lo
+      // compile y nadie se entera hasta compararlos.
+      const preferido = compiled.preferredEngine;
+      if (preferido !== undefined && preferido !== compiled.rendererType) {
+        warnings.push({
+          line,
+          lang,
+          code: ERROR_CODES.DSL_FALLBACK,
+          field: 'type',
+          message:
+            `"${compiled.typeName ?? lang}" se dibujo con ${compiled.rendererType} ` +
+            `en lugar de ${preferido}: el dibujo tendra otro aspecto. ` +
+            'Ejecuta `docviz doctor` para ver que falta.',
+        });
       }
     } else {
       rendererType = rendererFromLang!;

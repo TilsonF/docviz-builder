@@ -414,7 +414,13 @@ function scanBlocks(
     // El DSL necesita saber que motores hay registrados: si el preferido no
     // esta, compila para el respaldo declarado en lugar de abortar. Y el
     // directorio del documento, para resolver los datos de un archivo.
-    compileDsl: (lang, source) => compileDsl(lang, source, (engine) => registry.has(engine), datos),
+    compileDsl: (lang, source) => {
+      const out = compileDsl(lang, source, (engine) => registry.has(engine), datos);
+      return {
+        ...out,
+        ...(out.spec !== undefined ? { preferredEngine: out.spec.engine, typeName: out.spec.type } : {}),
+      };
+    },
     dslLanguages: DSL_LANGUAGES,
   });
 }

@@ -52,6 +52,14 @@ export const ERROR_CODES = {
   DSL_YAML: 'DV105',
   /** El `type` no existe o no pertenece a esta valla. */
   DSL_TYPE: 'DV106',
+  /**
+   * El bloque se dibujo con un respaldo y no con su motor preferido.
+   *
+   * No es un error del autor sino del entorno: falta Java, falta un navegador
+   * o falta un paquete. El documento sale, pero el dibujo tiene otro aspecto,
+   * y antes eso solo lo contaba `doctor` si alguien iba a preguntarselo.
+   */
+  DSL_FALLBACK: 'DV107',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

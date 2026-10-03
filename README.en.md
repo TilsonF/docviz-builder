@@ -245,32 +245,39 @@ npx docviz types sequence --lang en
 Native fences (`plantuml`, `mermaid`, `d2`, `graphviz`, `vega-lite`, `likec4`)
 remain available as an escape hatch.
 
-### If you would rather not install LikeC4
+### LikeC4 is an add-on, not a requirement
 
-`likec4` is a regular dependency, so it comes with DocViz: **`npm remove likec4`
-does not drop it**, because npm keeps it while DocViz declares it. The only way
-to do without it is to delete it after installing —what you do when slimming an
-image— and it comes back on the next `npm install`:
+Since 0.6.0, `likec4` is an **optional dependency**. That means two things at
+once, both deliberate:
+
+- **It installs by default.** If you already had it, upgrading does not take
+  it away and the three C4 types keep drawing the same. Nothing to do.
+- **It can be excluded**, and then it leaves the tree along with its 45
+  packages:
 
 ```bash
-rm -rf node_modules/likec4 node_modules/@likec4
+npm install docviz-builder --omit=optional
 ```
 
-DocViz keeps working: the three C4 types fall back to `plantuml-c4` and nothing
-else notices. `docviz doctor` says so rather than leaving you to guess.
+DocViz keeps working: the three C4 types fall back to `plantuml-c4`, `docviz
+doctor` says so, and since 0.6.0 the build itself warns block by block
+(`DV107`).
 
-**Measure before you do it**, though, because the saving is not what it looks
-like. Measured on a clean 0.5.1 install: 401 MB complete, 357 MB without
-`likec4`, and 382 MB without `likec4` but with the PlantUML jar the fallback
-needs. That fallback wants **a JVM and a 27 MB jar** (`npx docviz setup`). If
-you already use PlantUML —and you do if you draw any of the thirty-odd types
-that prefer it— you save the full 44 MB at no cost. If you do not, you trade
-44 MB of packages for 27 MB of jar plus a system dependency, and the net is
-19 MB.
+**Why you might want to exclude it.** `likec4` pulls in the toolchain it uses
+to build its own website, and that is where
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm)
+lives — a `high` advisory in `braces` **with no published fix**. Measured with
+an instrumented module loader, that code is **never loaded**: not when using
+the LikeC4 API, not during a full build. But it shows up in your `npm audit`,
+and if your team has a security gate that is enough to block you.
 
-The drawings also change: `plantuml-c4` labels with stereotypes (`«person»`,
-`«system»`) where LikeC4 uses shape. Both are valid C4, but they are not
-interchangeable halfway through a repository that is already published.
+With `--omit=optional` the tree drops to **291 MB** and `npm audit` reports
+**zero vulnerabilities**.
+
+The price in full: the C4 fallback is PlantUML, which wants a JVM and a 27 MB
+jar (`npx docviz setup`). And the drawings change: `plantuml-c4` labels with
+stereotypes (`«person»`, `«system»`) where LikeC4 uses shape. Both are valid
+C4, but they are not interchangeable halfway through a published repository.
 
 ### Fields are also understood in Spanish
 

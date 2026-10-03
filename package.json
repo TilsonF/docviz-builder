@@ -89,7 +89,6 @@
     "@terrastruct/d2": "^0.1.33",
     "bpmn-js": "^18.24.0",
     "commander": "^14.0.2",
-    "likec4": "^1.59.2",
     "mdast-util-to-string": "^4.0.0",
     "mermaid": "^11.16.1",
     "puppeteer-core": "^25.5.0",
@@ -133,5 +132,8 @@
   },
   "overrides": {
     "dompurify": "^3.4.16"
+  },
+  "optionalDependencies": {
+    "likec4": "^1.59.2"
   }
 }

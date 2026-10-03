@@ -397,47 +397,46 @@ flow:
     label: mensaje
 ```
 
-### Si no quieres instalar LikeC4
+### LikeC4 es un complemento, no un requisito
 
-`likec4` es una dependencia normal, así que se instala con DocViz: **`npm remove
-likec4` no lo saca**, porque npm lo mantiene mientras DocViz lo declare. La
-única forma de prescindir de él es borrarlo después de instalar —lo que se hace
-al adelgazar una imagen—, y vuelve en el siguiente `npm install`:
+Desde la 0.6.0, `likec4` es una **dependencia opcional**. Eso significa dos
+cosas a la vez, y las dos a propósito:
+
+- **Se instala por defecto.** Si ya lo tenías, actualizar no te lo quita y los
+  tres tipos C4 siguen dibujándose igual. No hay nada que hacer.
+- **Se puede excluir**, y entonces desaparece del árbol junto con sus 45
+  paquetes:
 
 ```bash
-rm -rf node_modules/likec4 node_modules/@likec4
+npm install docviz-builder --omit=optional
 ```
 
-DocViz sigue funcionando: los tres tipos C4 caen a `plantuml-c4` y el resto no
-se entera. `docviz doctor` lo dice sin que haya que adivinarlo:
+DocViz sigue funcionando: los tres tipos C4 caen a `plantuml-c4`, y `docviz
+doctor` lo dice sin que haya que adivinarlo. Desde la 0.6.0 el propio build
+también lo avisa, bloque a bloque:
 
 ```
-  FALTA  paquete likec4  los tipos C4 se dibujaran con su respaldo plantuml-c4
-                         -> npm install likec4
-Tipos
-   59  se dibujan con su motor preferido
-    3  usaran su respaldo:
-         c4-context (likec4 -> plantuml-c4)
+AVISO docs-src/arquitectura.md:12 [DV107] "c4-context" se dibujo con
+plantuml-c4 en lugar de likec4: el dibujo tendra otro aspecto.
 ```
 
-**Pero mide antes de hacerlo**, porque el ahorro no es el que parece. Medido
-sobre una instalación limpia de la 0.5.1:
+**Por qué querrías excluirlo.** `likec4` arrastra la cadena con la que
+construye su propio sitio web, y ahí vive
+[GHSA-vfj7-8cjw-p6xm](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) —un
+aviso `high` en `braces` **sin corrección publicada**—. Medido con el cargador
+de módulos instrumentado, ese código **no se carga nunca**: ni al usar la API
+de LikeC4 ni durante un build completo. Pero aparece en tu `npm audit`, y si
+tu equipo tiene una compuerta de seguridad eso basta para bloquearte.
 
-| | peso |
-|---|---|
-| instalación completa | 401 MB |
-| sin `likec4` | 357 MB |
-| sin `likec4`, con el jar de PlantUML que el respaldo necesita | 382 MB |
+Con `--omit=optional`, el árbol baja a **291 MB** y `npm audit` da **cero
+vulnerabilidades**.
 
-El respaldo de los tipos C4 es PlantUML, que pide **una JVM y un jar de 27 MB**
-(`npx docviz setup`). Si ya usas PlantUML —y lo usas si dibujas cualquiera de
-los treinta y tantos tipos que lo prefieren— el ahorro es de los 44 MB
-completos y no cuesta nada. Si no, cambias 44 MB de paquetes por 27 MB de jar
-más una dependencia de sistema, y el saldo son 19 MB.
-
-Y los dibujos cambian de aspecto: `plantuml-c4` rotula con estereotipos
-(`«person»`, `«system»`) donde LikeC4 usa la forma. Los dos son C4 válido; no
-son intercambiables a mitad de un repositorio ya publicado.
+El precio hay que decirlo entero: el respaldo de los tipos C4 es PlantUML, que
+pide una JVM y un jar de 27 MB (`npx docviz setup`). Si ya usas PlantUML no
+cuesta nada; si no, cambias unos paquetes por una dependencia de sistema. Y
+los dibujos cambian de aspecto: `plantuml-c4` rotula con estereotipos
+(`«person»`, `«system»`) donde LikeC4 usa la forma. Los dos son C4 válido, pero
+no son intercambiables a mitad de un repositorio ya publicado.
 
 ### Los campos también se entienden en español
 

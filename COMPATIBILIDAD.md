@@ -81,6 +81,23 @@ contrato:
   eval enseña dónde falla la elección de tipo.
 - **El formato del caché** en `.docviz-cache`. Se puede borrar siempre.
 
+## LikeC4 pasa a ser opcional
+
+En la 0.6.0, `likec4` se mueve de `dependencies` a `optionalDependencies`.
+**No es un cambio incompatible**, y por eso está aquí dicho: las dependencias
+opcionales se instalan por defecto, así que quien ya lo tenía y actualiza lo
+conserva, y los tres tipos C4 siguen dibujándose igual.
+
+Lo que cambia es que ahora se puede excluir con `--omit=optional`, y entonces
+salen del árbol sus 45 paquetes —y con ellos GHSA-vfj7-8cjw-p6xm, un aviso
+`high` en `braces` sin corrección publicada que llega por la cadena con la que
+LikeC4 construye su propio sitio—. Medido, ese código no se carga nunca; pero
+aparece en el `npm audit` de quien nos instale, y eso basta para bloquear a un
+equipo con compuerta de seguridad.
+
+Sin `likec4`, los tres tipos C4 caen a `plantuml-c4`. `doctor` lo reporta y el
+build avisa bloque a bloque con `DV107`.
+
 ## La versión mínima de Node
 
 **Node 22.** Subió desde 20.11 en la 0.6.0, y la razón no fue preferencia: la

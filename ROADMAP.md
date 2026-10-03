@@ -95,15 +95,23 @@ hipótesis sin medir.
 La parte determinista sí corre en CI: **89,6 %** de acierto en la primera
 propuesta, **90,0 %** sobre los casos reservados.
 
-### 2. Los mensajes de error en inglés
+### 2. Terminar los mensajes de error en inglés
 
-La documentación ya existe en los dos idiomas, con las tablas generadas desde
-el catálogo. Lo que sigue en español son **los mensajes de error y la salida de
-la CLI**, que es justo lo que un agente lee cuando algo falla.
+El mecanismo ya está: `DOCVIZ_LANG=en`, y las dos versiones de cada texto
+escritas juntas con `t(es, en)` en lugar de un catálogo de claves aparte —una
+clave se queda sin traducir en silencio; así el compilador exige las dos.
 
-Va junto con la decisión sobre el idioma por defecto, que
-[COMPATIBILIDAD.md](./COMPATIBILIDAD.md) marca como condición para la 1.0:
-cambiarlo después sería incompatible para quien analice la salida.
+El camino común está traducido, y resulta que cubre más de lo que parece: los
+193 errores que produce romper los 62 ejemplos del catálogo salen en inglés,
+porque todos pasan por los mismos ayudantes.
+
+Faltan **161 llamadas** en compiladores concretos: `diagram-product.ts` (15),
+`datos.ts` (14), `fallbacks.ts` (14), `config/load.ts` (12)… Son mensajes con
+matiz de dominio, así que traducirlos en bloque sin leerlos saldría peor que
+dejarlos.
+
+Y falta la decisión: hoy el valor por defecto es `es`. Cambiarlo es ahora una
+línea, que es el objetivo de haber hecho el mecanismo primero.
 
 ### 3. El build degrada en silencio
 

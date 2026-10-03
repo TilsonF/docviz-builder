@@ -11,6 +11,8 @@
  * cambiar de redaccion sin previo aviso.
  */
 
+import { t } from './idioma.js';
+
 /**
  * Codigos de regla.
  *
@@ -129,13 +131,13 @@ export class DocVizError extends Error {
   /** Formato de reporte exigido por la seccion 11 de la especificacion. */
   format(): string {
     const lines = ['ERROR'];
-    lines.push(`codigo: ${this.code}`);
-    if (this.location.file) lines.push(`archivo: ${this.location.file}`);
-    if (this.location.line !== undefined) lines.push(`linea: ${this.location.line}`);
+    lines.push(`${t('codigo', 'code')}: ${this.code}`);
+    if (this.location.file) lines.push(`${t('archivo', 'file')}: ${this.location.file}`);
+    if (this.location.line !== undefined) lines.push(`${t('linea', 'line')}: ${this.location.line}`);
     if (this.location.renderer) lines.push(`renderer: ${this.location.renderer}`);
-    lines.push(`motivo: ${this.message}`);
+    lines.push(`${t('motivo', 'reason')}: ${this.message}`);
     if (this.detail) {
-      lines.push('detalle:');
+      lines.push(`${t('detalle', 'detail')}:`);
       for (const l of this.detail.trimEnd().split('\n')) lines.push(`  ${l}`);
     }
     return lines.join('\n');

@@ -7,6 +7,7 @@
  * hay que compilarlo de nuevo.
  */
 
+import { t } from '../core/idioma.js';
 import { ERROR_CODES } from '../core/errors.js';
 import { fail } from './util.js';
 import { findType, TYPE_CATALOG, type TypeSpec } from './catalog.js';
@@ -151,8 +152,11 @@ export function compileType(
   const spec = findType(typeName);
   if (spec === undefined) {
     fail(
-      `el tipo "${typeName}" no existe`,
-      `tipos disponibles: ${TYPE_CATALOG.map((s) => s.type).sort().join(', ')}`,
+      t(`el tipo "${typeName}" no existe`, `type "${typeName}" does not exist`),
+      t(
+        `tipos disponibles: ${TYPE_CATALOG.map((s) => s.type).sort().join(', ')}`,
+        `available types: ${TYPE_CATALOG.map((s) => s.type).sort().join(', ')}`,
+      ),
       ERROR_CODES.DSL_TYPE,
     );
   }
@@ -169,8 +173,14 @@ export function compileType(
   if (chosen === undefined) {
     const alternatives = usable.length > 1 ? ` (respaldos: ${usable.slice(1).join(', ')})` : '';
     fail(
-      `el tipo "${spec.type}" necesita el motor ${spec.engine}${alternatives}, y no hay ninguno disponible`,
-      'habilita ese renderer en docviz.config.yaml o instala lo que necesita: Java para PlantUML, un Chromium para Mermaid y BPMN',
+      t(
+        `el tipo "${spec.type}" necesita el motor ${spec.engine}${alternatives}, y no hay ninguno disponible`,
+        `type "${spec.type}" needs the ${spec.engine} engine${alternatives}, and none is available`,
+      ),
+      t(
+        'habilita ese renderer en docviz.config.yaml o instala lo que necesita: Java para PlantUML, un Chromium para Mermaid y BPMN',
+        'enable that renderer in docviz.config.yaml or install what it needs: Java for PlantUML, a Chromium for Mermaid and BPMN',
+      ),
       ERROR_CODES.RENDERER_UNAVAILABLE,
     );
   }
@@ -183,8 +193,8 @@ export function compileChartType(doc: Record<string, unknown>, typeName: string)
   const spec = findType(typeName);
   if (spec === undefined || spec.lang !== 'chart') {
     fail(
-      `el tipo de grafico "${typeName}" no existe`,
-      `tipos disponibles: ${TYPE_CATALOG.filter((s) => s.lang === 'chart').map((s) => s.type).sort().join(', ')}`,
+      t(`el tipo de grafico "${typeName}" no existe`, `chart type "${typeName}" does not exist`),
+      t(`tipos disponibles: ${TYPE_CATALOG.filter((s) => s.lang === 'chart').map((s) => s.type).sort().join(', ')}`, `available types: ${TYPE_CATALOG.filter((s) => s.lang === 'chart').map((s) => s.type).sort().join(', ')}`),
       ERROR_CODES.DSL_TYPE,
     );
   }

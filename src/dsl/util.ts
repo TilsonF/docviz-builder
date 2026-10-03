@@ -5,6 +5,7 @@
  * campo falla, que se esperaba y como se escribe bien.
  */
 
+import { t } from '../core/idioma.js';
 import { DslValidationError, ERROR_CODES, type ErrorCode } from '../core/errors.js';
 import { observarAnidado } from './fields.js';
 
@@ -20,7 +21,11 @@ export function fail(message: string, detail?: string, code: ErrorCode = ERROR_C
 
 export function asRecord(value: unknown, field: string): Record<string, unknown> {
   if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    fail(`${field} debe ser un mapa`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
+    fail(
+      t(`${field} debe ser un mapa`, `${field} must be a map`),
+      t(`valor recibido: ${preview(value)}`, `received: ${preview(value)}`),
+      ERROR_CODES.DSL_FIELD_TYPE,
+    );
   }
   // Todo mapa anidado se entrega observado: es la unica forma de saber si el
   // compilador llego a leer sus claves o si el autor escribio en el vacio.
@@ -110,8 +115,8 @@ export function requireString(record: Record<string, unknown>, key: string, fiel
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (typeof value !== 'string' || value.trim() === '') {
     fail(
-      `falta el campo obligatorio "${key}" en ${field}`,
-      `valor recibido: ${preview(value)}`,
+      t(`falta el campo obligatorio "${key}" en ${field}`, `missing required field "${key}" in ${field}`),
+      t(`valor recibido: ${preview(value)}`, `received: ${preview(value)}`),
       ERROR_CODES.DSL_FIELD_MISSING,
     );
   }
@@ -132,7 +137,11 @@ export function optionalNumber(record: Record<string, unknown>, key: string, fie
   if (value === undefined || value === null) return undefined;
   const n = typeof value === 'number' ? value : Number(value);
   if (!Number.isFinite(n)) {
-    fail(`${field}.${key} debe ser numerico`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
+    fail(
+      t(`${field}.${key} debe ser numerico`, `${field}.${key} must be a number`),
+      t(`valor recibido: ${preview(value)}`, `received: ${preview(value)}`),
+      ERROR_CODES.DSL_FIELD_TYPE,
+    );
   }
   return n;
 }
@@ -140,7 +149,14 @@ export function optionalNumber(record: Record<string, unknown>, key: string, fie
 export function requireNumber(record: Record<string, unknown>, key: string, field: string): number {
   const n = optionalNumber(record, key, field);
   if (n === undefined) {
-    fail(`falta el campo numerico obligatorio "${key}" en ${field}`, undefined, ERROR_CODES.DSL_FIELD_MISSING);
+    fail(
+      t(
+        `falta el campo numerico obligatorio "${key}" en ${field}`,
+        `missing required numeric field "${key}" in ${field}`,
+      ),
+      undefined,
+      ERROR_CODES.DSL_FIELD_MISSING,
+    );
   }
   return n;
 }
@@ -148,8 +164,11 @@ export function requireNumber(record: Record<string, unknown>, key: string, fiel
 export function requireArray(value: unknown, field: string): unknown[] {
   if (!Array.isArray(value) || value.length === 0) {
     fail(
-      `${field} debe ser una lista con al menos un elemento`,
-      `valor recibido: ${preview(value)}`,
+      t(
+        `${field} debe ser una lista con al menos un elemento`,
+        `${field} must be a list with at least one item`,
+      ),
+      t(`valor recibido: ${preview(value)}`, `received: ${preview(value)}`),
       ERROR_CODES.DSL_FIELD_MISSING,
     );
   }
@@ -159,7 +178,11 @@ export function requireArray(value: unknown, field: string): unknown[] {
 export function optionalArray(value: unknown, field: string): unknown[] {
   if (value === undefined || value === null) return [];
   if (!Array.isArray(value)) {
-    fail(`${field} debe ser una lista`, `valor recibido: ${preview(value)}`, ERROR_CODES.DSL_FIELD_TYPE);
+    fail(
+      t(`${field} debe ser una lista`, `${field} must be a list`),
+      t(`valor recibido: ${preview(value)}`, `received: ${preview(value)}`),
+      ERROR_CODES.DSL_FIELD_TYPE,
+    );
   }
   return value;
 }
@@ -330,12 +353,12 @@ export function esEscalar(value: unknown): value is string | number | boolean | 
  */
 export function textoEscalar(value: unknown, field: string): string {
   if (value === null || value === undefined) {
-    fail(`${field} no puede estar vacio`, undefined, ERROR_CODES.DSL_FIELD_MISSING);
+    fail(t(`${field} no puede estar vacio`, `${field} cannot be empty`), undefined, ERROR_CODES.DSL_FIELD_MISSING);
   }
   if (!esEscalar(value)) {
     fail(
-      `${field} debe ser un texto, no una lista ni un mapa`,
-      `valor recibido: ${preview(value)}`,
+      t(`${field} debe ser un texto, no una lista ni un mapa`, `${field} must be text, not a list or a map`),
+      t(`valor recibido: ${preview(value)}`, `received: ${preview(value)}`),
       ERROR_CODES.DSL_FIELD_TYPE,
     );
   }

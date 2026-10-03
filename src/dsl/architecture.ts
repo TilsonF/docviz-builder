@@ -5,6 +5,7 @@
  * la especificacion de tipos y la vista.
  */
 
+import { t } from '../core/idioma.js';
 import { fail } from './util.js';
 import {
   asArrowShorthand,
@@ -90,8 +91,8 @@ export function architectureLikeC4(doc: Record<string, unknown>): string {
   const type = (optionalString(doc, 'type') ?? 'c4-context').toLowerCase();
   if (!(ARCHITECTURE_TYPES as readonly string[]).includes(type)) {
     fail(
-      `el tipo de arquitectura "${type}" no existe`,
-      `tipos disponibles: ${ARCHITECTURE_TYPES.join(', ')}`,
+      t(`el tipo de arquitectura "${type}" no existe`, `architecture type "${type}" does not exist`),
+      t(`tipos disponibles: ${ARCHITECTURE_TYPES.join(', ')}`, `available types: ${ARCHITECTURE_TYPES.join(', ')}`),
     );
   }
 

@@ -86,10 +86,21 @@ contrato:
 1. **Una medida del acierto con un modelo real.** Hoy solo está medida la parte
    determinista. Sin el número real, "cualquier agente sabe usarlo" es una
    hipótesis, y es el argumento central del proyecto.
-2. **Una decisión sobre el idioma por defecto.** El catálogo ya es bilingüe,
-   pero la documentación y los mensajes de error son solo en español. Cambiar el
-   idioma por defecto después de la 1.0 sería un cambio incompatible para quien
-   analice la salida.
+2. **Una decisión sobre el idioma por defecto.** El catálogo y la
+   documentación ya son bilingües. Los mensajes de error tienen ya el
+   mecanismo —`DOCVIZ_LANG=en`— y el camino común traducido: el andamiaje del
+   error, los ayudantes de campos y de listas, y los tres «el tipo no existe».
+   Medido rompiendo los 62 ejemplos del catálogo de cuatro formas distintas,
+   los 193 errores que eso produce salen en inglés.
+
+   Lo que falta son **161 mensajes específicos** de compiladores concretos,
+   que ese barrido no alcanza. Y la decisión en sí: hoy el valor por defecto
+   sigue siendo `es`, y cambiarlo después de la 1.0 sería incompatible para
+   quien analice la salida. El mecanismo convierte esa decisión en una línea
+   en lugar de una reescritura.
+
+   **Los códigos (`DV000`–`DV107`) no cambian con el idioma y no lo harán.**
+   Es lo que un agente usa para decidir.
 3. **Un ciclo de uso real fuera de este repositorio.** Ninguna promesa de
    estabilidad vale nada antes de que alguien haya intentado romperla.
 4. **Los tipos sin respaldo, resueltos o documentados como tales.** Hoy son

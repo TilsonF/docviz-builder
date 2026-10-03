@@ -468,6 +468,27 @@ same bytes** — and a test renders all 57 types twice to prove it.
 
 ---
 
+### Messages in English
+
+```bash
+DOCVIZ_LANG=en npx docviz check docs-src
+```
+
+This translates the error scaffolding —`code`, `file`, `line`, `reason`,
+`detail`— and the common path: field errors, list errors and the three "type
+does not exist". Measured by breaking the 62 catalog examples four ways, the
+193 errors that produces come out in English.
+
+161 messages in specific compilers are still Spanish; they are counted in the
+[roadmap](./ROADMAP.md). The default stays `es` until the decision is made
+deliberately, because changing it after 1.0 would break anyone parsing the
+output.
+
+**Codes do not change with the language.** `DV104` is `DV104` in both, and it
+is what an agent should be looking at.
+
+---
+
 ## Security
 
 1. Local engines by default; no network request during the build.

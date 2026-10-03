@@ -17,6 +17,7 @@
  * una heuristica, y por eso se puede reportar sin miedo a falsos positivos.
  */
 
+import { t } from '../core/idioma.js';
 import { parse as parseYaml } from 'yaml';
 import { ERROR_CODES, type ErrorCode } from '../core/errors.js';
 import type { TypeSpec } from './catalog.js';
@@ -194,8 +195,14 @@ export function unknownFields(
     const suggestion = nearestField(field, known);
     const message =
       suggestion !== undefined
-        ? `el campo "${field}" no existe en el tipo ${spec.type}; quiza querias "${suggestion}"`
-        : `el campo "${field}" no existe en el tipo ${spec.type} y se ha ignorado`;
+        ? t(
+            `el campo "${field}" no existe en el tipo ${spec.type}; quiza querias "${suggestion}"`,
+            `field "${field}" does not exist on type ${spec.type}; did you mean "${suggestion}"?`,
+          )
+        : t(
+            `el campo "${field}" no existe en el tipo ${spec.type} y se ha ignorado`,
+            `field "${field}" does not exist on type ${spec.type} and was ignored`,
+          );
 
     const warning: FieldWarning = {
       code: ERROR_CODES.DSL_FIELD_UNKNOWN,
@@ -239,8 +246,14 @@ export function unknownNestedFields(tracker: FieldAccessTracker<object>): FieldW
         field,
         message:
           suggestion !== undefined
-            ? `el campo "${field}"${donde} no se usa; quiza querias "${suggestion}"`
-            : `el campo "${field}"${donde} no se usa y se ha ignorado`,
+            ? t(
+                `el campo "${field}"${donde} no se usa; quiza querias "${suggestion}"`,
+                `field "${field}"${donde} is not used; did you mean "${suggestion}"?`,
+              )
+            : t(
+                `el campo "${field}"${donde} no se usa y se ha ignorado`,
+                `field "${field}"${donde} is not used and was ignored`,
+              ),
         ...(suggestion !== undefined ? { suggestion } : {}),
       });
     }
@@ -361,7 +374,10 @@ export function nestedTyposFromExample(
       warnings.push({
         code: ERROR_CODES.DSL_FIELD_UNKNOWN,
         field: clave,
-        message: `el campo "${clave}" en ${spec.lang}${ruta} no existe; quiza querias "${suggestion}"`,
+        message: t(
+          `el campo "${clave}" en ${spec.lang}${ruta} no existe; quiza querias "${suggestion}"`,
+          `field "${clave}" in ${spec.lang}${ruta} does not exist; did you mean "${suggestion}"?`,
+        ),
         suggestion,
       });
     }

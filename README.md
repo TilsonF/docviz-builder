@@ -1007,6 +1007,27 @@ de las dos no hizo nada; eso es un hecho, no una heurística.
 
 ---
 
+### Los mensajes en inglés
+
+```bash
+DOCVIZ_LANG=en npx docviz check docs-src
+```
+
+Traduce el andamiaje del error —`code`, `file`, `line`, `reason`, `detail`— y
+los mensajes del camino común: los de campos, los de listas y los tres «el
+tipo no existe». Medido rompiendo los 62 ejemplos del catálogo de cuatro
+formas, los 193 errores que eso produce salen en inglés.
+
+Quedan 161 mensajes de compiladores concretos todavía en español. Están
+contados en el [roadmap](./ROADMAP.md), y el valor por defecto sigue siendo
+`es` hasta que la decisión se tome a conciencia, porque cambiarlo después de
+la 1.0 rompería a quien analice la salida.
+
+**Los códigos no cambian con el idioma.** `DV104` es `DV104` en los dos, y es
+lo que un agente debería estar mirando.
+
+---
+
 ## Seguridad
 
 1. Motores locales por defecto; ninguna petición de red durante el build.

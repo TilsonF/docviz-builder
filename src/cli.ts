@@ -38,7 +38,7 @@ import { suggestType } from './mcp/tools.js';
 import { themeNames } from './themes/index.js';
 import type { RendererBackend } from './config/types.js';
 
-const VERSION = '0.5.3';
+const VERSION = '0.6.0';
 
 const ejecutar = promisify(execFile);
 

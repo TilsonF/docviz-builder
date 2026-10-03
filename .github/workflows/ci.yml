@@ -74,8 +74,12 @@ jobs:
       # El arbol de produccion es lo que viaja dentro del paquete: una
       # vulnerabilidad ahi la hereda todo el que lo instale, aunque el codigo
       # afectado no este en ningun camino que DocViz ejecute.
+      # `npm audit` crudo es todo o nada. Cuando aparece un aviso SIN correccion
+      # publicada, las salidas eran bajar el nivel —que esconde tambien los que
+      # si se pueden arreglar— o quitar el paso. Esto permite aceptar uno
+      # concreto, con su motivo escrito y una fecha de revision que caduca.
       - name: Auditar dependencias de produccion
-        run: npm audit --omit=dev --audit-level=moderate
+        run: npm run auditoria
 
       # Las de desarrollo se reportan y no bloquean: no salen de este repositorio.
       - name: Auditar dependencias de desarrollo

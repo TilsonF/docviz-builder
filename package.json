@@ -81,7 +81,8 @@
     "prepack": "npm run build",
     "licencias": "node scripts/licencias.mjs",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "auditoria": "node scripts/auditoria.mjs"
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1.28.0",
@@ -129,5 +130,8 @@
     "@modelcontextprotocol/sdk": {
       "optional": true
     }
+  },
+  "overrides": {
+    "dompurify": "^3.4.16"
   }
 }

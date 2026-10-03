@@ -43,3 +43,23 @@ describe('LICENCIAS.md', () => {
     expect(pkg.files).toContain('LICENCIAS.md');
   });
 });
+
+describe('auditoria de produccion', () => {
+  it('no hay vulnerabilidades sin aceptar, ni excepciones caducadas', () => {
+    // Si esto falla por una EXCEPCION CADUCADA, el trabajo no es mover la
+    // fecha: es mirar si ya hay correccion publicada.
+    const salida = execFileSync('node', ['scripts/auditoria.mjs'], { cwd: raiz, encoding: 'utf8' });
+    expect(salida).toContain('auditoria de produccion limpia');
+  });
+
+  it('toda excepcion lleva motivo y fecha de revision', () => {
+    const aceptadas = JSON.parse(readFileSync(path.join(raiz, 'auditoria-aceptada.json'), 'utf8')) as {
+      avisos: Array<{ aviso: string; porque: string; revisar_el: string }>;
+    };
+    for (const a of aceptadas.avisos) {
+      // Un «porque» de una linea no explica nada dentro de seis meses.
+      expect(a.porque.length, `${a.aviso} sin motivo suficiente`).toBeGreaterThan(80);
+      expect(a.revisar_el).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    }
+  });
+});

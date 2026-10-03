@@ -1,0 +1,12 @@
+{
+  "que_es": "Avisos de npm audit que se aceptan a sabiendas, con su motivo y una fecha de revision. Pasada esa fecha, `npm run auditoria` vuelve a fallar: una excepcion sin caducidad deja de ser una excepcion y se convierte en un agujero.",
+  "avisos": [
+    {
+      "aviso": "GHSA-vfj7-8cjw-p6xm",
+      "paquete": "braces",
+      "severidad": "high",
+      "porque": "No hay version corregida: 3.0.3 es la ultima publicada y es la vulnerable. Llega por likec4 -> vite-plugin-singlefile -> micromatch, que es la cadena con la que LikeC4 construye su sitio web: DocViz no la invoca nunca, solo usa su API de parseo y trazado. Lo unico que npm propone es degradar likec4 a 1.47.0, que es un cambio incompatible y nos dejaria sin los tipos C4 actuales. El fallo es una denegacion de servicio por agotamiento de pila con patrones glob profundamente anidados, y aqui los patrones no vienen de fuera.",
+      "revisar_el": "2026-12-15"
+    }
+  ]
+}

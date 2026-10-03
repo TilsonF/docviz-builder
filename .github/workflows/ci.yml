@@ -154,11 +154,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, macos-latest]
-        node: ['20', '22']
-        exclude:
-          # macOS es caro en minutos; con la version que se publica basta.
-          - os: macos-latest
-            node: '20'
+        # Node 20 llego a fin de vida el 24 de marzo de 2026. Ademas no carga
+        # modulos WASM por ESM sin bandera, asi que `svgbob` no funcionaba alli
+        # —y la matriz lo descubrio—. Mantenerlo en la matriz habria sido
+        # prometer un soporte que no existia.
+        node: ['22']
 
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25

@@ -81,7 +81,7 @@ Requisitos:
 
 | Requisito | Para qué | Obligatorio |
 |---|---|---|
-| Node.js ≥ 20.11 | Todo | Sí |
+| Node.js ≥ 22 | Todo | Sí |
 | Java ≥ 8 | PlantUML (UML, ERD, C4 alternativo, wireframes) | Solo si usas esos tipos |
 | Chrome o Chromium ya instalado | Mermaid y BPMN | Solo si usas esos tipos |
 

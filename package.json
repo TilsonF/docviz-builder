@@ -29,7 +29,7 @@
   "type": "module",
   "license": "MIT",
   "engines": {
-    "node": ">=20.11"
+    "node": ">=22.0.0"
   },
   "bin": {
     "docviz": "./bin/docviz.mjs",

@@ -81,6 +81,19 @@ contrato:
   eval enseña dónde falla la elección de tipo.
 - **El formato del caché** en `.docviz-cache`. Se puede borrar siempre.
 
+## La versión mínima de Node
+
+**Node 22.** Subió desde 20.11 en la 0.6.0, y la razón no fue preferencia: la
+matriz de CI descubrió que `svgbob` **no funcionaba en Node 20** —importa un
+`.wasm` por ESM, y Node 20 no lo carga sin `--experimental-wasm-modules`—, de
+modo que el mínimo declarado prometía un soporte que no existía.
+
+Node 20 llegó además a fin de vida el 24 de marzo de 2026; hoy el LTS activo
+es 24 y el de mantenimiento, 22.
+
+Subir el mínimo es un cambio incompatible, y por eso está aquí. Volver a
+bajarlo no está previsto.
+
 ## Qué falta para poder llamarla 1.0
 
 1. **Una medida del acierto con un modelo real.** Hoy solo está medida la parte

@@ -176,10 +176,41 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      # --- Diagnostico del cuelgue de macOS -------------------------------
+      #
+      # El job de macOS muere con «The runner has received a shutdown signal»
+      # SIN que falle ninguna prueba: las que ya corrieron salen en verde y el
+      # runner desaparece a los ocho minutos. Es un fallo conocido de GitHub
+      # que se reporta desde 2022, y la causa que mas se repite es quedarse
+      # sin disco.
+      #
+      # Encaja con este job: instala ~400 MB de `node_modules` y descarga un
+      # jar de 27 MB, y los runners de macOS tienen menos disco que los de
+      # Linux. Asi que antes de tocar nada se mide, que es mas barato que
+      # suponer. Si el disco resulta no ser la causa, estos numeros tambien lo
+      # descartan y toca mirar la memoria o pedir el log de depuracion.
+      - name: Espacio y memoria antes de instalar
+        if: runner.os != 'Windows'
+        run: |
+          echo "── disco ──"; df -h /
+          echo "── memoria ──"
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            vm_stat | head -6
+            sysctl -n hw.memsize | awk '{printf "  RAM total: %.1f GB\n", $1/1073741824}'
+          else
+            free -h
+          fi
+
       - run: npm ci
 
       # Comprueba de paso la verificacion del digest en otro sistema.
       - run: npm run setup
+
+      - name: Espacio despues de instalar y descargar el jar
+        if: runner.os != 'Windows'
+        run: |
+          df -h /
+          du -sh node_modules vendor 2>/dev/null || true
 
       - run: npm run build
       - run: npm run typecheck
@@ -187,6 +218,12 @@ jobs:
       # Las pruebas unitarias incluyen las que dibujan con PlantUML y con los
       # motores WebAssembly. Mermaid y BPMN se omiten solos si no hay navegador.
       - run: npm run test:unit
+
+      # `always()` para que se ejecute aunque las pruebas fallen. Si el runner
+      # muere de golpe tampoco correra: eso tambien es informacion.
+      - name: Espacio al terminar
+        if: always() && runner.os != 'Windows'
+        run: df -h /
 
       - name: Comprobar que la CLI arranca y ve su entorno
         run: node bin/docviz.mjs doctor

@@ -163,12 +163,40 @@ Así que el argumento fuerte para aislarlo no es el peso, es que desaparecen el
 único script de instalación y los binarios nativos. El README ya explica cómo
 prescindir de él hoy, con esos números delante.
 
-### 6. Caracterizar el bloqueo en macOS
+### 6. macOS: ya no es un misterio, son tres cosas
 
-Una prueba de la CLI que aquí tarda menos de un segundo agota los 180 s en el
-runner, y no se reproduce en local pese a que esta máquina también es macOS.
-El job es informativo: reporta sin bloquear. Bloquear cada PR con un fallo que
-no se entiende cuesta más de lo que avisa.
+Durante semanas esto decía «una prueba de la CLI agota los 180 s y no se sabe
+por qué». Medido, se descompone:
+
+**El disco no era.** Se instrumentó el job: **94 GiB libres, 12 % de uso**,
+con `node_modules` en 502 MB. La hipótesis más repetida en los informes de
+GitHub queda descartada para nuestro caso.
+
+**La concurrencia tampoco.** `vitest.config.ts` ya corre con `maxWorkers: 1` y
+`fileParallelism: false`: los 51 forks que menciona el log son secuenciales,
+no simultáneos.
+
+**Lo que sí hay:**
+
+1. **D2 es lentísimo en ese runner.** Las dos pruebas que agotan los 180 s
+   —`builder.test.ts` «escribe los recursos en el assetsDir configurado» y
+   `cli-comandos.test.ts` «check y verify aceptan -c»— dibujan con D2, cuyo
+   bundle WASM pesa 58 MB. Y con `pool: 'forks'` **cada archivo de prueba lo
+   recompila desde cero**. Encaja con que `mcp-tools.test.ts` tardara 30 s
+   allí y 3 s en los demás: también usa D2. El runner tiene **7 GB de RAM**.
+   El camino a probar es compartir el módulo compilado entre archivos, o
+   reconocer que ese runner necesita más tiempo para los que tocan D2.
+2. **`watch.test.ts` sigue siendo inestable** sobre el sistema de archivos
+   real: FSEvents tarda más de lo que la prueba espera. La parte determinista
+   ya se arregló haciendo inyectable el observador; lo que queda es la que
+   mide el sistema de verdad.
+3. **Un apagado del runner**, una sola vez: «The runner has received a
+   shutdown signal», sin que fallara ninguna prueba. La corrida siguiente
+   llegó al final. Parece un evento aislado de infraestructura y no algo
+   nuestro.
+
+El job sigue informativo, pero ya no por desconocimiento: ahora se sabe qué
+arreglar y en qué orden.
 
 ### 7. Determinismo entre plataformas
 

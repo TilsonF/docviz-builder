@@ -1,5 +1,6 @@
 {
   "que_es": "Avisos de npm audit que se aceptan a sabiendas, con su motivo y una fecha de revision. Pasada esa fecha, `npm run auditoria` vuelve a fallar: una excepcion sin caducidad deja de ser una excepcion y se convierte en un agujero.",
+  "ojo": "Esto mide el arbol de ESTE repositorio, que esta protegido por los `overrides` de package.json. Quien instale docviz-builder NO los hereda: npm solo aplica los `overrides` del proyecto raiz. Comprobado instalando el tarball en un proyecto limpio: le llega `katex@0.16.47` pese a que aqui el override lo fija en 0.19. Lo que recibe un consumidor esta dicho en el README, y no es lo mismo que sale aqui.",
   "avisos": [
     {
       "aviso": "GHSA-vfj7-8cjw-p6xm",

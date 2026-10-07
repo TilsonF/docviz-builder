@@ -271,8 +271,24 @@ an instrumented module loader, that code is **never loaded**: not when using
 the LikeC4 API, not during a full build. But it shows up in your `npm audit`,
 and if your team has a security gate that is enough to block you.
 
-With `--omit=optional` the tree drops to **291 MB** and `npm audit` reports
-**zero vulnerabilities**.
+With `--omit=optional` the tree drops to **291 MB** and `likec4` and its chain
+—`braces` included— are not installed. Precisely, because this was measured
+and it is not what you would expect: **`npm audit` still names them**, because
+it reads the lockfile, where optional dependencies stay recorded even when not
+installed. What is actually there is what `npm ls braces` says — nothing.
+
+One advisory does reach you: two `low` in **`katex`**, pulled in by Mermaid.
+No Mermaid release fixes it —not even 12, which still asks for
+`katex@^0.16.47`, inside the vulnerable range— and this package's `overrides`
+**do not protect you**, because npm only applies the root project's. If it
+blocks you, put it in your own `package.json`:
+
+```json
+{ "overrides": { "katex": "^0.19.0" } }
+```
+
+It is set that way here and Mermaid keeps drawing: 181 render tests green on
+that version.
 
 The price in full: the C4 fallback is PlantUML, which wants a JVM and a 27 MB
 jar (`npx docviz setup`). And the drawings change: `plantuml-c4` labels with

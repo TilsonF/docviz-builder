@@ -428,8 +428,25 @@ de módulos instrumentado, ese código **no se carga nunca**: ni al usar la API
 de LikeC4 ni durante un build completo. Pero aparece en tu `npm audit`, y si
 tu equipo tiene una compuerta de seguridad eso basta para bloquearte.
 
-Con `--omit=optional`, el árbol baja a **291 MB** y `npm audit` da **cero
-vulnerabilidades**.
+Con `--omit=optional` el árbol baja a **291 MB** y `likec4` y su cadena —con
+`braces` dentro— no se instalan. Dicho con precisión, porque lo medí y no es
+lo que esperaba: **`npm audit` los sigue nombrando igual**, porque lee el
+lockfile y ahí quedan registradas las dependencias opcionales aunque no se
+hayan instalado. Comprobar qué hay de verdad es `npm ls braces`, que responde
+vacío.
+
+Queda un aviso que sí te llega: dos `low` en **`katex`**, que entra por
+Mermaid. No hay versión de Mermaid que lo arregle —ni la 12 lo hace: sigue
+pidiendo `katex@^0.16.47`, dentro del rango vulnerable— y los `overrides` de
+este paquete **no te protegen**, porque npm solo aplica los del proyecto raíz.
+Si te bloquea, ponlo en el `overrides` de tu propio `package.json`:
+
+```json
+{ "overrides": { "katex": "^0.19.0" } }
+```
+
+Aquí está puesto así y Mermaid sigue dibujando: 181 pruebas de render en
+verde con esa versión.
 
 El precio hay que decirlo entero: el respaldo de los tipos C4 es PlantUML, que
 pide una JVM y un jar de 27 MB (`npx docviz setup`). Si ya usas PlantUML no

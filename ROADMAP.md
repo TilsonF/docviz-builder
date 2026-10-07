@@ -61,6 +61,13 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   lista se comía el guion. Y ninguna errata anidada recibía sugerencia.
 - **Los campos de hoja se entienden en español**, con una tabla central en vez
   de alias sueltos donde cada autor se acordó.
+- **El build ya no degrada en silencio** (`DV107`): si un bloque se dibujó con
+  su respaldo, lo dice con su archivo y su línea.
+- **LikeC4 es opcional.** Se sigue instalando por defecto —quien lo tenía no lo
+  pierde al actualizar— y con `--omit=optional` salen sus 45 paquetes y la
+  cadena donde vive el aviso de `braces`.
+- **Lint con información de tipos** y **auditoría con excepciones que caducan**
+  en CI.
 - **`docviz fix` tiene banco**: 23 casos repartidos en tres resultados
   —repara, ya estaba bien, no adivina—. Escribirlo encontró dos defectos más:
   con la misma errata repetida corregía solo la primera y devolvía un bloque a
@@ -113,18 +120,7 @@ dejarlos.
 Y falta la decisión: hoy el valor por defecto es `es`. Cambiarlo es ahora una
 línea, que es el objetivo de haber hecho el mecanismo primero.
 
-### 3. El build degrada en silencio
-
-Si falta un motor, el bloque cae a su respaldo y **se dibuja con otro aspecto
-sin decir nada**. Solo `doctor` lo cuenta, y hay que ir a preguntárselo. Quien
-compila en una máquina distinta —o con un `node_modules` incompleto— obtiene
-otros dibujos y no se entera.
-
-El canal de avisos del build es por bloque (`archivo:línea`) y un motor ausente
-no encaja ahí, así que hace falta decidir dónde va: una línea en el resumen, un
-aviso por bloque afectado, o un código de salida distinto con `--strict`.
-
-### 4. Los siete tipos que aún dependen de su motor
+### 3. Los siete tipos que aún dependen de su motor
 
 Sin Java caen `wireframe`, `json` y `yaml`: los tres son árboles o bocetos que
 PlantUML dibuja de una forma sin equivalente razonable. Sin Chromium caen
@@ -138,32 +134,7 @@ que documentarlos como dependientes de su motor y dejarlo dicho.
 
 ## Medio plazo
 
-### 5. Aislar `likec4`
-
-Está medido, no estimado: instalar `docviz-builder` en un proyecto limpio deja
-**401 MB y 315 paquetes**. Sacando `likec4` quedan **289 MB y 270**, y con ello
-desaparecen el **único script de instalación** que queda (el `postinstall` de
-esbuild, que descarga un binario de la red), los **dos binarios nativos**, la
-licencia MPL de lightningcss y `playwright-core` —12 MB de un segundo motor de
-navegador, además de puppeteer—.
-
-Para una herramienta cuyo compromiso es que el build no toca la red, que
-instalarla no ejecute nada ni compile nada es un cambio de categoría.
-
-El respaldo ya está listo para soportarlo: los tres tipos C4 se dibujan con
-`plantuml-c4` cuando el paquete no está, y `doctor` lo dice.
-
-El precio hay que decirlo entero, porque medirlo cambió la conclusión: ese
-respaldo es PlantUML, que pide **una JVM y un jar de 27 MB**. Quien ya use
-PlantUML —y lo usa si dibuja cualquiera de los treinta y tantos tipos que lo
-prefieren— se ahorra los 44 MB completos. Quien no, cambia 44 MB de paquetes
-por 27 de jar más una dependencia de sistema: el saldo real son **19 MB**.
-
-Así que el argumento fuerte para aislarlo no es el peso, es que desaparecen el
-único script de instalación y los binarios nativos. El README ya explica cómo
-prescindir de él hoy, con esos números delante.
-
-### 6. macOS: ya no es un misterio, son tres cosas
+### 4. macOS: ya no es un misterio, son tres cosas
 
 Durante semanas esto decía «una prueba de la CLI agota los 180 s y no se sabe
 por qué». Medido, se descompone:
@@ -198,7 +169,7 @@ no simultáneos.
 El job sigue informativo, pero ya no por desconocimiento: ahora se sabe qué
 arreglar y en qué orden.
 
-### 7. Determinismo entre plataformas
+### 5. Determinismo entre plataformas
 
 El caché es direccionable por contenido y su hash incluye la versión del motor,
 pero **nadie comprueba que el mismo bloque produzca los mismos bytes en Linux y

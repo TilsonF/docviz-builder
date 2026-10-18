@@ -109,6 +109,30 @@ documentación confidencial no descarga nada por su cuenta sin que se lo pidas.
 Si tu organización ya distribuye el jar, apúntalo con `renderers.plantuml.jar`
 en la configuración y omite ese paso.
 
+### Como biblioteca, desde ESM o desde CommonJS
+
+La herramienta es una CLI, pero el paquete también exporta su compilador. Se
+publica en **un solo formato** —ESM— y las dos condiciones del mapa de
+exportaciones apuntan al mismo fichero:
+
+```js
+import { build } from 'docviz-builder';          // ESM
+const { build } = require('docviz-builder');     // CommonJS, Node ≥ 22.12
+```
+
+Que sea de un solo formato no es un detalle de empaquetado, es la garantía:
+nunca existen dos construcciones que el resolutor pueda cargar por separado,
+así que no hay dos instancias del módulo ni dos copias de su estado, y un
+`instanceof` cruzado entre las dos puertas sigue siendo cierto. Declarar
+`"type": "module"` no basta para eso por sí solo —un paquete de doble formato
+también lo declara—; lo que lo garantiza es que no haya un segundo fichero.
+
+La puerta de CommonJS depende de que ningún módulo del grafo compilado use
+`await` de nivel superior: uno solo haría que `require()` fallara con
+`ERR_REQUIRE_ASYNC_MODULE`, y ni el compilador ni las pruebas lo verían.
+`npm run check:cjs` lo comprueba pidiéndole a Node que requiera cada módulo, y
+corre en CI después de compilar.
+
 ### Desde el repositorio
 
 ```bash

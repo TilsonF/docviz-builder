@@ -88,6 +88,13 @@ jobs:
       - name: Compilar
         run: npm run build
 
+      # Un solo `await` de nivel superior en cualquier modulo del grafo cierra
+      # la puerta a todo consumidor CommonJS, y lo hace en silencio: ni el
+      # compilador ni las pruebas lo ven. Esto lo mide pidiendole a Node que
+      # requiera cada modulo compilado.
+      - name: Comprobar que se puede requerir desde CommonJS
+        run: npm run check:cjs
+
       - name: Comprobar tipos
         run: npm run typecheck
 
@@ -221,6 +228,7 @@ jobs:
           du -sh node_modules vendor 2>/dev/null || true
 
       - run: npm run build
+      - run: npm run check:cjs
       - run: npm run typecheck
 
       # Las pruebas unitarias incluyen las que dibujan con PlantUML y con los

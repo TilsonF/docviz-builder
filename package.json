@@ -40,7 +40,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -80,6 +81,7 @@
     "check:github": "node scripts/check-github.mjs docs",
     "test:coverage": "vitest run --coverage",
     "prepack": "npm run build",
+    "check:cjs": "node scripts/comprobar-cjs.mjs",
     "licencias": "node scripts/licencias.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

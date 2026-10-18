@@ -88,6 +88,7 @@ jobs:
 
       # No se publica algo que no compila ni pasa sus propias comprobaciones.
       - run: npm run build
+      - run: npm run check:cjs
       - run: npm run typecheck
       - run: npm run test:unit
 

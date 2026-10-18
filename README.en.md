@@ -87,6 +87,30 @@ DocViz **never downloads browsers**. It uses the system Chrome, or whatever
 Chromium Playwright or Puppeteer already cached. If it finds none, it says so
 and explains how to point at one.
 
+### As a library, from ESM or from CommonJS
+
+The tool is a CLI, but the package also exports its compiler. It ships in **a
+single format** — ESM — and both conditions of the exports map point at the
+same file:
+
+```js
+import { build } from 'docviz-builder';          // ESM
+const { build } = require('docviz-builder');     // CommonJS, Node >= 22.12
+```
+
+Being single-format is not a packaging detail, it is the guarantee: there is
+never a second build the resolver could load separately, so there are never two
+instances of the module nor two copies of its state, and an `instanceof` across
+the two doors still holds. Declaring `"type": "module"` does not achieve that on
+its own — a dual-format package declares it too; what achieves it is the absence
+of a second file.
+
+The CommonJS door depends on no module in the compiled graph using top-level
+`await`: a single one would make `require()` fail with
+`ERR_REQUIRE_ASYNC_MODULE`, and neither the compiler nor the tests would see it.
+`npm run check:cjs` measures it by asking Node to require every compiled module,
+and runs in CI right after the build.
+
 ---
 
 ## Commands

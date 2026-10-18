@@ -124,6 +124,11 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   `docviz fix` «corregia» `titulo` a `title` reescribiendo un bloque que
   funcionaba. A cambio se gano un aviso que no habia: declarar los dos nombres
   del mismo campo deja uno sin efecto, y ahora se dice.
+- **`docviz --version` dejo de mentir.** Estaba escrita a mano en `cli.ts` y
+  nadie la subia: la 0.7.0 y la 0.8.0 salieron al registro diciendo las dos
+  que eran la 0.6.0, y `--version` es lo primero que mira quien va a abrir un
+  informe de fallo. Ahora se lee del manifiesto y una prueba comprueba que
+  coincidan, asi que no puede volver a desincronizarse.
 - **El rastreador de campos no se envuelve dos veces.** Un compilador que
   pasara a un ayudante el registro que ya observaba partia las lecturas en dos
   conjuntos, y campos leidos de verdad salian como ignorados.

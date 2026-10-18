@@ -246,3 +246,17 @@ describe('docviz suggest', () => {
     expect(out).toContain('tabla');
   });
 });
+
+describe('la version que anuncia la CLI', () => {
+  it('es la del manifiesto, no una copia escrita a mano', async () => {
+    // Estaba fijada como constante en `cli.ts` y nadie la subia: la 0.7.0 y la
+    // 0.8.0 salieron al registro diciendo las dos que eran la 0.6.0, y
+    // `--version` es lo primero que mira quien va a abrir un informe de fallo.
+    const { readFile } = await import('node:fs/promises');
+    const { versionDeDocViz } = await import('../../src/core/package-version.js');
+    const manifiesto = JSON.parse(
+      await readFile(new URL('../../package.json', import.meta.url), 'utf8'),
+    ) as { version: string };
+    expect(versionDeDocViz()).toBe(manifiesto.version);
+  });
+});

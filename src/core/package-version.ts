@@ -65,3 +65,33 @@ export function packageVersion(name: string, fallback = 'desconocida'): string {
   cache.set(name, version);
   return version;
 }
+
+/**
+ * Version de DocViz, leida de su propio `package.json`.
+ *
+ * Estaba escrita a mano en `cli.ts` y nadie la subia: la 0.7.0 y la 0.8.0
+ * salieron al registro diciendo las dos que eran la 0.6.0, y `--version` es
+ * justo lo que mira quien va a abrir un informe de fallo. Una prueba comprueba
+ * que coincida con el manifiesto, asi que ya no puede desincronizarse.
+ *
+ * Se sube por el arbol en lugar de fijar `../package.json`: la ruta no es la
+ * misma ejecutando `dist/cli.js` que `src/cli.ts` con tsx.
+ */
+export function versionDeDocViz(): string {
+  let dir = path.dirname(new URL(import.meta.url).pathname);
+  for (let depth = 0; depth < 6; depth += 1) {
+    try {
+      const pkg = JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')) as {
+        name?: string;
+        version?: string;
+      };
+      if (pkg.name === 'docviz-builder' && typeof pkg.version === 'string') return pkg.version;
+    } catch {
+      // seguir subiendo
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return 'desconocida';
+}

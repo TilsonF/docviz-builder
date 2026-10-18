@@ -34,13 +34,14 @@ import { errores, lint } from './build/lint.js';
 import { esTamanoSalida, TAMANOS_SALIDA } from './core/salida.js';
 import { loadConfig, resolveFromRoot } from './config/load.js';
 import { BuildFailedError, ConfigError, DocVizError } from './core/errors.js';
+import { versionDeDocViz } from './core/package-version.js';
 import { dslCatalog, findType, TYPE_CATALOG, type TypeSpec } from './dsl/index.js';
 import { esquemaDeConfiguracion, esquemaDeTipo, esquemaDeValla } from './dsl/esquema.js';
 import { suggestType } from './mcp/tools.js';
 import { themeNames } from './themes/index.js';
 import type { RendererBackend } from './config/types.js';
 
-const VERSION = '0.6.0';
+const VERSION = versionDeDocViz();
 
 const ejecutar = promisify(execFile);
 

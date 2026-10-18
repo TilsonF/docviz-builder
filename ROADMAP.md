@@ -107,6 +107,25 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   proyecto con caché caliente siguió sirviendo los SVG viejos sin que nada lo
   dijera.
 
+### Cerrado en la 0.9
+
+- **El suelo de Node declarado era falso.** `engines` decia `>=22.0.0` y
+  `puppeteer-core@25.5.0` —que ya viajaba en la 0.8.2— exige `>=22.12.0`: una
+  instalacion en Node 22.0 habria fallado al dibujar un Mermaid o un BPMN
+  aunque el manifiesto dijera que valia. Salio al medir el suelo real de todo
+  el arbol en lugar de suponerlo, y de paso aparecio que LikeC4 pide
+  `>=22.22.3`.
+- **EPL-2.0 clasificada.** Llega con `elkjs` por debajo de Mermaid. Copyleft
+  por modulo: obliga sobre lo que se modifique de la libreria, no sobre el
+  codigo que la usa. DocViz no la modifica ni la empaqueta, y se comprobo en
+  lugar de suponerlo.
+- **Mermaid 12, commander 15 y las acciones al dia.** Mermaid 12 se tomo tras
+  comprobar que el PNG de kanban y el de radar salen **byte a byte identicos**
+  a los de la 11.
+- **`@types/node` sigue al minimo de Node, no al ultimo.** Estaba en `^24` con
+  un suelo de 22: el compilador aceptaba APIs que no existen en el Node que
+  prometemos.
+
 ### Cerrado en la 0.8
 
 - **Enlaces en los nodos** (`href`). La capacidad estaba en el SVG desde

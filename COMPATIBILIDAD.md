@@ -123,6 +123,17 @@ es 24 y el de mantenimiento, 22.
 Subir el mínimo es un cambio incompatible, y por eso está aquí. Volver a
 bajarlo no está previsto.
 
+**Node 22.12 desde la 0.9.0**, y esto no es una subida sino una corrección. El
+número declarado llevaba tiempo siendo falso: `puppeteer-core@25.5.0` —que ya
+viajaba en la 0.8.2— declara `>=22.12.0`, de modo que una instalación en Node
+22.0 habría fallado al dibujar un Mermaid o un BPMN aunque `engines` dijera que
+valía. Se descubrió al medir el suelo real de todo el árbol de producción en
+lugar de suponerlo, y de paso salió que **LikeC4 pide `>=22.22.3`**: quien lo
+use necesita esa, y por eso es un complemento opcional.
+
+Node 22.12 se publicó en diciembre de 2024. Quien esté por debajo lleva dos
+años sin actualizar el parche de una rama que sigue viva.
+
 ## Qué falta para poder llamarla 1.0
 
 1. **Una medida del acierto con un modelo real.** Hoy solo está medida la parte

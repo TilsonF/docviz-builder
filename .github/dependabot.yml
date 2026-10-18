@@ -24,17 +24,9 @@ updates:
       desarrollo:
         dependency-type: development
 
-    # Dos mayores que se rechazan a proposito, no por pereza. Se revisa cuando
-    # cambie el motivo, no cuando Dependabot insista.
+    # Lo que se rechaza a proposito, no por pereza. Se revisa cuando cambie el
+    # motivo, no cuando Dependabot insista.
     ignore:
-      # Commander 15 exige Node >=22.12.0 y nosotros declaramos >=22.0.0.
-      # Subir el minimo es un cambio incompatible para quien instala, y a
-      # cambio no se gana nada: la unica novedad que nos tocaria —el cambio en
-      # los valores por defecto de las opciones `--no-*`— no nos afecta,
-      # porque `--no-cache` no tiene contraparte positiva. Se tomara cuando
-      # haya otro motivo para subir el suelo de Node.
-      - dependency-name: commander
-        update-types: ['version-update:semver-major']
       # TypeScript 7 todavia no lo acepta `typescript-eslint` como peer: `npm
       # ci` falla antes de compilar nada. Se toma cuando el lint lo soporte.
       - dependency-name: typescript

@@ -74,7 +74,7 @@ documentation does not download anything on its own without being asked.
 
 | Requirement | What for | Required |
 |---|---|---|
-| Node.js ≥ 22 | Everything | Yes |
+| Node.js ≥ 22.12 | Everything | Yes |
 | Java ≥ 8 | PlantUML | Only for those types |
 | An already-installed Chrome or Chromium | Mermaid and BPMN | Only for those types |
 

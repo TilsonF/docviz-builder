@@ -6,6 +6,7 @@
  */
 
 import type { Theme } from '../themes/types.js';
+import type { TamanoSalida } from './salida.js';
 
 export type OutputFormat = 'svg' | 'png';
 
@@ -22,6 +23,22 @@ export interface RenderOptions {
   theme: Theme;
   /** Titulo del diagrama, util para `<title>` accesible dentro del SVG. */
   title?: string;
+  /**
+   * Descripcion larga del dibujo, para el `<desc>` del SVG.
+   *
+   * El titulo dice de que es el diagrama; la descripcion dice que se ve en el,
+   * que es lo unico que le llega a quien no puede mirarlo.
+   */
+  description?: string;
+  /**
+   * Prefijo unico de este diagrama para sus ids y su CSS.
+   *
+   * Sin el, dos diagramas incrustados en la misma pagina comparten ids y el
+   * segundo se queda sin nombre accesible y con la paleta del primero.
+   */
+  idPrefix?: string;
+  /** Destino del dibujo: fija el lienzo y la letra minima exigible. */
+  size?: TamanoSalida;
   /** Milisegundos maximos de render. Superarlo es un error, no un warning. */
   timeoutMs: number;
   /** Tamano maximo aceptado del recurso generado, en bytes. */
@@ -63,6 +80,10 @@ export interface DiagramBlock {
   rawSource: string;
   /** Titulo usado como alt text y como base del nombre de archivo. */
   title: string;
+  /** Descripcion larga, si el bloque la declara. Va al `<desc>` del SVG. */
+  description?: string;
+  /** Destino pedido en la valla, si lo hubo. */
+  requestedSize?: TamanoSalida;
   /** Formato pedido explicitamente en la valla, si lo hubo. */
   requestedFormat?: OutputFormat;
   /** Posicion en el documento fuente, para reemplazo quirurgico y errores. */
@@ -79,6 +100,12 @@ export interface RenderedAsset {
   format: OutputFormat;
   bytes: number;
   fromCache: boolean;
+  /**
+   * El dibujo no llega a la letra minima del destino declarado.
+   *
+   * Se mide sobre los bytes escritos, vengan del motor o del cache.
+   */
+  densidad?: { letraEfectiva: number; letraMinima: number };
 }
 
 export interface BuildStats {

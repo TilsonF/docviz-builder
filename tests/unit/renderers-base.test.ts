@@ -93,7 +93,7 @@ describe('svgResult y pngResult', () => {
     expect(result.mimeType).toBe('image/svg+xml');
     const text = result.content.toString('utf8');
     expect(text).toContain('width="10"');
-    expect(text).toContain('<title>Titulo</title>');
+    expect(text).toContain('<title id="dv-t">Titulo</title>');
     expect(text).not.toContain('script');
   });
 

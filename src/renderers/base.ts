@@ -5,6 +5,7 @@
 
 import { RenderError } from '../core/errors.js';
 import { MIME_TYPES, type OutputFormat, type RenderOptions, type RenderResult } from '../core/types.js';
+import { ajustarTamano } from '../core/salida.js';
 import { applyColorScheme } from './color-scheme.js';
 import { finalizeSvg } from './svg-utils.js';
 
@@ -63,8 +64,19 @@ export function svgResult(
   options: RenderOptions,
 ): RenderResult {
   // El esquema dual se aplica al final, sobre los colores que el tema ya inyecto.
-  const finalized = applyColorScheme(finalizeSvg(svg, options.title), options.theme);
-  const content = Buffer.from(finalized, 'utf8');
+  const finalized = applyColorScheme(
+    finalizeSvg(svg, {
+      ...(options.title !== undefined ? { title: options.title } : {}),
+      ...(options.description !== undefined ? { description: options.description } : {}),
+      ...(options.idPrefix !== undefined ? { idPrefix: options.idPrefix } : {}),
+    }),
+    options.theme,
+  );
+  // El tamano se ajusta al final, sobre el SVG ya saneado y con dimensiones
+  // normalizadas: antes de eso Mermaid todavia declara `width="100%"` y no hay
+  // de donde sacar la geometria.
+  const ajuste = ajustarTamano(finalized, options.size ?? 'fit');
+  const content = Buffer.from(ajuste.svg, 'utf8');
   enforceSize(renderer, content, options.maxOutputBytes);
   return { format: 'svg', content, mimeType: MIME_TYPES.svg };
 }

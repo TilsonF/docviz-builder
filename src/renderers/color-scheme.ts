@@ -15,6 +15,7 @@
 
 import { ConfigError } from '../core/errors.js';
 import type { Theme, ThemePalette } from '../themes/types.js';
+import { svgRootId } from './svg-utils.js';
 
 /** Correspondencia entre un color del tema claro y su equivalente oscuro. */
 export interface ColorPair {
@@ -109,13 +110,26 @@ export function applyColorScheme(svg: string, theme: Theme): string {
 
   const lightBlock = declarations.map((d) => d.split('|')[0]!).join('');
   const darkBlock = declarations.map((d) => d.split('|')[1]!).join('');
+  // Las variables se declaran sobre la raiz **de este** SVG, no sobre `:root`.
+  // En un SVG abierto como documento propio las dos cosas son lo mismo, pero
+  // incrustado en una pagina `:root` es el `<html>` del anfitrion: dos
+  // diagramas en la misma pagina se pisaban las variables y el ultimo en
+  // cargar repintaba a los anteriores con su paleta.
+  const alcance = svgRootId(out);
+  const selector = alcance !== undefined ? `#${alcance}` : ':root';
   const style =
-    `<style>:root{${lightBlock}}` +
-    `@media (prefers-color-scheme:dark){:root{${darkBlock}}}</style>`;
+    `<style>${selector}{${lightBlock}}` +
+    `@media (prefers-color-scheme:dark){${selector}{${darkBlock}}}</style>`;
 
   const openTag = /<svg\b[^>]*>/i.exec(out);
   if (openTag === null) return svg;
-  const at = openTag.index + openTag[0].length;
+  // Detras del nombre accesible, no delante: el `<title>` tiene que seguir
+  // siendo el primer hijo del `<svg>`, y este bloque se inserta despues de que
+  // `finalizeSvg` lo haya puesto.
+  const tras = /^(?:\s*<(?:title|desc)\b[^>]*>[\s\S]*?<\/(?:title|desc)>)+/i;
+  const resto = out.slice(openTag.index + openTag[0].length);
+  const cabecera = tras.exec(resto)?.[0] ?? '';
+  const at = openTag.index + openTag[0].length + cabecera.length;
   return `${out.slice(0, at)}${style}${out.slice(at)}`;
 }
 

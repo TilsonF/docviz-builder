@@ -10,6 +10,7 @@ import path from 'node:path';
 import { AssetCache } from '../core/cache.js';
 import { BuildFailedError, DocVizError, ERROR_CODES, RenderError } from '../core/errors.js';
 import { fullHash, HashRegistry, shortHash } from '../core/hash.js';
+import { veredictoDensidad } from '../core/salida.js';
 import {
   assertInside,
   displayPath,
@@ -258,6 +259,21 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
             result.assets.push(asset);
             if (asset.fromCache) result.stats.cacheHits += 1;
             else result.stats.generated += 1;
+            // Un diagrama que encaja pero no se lee no es un error: sale, y se
+            // dice. Callarlo es como entregar una diapositiva ilegible.
+            if (asset.densidad !== undefined) {
+              result.warnings.push({
+                file: doc.relativeSource,
+                line: block.line,
+                lang: block.lang,
+                code: ERROR_CODES.SALIDA_DENSA,
+                field: 'size',
+                message:
+                  `la letra mas pequena queda a ${asset.densidad.letraEfectiva} px efectivos y ` +
+                  `"${block.requestedSize ?? config.size}" pide al menos ${asset.densidad.letraMinima}: ` +
+                  'el diagrama lleva demasiada informacion para ese destino.',
+              });
+            }
             doc.replacements.push({
               block,
               assetPath: relativeAssetPath(path.dirname(doc.outputPath), asset.absolutePath),
@@ -291,6 +307,22 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
       }
     }
     result.assets.sort((a, b) => (a.relativePath < b.relativePath ? -1 : a.relativePath > b.relativePath ? 1 : 0));
+    // Los avisos de densidad se emiten dentro del reparto por motor, asi que su
+    // orden de llegada depende de quien termine antes. Dos builds del mismo
+    // proyecto tienen que reportar exactamente lo mismo, en el mismo orden.
+    result.warnings.sort((a, b) =>
+      a.file !== b.file
+        ? a.file < b.file
+          ? -1
+          : 1
+        : a.line !== b.line
+          ? a.line - b.line
+          : a.code < b.code
+            ? -1
+            : a.code > b.code
+              ? 1
+              : 0,
+    );
 
     // Los documentos solo se escriben si el build va a considerarse valido.
     if (result.errors.length === 0 || options.continueOnError === true) {
@@ -336,6 +368,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
   const { block, config, registry, cache, hashes, assetsDir, theme } = args;
   const renderer = registry.get(block.rendererType);
   const format = resolveFormat(block, config, renderer.defaultFormat);
+  const size = block.requestedSize ?? config.size;
   const version = await renderer.version();
 
   const hashInput = {
@@ -345,6 +378,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     themeFingerprint: args.themeFingerprintValue,
     rendererVersion: version,
     format,
+    size,
   };
   const digest = fullHash(hashInput);
   const short = shortHash(hashInput, config.hash.length);
@@ -373,6 +407,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
       format,
       bytes: cached.byteLength,
       fromCache: true,
+      ...densidadDe(cached, format, size),
     };
   }
 
@@ -380,6 +415,11 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     format,
     theme,
     title: block.title,
+    // El prefijo sale del hash truncado, que `HashRegistry` ya garantizo unico
+    // en este build: dos diagramas no pueden compartir ids ni variables CSS.
+    idPrefix: `dv${short}`,
+    size,
+    ...(block.description !== undefined ? { description: block.description } : {}),
     timeoutMs: config.renderers.timeoutMs,
     maxOutputBytes: config.renderers.maxOutputBytes,
   });
@@ -393,7 +433,19 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     format,
     bytes: rendered.content.byteLength,
     fromCache: false,
+    ...densidadDe(rendered.content, format, size),
   };
+}
+
+/** Veredicto de densidad de un recurso ya escrito. Solo aplica al SVG. */
+function densidadDe(
+  content: Buffer,
+  format: OutputFormat,
+  size: DocVizConfig['size'],
+): Pick<RenderedAsset, 'densidad'> {
+  if (format !== 'svg') return {};
+  const veredicto = veredictoDensidad(content.toString('utf8'), size);
+  return veredicto !== undefined ? { densidad: veredicto } : {};
 }
 
 function resolveFormat(

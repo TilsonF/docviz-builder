@@ -3,6 +3,7 @@
  */
 
 import type { OutputFormat } from '../core/types.js';
+import type { TamanoSalida } from '../core/salida.js';
 
 export type RendererBackend = 'local' | 'kroki';
 
@@ -57,6 +58,14 @@ export interface DocVizConfig {
   assetsDir: string;
   /** Formato preferido por tipo de renderer. */
   formats: Record<string, OutputFormat>;
+  /**
+   * Destino por defecto de los dibujos.
+   *
+   * `fit` deja el tamano que emita cada motor, que es lo que DocViz hacia
+   * siempre. Un proyecto cuya documentacion acaba en diapositivas declara
+   * `slide-16x9` una vez y deja de escalar a mano.
+   */
+  size: TamanoSalida;
   /**
    * Tema visual.
    *

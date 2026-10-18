@@ -62,6 +62,15 @@ export const ERROR_CODES = {
    * y antes eso solo lo contaba `doctor` si alguien iba a preguntarselo.
    */
   DSL_FALLBACK: 'DV107',
+  /**
+   * El dibujo no cabe en el destino declarado con la letra legible.
+   *
+   * No es un error: el diagrama sale y encaja. Lo que dice es que para ese
+   * destino lleva demasiada informacion, y que proyectado nadie leera las
+   * etiquetas. Es el unico veredicto de densidad que se puede dar midiendo en
+   * lugar de adivinando.
+   */
+  SALIDA_DENSA: 'DV108',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

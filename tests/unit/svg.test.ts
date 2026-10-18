@@ -144,7 +144,7 @@ describe('finalizeSvg', () => {
     expect(out).toMatch(/^<\?xml version="1\.0"/);
     expect(out).toContain('xmlns="http://www.w3.org/2000/svg"');
     expect(out).toContain('width="200"');
-    expect(out).toContain('<title>Titulo</title>');
+    expect(out).toContain('<title id="dv-t">Titulo</title>');
     expect(out).not.toContain('script');
     expect(out.endsWith('\n')).toBe(true);
   });

@@ -16,6 +16,7 @@ import { assertRelativeDir } from '../core/paths.js';
 import { buildTheme_, themeNames } from '../themes/index.js';
 import type { OutputFormat } from '../core/types.js';
 import type { DocVizConfig, RendererBackend } from './types.js';
+import { esTamanoSalida, TAMANO_POR_DEFECTO, TAMANOS_SALIDA } from '../core/salida.js';
 
 export const CONFIG_FILE_NAMES = ['docviz.config.yaml', 'docviz.config.yml', '.docvizrc.yaml'];
 
@@ -38,6 +39,7 @@ export function defaultConfig(rootDir: string): DocVizConfig {
       svgbob: 'svg',
       bpmn: 'svg',
     },
+    size: TAMANO_POR_DEFECTO,
     theme: { name: 'default' },
     cache: { enabled: true, dir: DEFAULT_CACHE_DIR },
     hash: { length: DEFAULT_HASH_LENGTH },
@@ -158,6 +160,17 @@ export function mergeConfig(base: DocVizConfig, raw: unknown): DocVizConfig {
       }
       out.formats[type] = value as OutputFormat;
     }
+  }
+
+  const size = doc['size'];
+  if (size !== undefined) {
+    if (typeof size !== 'string' || !esTamanoSalida(size)) {
+      throw new ConfigError(
+        'size debe ser uno de los destinos conocidos',
+        `destinos validos: ${TAMANOS_SALIDA.join(', ')}`,
+      );
+    }
+    out.size = size;
   }
 
   const theme = doc['theme'];

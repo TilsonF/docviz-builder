@@ -35,6 +35,8 @@ export interface CompiledDsl {
   rendererType: string;
   source: string;
   title?: string;
+  /** Descripcion larga del dibujo, declarada con `description` o `descripcion`. */
+  description?: string;
   /** Ficha del tipo resuelto, util para diagnosticos. */
   spec?: TypeSpec;
   /**
@@ -105,6 +107,7 @@ export function compileDsl(
   resolverModelo(doc, datos);
 
   const title = optionalString(doc, 'title');
+  const description = optionalString(doc, 'description');
   const declared = optionalString(doc, 'type');
 
   if (declared === undefined && lang !== 'architecture') {
@@ -154,6 +157,7 @@ export function compileDsl(
     spec: compiled.spec,
   };
   if (title !== undefined) result.title = title;
+  if (description !== undefined) result.description = description;
 
   const warnings = [...unknownFields(doc, compiled.spec, tracker), ...unknownNestedFields(tracker)];
   if (warnings.length > 0) result.warnings = warnings;

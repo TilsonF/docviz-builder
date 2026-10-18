@@ -11,6 +11,7 @@
  */
 
 import { parse as parseYaml } from 'yaml';
+import { TAMANO_POR_DEFECTO, TAMANOS_SALIDA } from '../core/salida.js';
 import { TYPE_CATALOG, type DslLang, type TypeSpec } from './catalog.js';
 import { knownFields } from './fields.js';
 
@@ -189,6 +190,13 @@ export function esquemaDeConfiguracion(temas: readonly string[]): Record<string,
           dir: { type: 'string', default: 'docs' },
           assetsDir: { type: 'string', default: 'assets/generated' },
         },
+      },
+      size: {
+        description:
+          'Destino del dibujo: fija el lienzo y la letra minima exigible. ' +
+          '`fit` deja el tamano que emita cada motor.',
+        enum: [...TAMANOS_SALIDA],
+        default: TAMANO_POR_DEFECTO,
       },
       theme: {
         description: 'Uno de los incluidos por su nombre, o un tema de marca con `base` y `palette`.',

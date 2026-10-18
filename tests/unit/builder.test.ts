@@ -185,3 +185,66 @@ describe('build — reglas generales', () => {
     expect((await stat(path.join(root, 'docs', 'img', 'diagramas'))).isDirectory()).toBe(true);
   });
 });
+
+describe('build — destino del dibujo', () => {
+  it('ajusta el lienzo al destino y lo mete en el hash', async () => {
+    const texto = '## Uno\n\n```d2\nA -> B\n```\n';
+    const suelto = await project({ 'docs-src/a.md': texto });
+    const diapositiva = await project({ 'docs-src/a.md': texto });
+
+    const a = await build(config(suelto, { size: 'fit' }));
+    const b = await build(config(diapositiva, { size: 'slide-16x9' }));
+
+    // Mismo bloque, mismo tema, mismo motor: si el destino no entrara en el
+    // hash los dos recursos compartirian nombre y el segundo serviria el lienzo
+    // del primero desde el cache.
+    expect(a.assets[0]!.hash).not.toBe(b.assets[0]!.hash);
+
+    const { readFile } = await import('node:fs/promises');
+    const svg = await readFile(b.assets[0]!.absolutePath, 'utf8');
+    const ancho = Number(/\bwidth="(\d+)"/.exec(svg)![1]!);
+    expect(ancho).toBeGreaterThan(0);
+    expect(ancho).toBeLessThanOrEqual(1280);
+  });
+
+  it('avisa (DV108) cuando el dibujo no alcanza la letra del destino', async () => {
+    // Un diagrama ancho en una tarjeta social, que es el destino mas exigente:
+    // 18 px de letra sobre 1200 de ancho.
+    const nodos = Array.from({ length: 26 }, (_, i) => `n${i} -> n${i + 1}`).join('\n');
+    const root = await project({ 'docs-src/a.md': `## Uno\n\n\`\`\`d2\n${nodos}\n\`\`\`\n` });
+    const result = await build(config(root, { size: 'social-og' }));
+
+    const denso = result.warnings.filter((w) => w.code === 'DV108');
+    expect(denso).toHaveLength(1);
+    expect(denso[0]!.field).toBe('size');
+    expect(denso[0]!.message).toContain('demasiada informacion');
+    expect(result.assets[0]!.densidad!.letraMinima).toBe(18);
+  });
+
+  it('el aviso sale igual cuando el recurso viene del cache', async () => {
+    // Un aviso que solo aparece la primera vez es peor que no tenerlo: el
+    // segundo build del mismo proyecto diria que todo esta bien.
+    const nodos = Array.from({ length: 26 }, (_, i) => `n${i} -> n${i + 1}`).join('\n');
+    const root = await project({ 'docs-src/a.md': `## Uno\n\n\`\`\`d2\n${nodos}\n\`\`\`\n` });
+    const cfg = config(root, { size: 'social-og' });
+    const primero = await build(cfg);
+    const segundo = await build(cfg);
+
+    expect(segundo.stats.cacheHits).toBe(1);
+    expect(segundo.warnings.filter((w) => w.code === 'DV108')).toEqual(
+      primero.warnings.filter((w) => w.code === 'DV108'),
+    );
+  });
+
+  it('el destino de la valla gana sobre el del proyecto', async () => {
+    const root = await project({
+      'docs-src/a.md': '## Uno\n\n```d2 size=fit\nA -> B\n```\n',
+    });
+    const cfg = config(root, { size: 'social-og' });
+    const conValla = await build(cfg);
+    const sinValla = await build(
+      config(await project({ 'docs-src/a.md': '## Uno\n\n```d2\nA -> B\n```\n' }), { size: 'social-og' }),
+    );
+    expect(conValla.assets[0]!.hash).not.toBe(sinValla.assets[0]!.hash);
+  });
+});

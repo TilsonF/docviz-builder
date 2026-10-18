@@ -270,3 +270,51 @@ describe('cuando un bloque se dibuja con su respaldo, se dice', () => {
     expect(codigos).toEqual(['DV104', 'DV107']);
   });
 });
+
+describe('destino y descripcion en la valla', () => {
+  it('lee size, desc y description', () => {
+    expect(parseMeta('size=slide-16x9')).toEqual({ size: 'slide-16x9' });
+    expect(parseMeta('desc="Tres pasos"')).toEqual({ description: 'Tres pasos' });
+    expect(parseMeta('description="Tres pasos"')).toEqual({ description: 'Tres pasos' });
+  });
+
+  it('un destino que no existe se ignora en lugar de romper el documento', () => {
+    // Es una errata de quien escribe, no un fallo del sistema: el diagrama sale
+    // con el destino del proyecto.
+    expect(parseMeta('size=diapositiva')).toEqual({});
+  });
+
+  it('el bloque lleva el destino y la descripcion al resto del build', () => {
+    const texto = [
+      '```diagram size=slide-16x9',
+      'type: flow',
+      'title: Alta',
+      'descripcion: Tres pasos, del alta al cobro',
+      'steps: [a, b]',
+      '```',
+    ].join('\n');
+    const result = scanDocument(texto, {
+      resolveLanguage: () => undefined,
+      dslLanguages: ['diagram'],
+      compileDsl: () => ({
+        rendererType: 'd2',
+        source: 'a -> b',
+        title: 'Alta',
+        description: 'Tres pasos, del alta al cobro',
+      }),
+    });
+    expect(result.blocks).toHaveLength(1);
+    expect(result.blocks[0]!.requestedSize).toBe('slide-16x9');
+    expect(result.blocks[0]!.description).toBe('Tres pasos, del alta al cobro');
+  });
+
+  it('la valla gana sobre lo que diga el bloque', () => {
+    const texto = ['```diagram desc="la de la valla"', 'type: flow', '```'].join('\n');
+    const result = scanDocument(texto, {
+      resolveLanguage: () => undefined,
+      dslLanguages: ['diagram'],
+      compileDsl: () => ({ rendererType: 'd2', source: 'a', description: 'la del bloque' }),
+    });
+    expect(result.blocks[0]!.description).toBe('la de la valla');
+  });
+});

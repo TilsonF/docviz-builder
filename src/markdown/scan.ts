@@ -14,12 +14,15 @@ import { visit } from 'unist-util-visit';
 import { toString as mdastToString } from 'mdast-util-to-string';
 import type { Code, Heading, Root } from 'mdast';
 import { ERROR_CODES } from '../core/errors.js';
+import { esTamanoSalida, type TamanoSalida } from '../core/salida.js';
 import type { DiagramBlock, OutputFormat } from '../core/types.js';
 
 export interface CompiledBlock {
   rendererType: string;
   source: string;
   title?: string;
+  /** Descripcion larga del dibujo, para el `<desc>` del SVG. */
+  description?: string;
   /** Campos declarados que el compilador no uso. */
   warnings?: ReadonlyArray<{ code: string; field: string; message: string }>;
   /**
@@ -121,6 +124,7 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
     let rendererType: string;
     let source: string;
     let dslTitle: string | undefined;
+    let dslDescription: string | undefined;
 
     if (isDsl) {
       if (context.compileDsl === undefined) return;
@@ -134,6 +138,7 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
       rendererType = compiled.rendererType;
       source = compiled.source;
       dslTitle = compiled.title;
+      dslDescription = compiled.description;
       for (const w of compiled.warnings ?? []) {
         warnings.push({ line, lang, code: w.code, field: w.field, message: w.message });
       }
@@ -174,7 +179,10 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
       end,
       line,
     };
+    const description = meta.description ?? dslDescription;
+    if (description !== undefined) block.description = description;
     if (meta.format !== undefined) block.requestedFormat = meta.format;
+    if (meta.size !== undefined) block.requestedSize = meta.size;
     blocks.push(block);
   });
 
@@ -186,7 +194,9 @@ export function scanDocument(text: string, context: ScanContext): ScanResult {
 
 export interface FenceMeta {
   title?: string;
+  description?: string;
   format?: OutputFormat;
+  size?: TamanoSalida;
 }
 
 /**
@@ -204,6 +214,8 @@ export function parseMeta(meta: string | undefined): FenceMeta {
     const key = m[1]!.toLowerCase();
     const value = m[2] ?? m[3] ?? m[4] ?? '';
     if (key === 'title' || key === 'alt') out.title = value;
+    else if (key === 'desc' || key === 'description') out.description = value;
+    else if (key === 'size' && esTamanoSalida(value)) out.size = value;
     else if (key === 'format' && (value === 'svg' || value === 'png')) out.format = value;
   }
   return out;

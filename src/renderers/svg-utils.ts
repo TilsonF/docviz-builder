@@ -17,9 +17,9 @@
  * se ha pensado se cae por defecto en lugar de colarse.
  *
  * El contenido de la lista sale de medir que emiten de verdad los seis motores
- * sobre los 57 tipos del catalogo, mas el vocabulario SVG estandar que un
+ * sobre los 62 tipos del catalogo, mas el vocabulario SVG estandar que un
  * bloque nativo puede usar legitimamente. Una prueba comprueba que sanear los
- * 69 diagramas del catalogo no cambia ni un byte.
+ * 74 diagramas del catalogo no cambia ni un byte.
  */
 const ALLOWED_ELEMENTS = new Set([
   // Estructura
@@ -75,7 +75,7 @@ const ALLOWED_ATTRS = new Set([
   'href', 'xlink:href', 'target', 'xlink:title',
   // Metadatos que emiten los motores: `type` en `<style>`, el resto de PlantUML
   // y del SVG estandar. Sin ellos el dibujo cambia, asi que estan medidos, no
-  // supuestos: salen de sanear los 69 diagramas del catalogo y ver que faltaba.
+  // supuestos: salen de sanear los 74 diagramas del catalogo y ver que faltaba.
   'type', 'contentstyletype', 'zoomandpan', 'codeline',
 ]);
 
@@ -421,6 +421,34 @@ export function stabilizeSvgIds(svg: string, prefix = 'dv'): string {
   return out;
 }
 
+/**
+ * Deja un solo elemento por identificador.
+ *
+ * El mapa de mindmap de Mermaid da el **mismo** id al grupo del nodo y al
+ * `path` que lo pinta. Un id repetido hace invalido el documento, y cuando el
+ * SVG se incrusta en una pagina rompe `getElementById` y `aria-labelledby`, que
+ * resuelven siempre contra el primero.
+ *
+ * Se renombra de la segunda aparicion en adelante y **no** se toca ninguna
+ * referencia: un navegador ya resolvia `#id` contra el primer elemento, asi que
+ * el dibujo sale exactamente igual y el documento pasa a ser valido.
+ */
+export function dedupeSvgIds(svg: string, prefix = 'dv'): string {
+  const vistos = new Set<string>();
+  let siguiente = 0;
+  // `(?<![\w-])` y no `\b`: el guion es limite de palabra, asi que `\bid=`
+  // tambien casa `data-id=`, que los motores repiten a proposito —una arista
+  // aparece dos veces, su trazo y su etiqueta— y no es un identificador.
+  return svg.replace(/(?<![\w-])id\s*=\s*(["'])([^"']*)\1/g, (bruto, comilla: string, valor: string) => {
+    if (!vistos.has(valor)) {
+      vistos.add(valor);
+      return bruto;
+    }
+    siguiente += 1;
+    return `id=${comilla}${prefix}dup${siguiente}${comilla}`;
+  });
+}
+
 export function escapeXml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -450,18 +478,139 @@ export function ensureNamespace(svg: string): string {
   return svg.slice(0, tag.index) + newTag + svg.slice(tag.index + tag.raw.length);
 }
 
+/** Identificador del elemento raiz, si lo trae. */
+function rootId(svg: string): string | undefined {
+  const tag = parseOpenSvgTag(svg);
+  const id = tag?.attrs['id'];
+  return id !== undefined && id.trim() !== '' ? id : undefined;
+}
+
+/**
+ * Nombre accesible y descripcion del dibujo.
+ *
+ * Un lector de pantalla anuncia un SVG sin nombre como «imagen», y con un
+ * `<title>` suelto no siempre lo anuncia: hace falta `role="img"` para que el
+ * arbol de accesibilidad trate el dibujo como una imagen y no como un grupo de
+ * formas, y `aria-labelledby` para que el nombre se resuelva de verdad.
+ *
+ * Los identificadores van prefijados por diagrama. Dos SVG incrustados en la
+ * misma pagina con `<title id="title">` dejan al segundo sin nombre accesible:
+ * un `aria-labelledby` resuelve siempre contra el primer elemento con ese id
+ * del documento, que es el del otro diagrama.
+ */
+export function injectAccessibility(
+  svg: string,
+  datos: { title?: string; description?: string; prefix?: string },
+): string {
+  const tag = parseOpenSvgTag(svg);
+  if (tag === undefined) return svg;
+
+  const prefijo = datos.prefix ?? 'dv';
+  const idRaiz = tag.attrs['id'] ?? prefijo;
+  const titulo = datos.title?.trim();
+  const descripcion = datos.description?.trim();
+
+  let nuevo = tag.raw;
+  // El id propio del motor no se toca: Mermaid acota su hoja de estilos con el
+  // id de la raiz (`#id .task{}`), asi que renombrarlo deja el diagrama sin
+  // estilos y los rectangulos en negro.
+  if (tag.attrs['id'] === undefined) nuevo = setAttr(nuevo, 'id', prefijo);
+  // El rol se **impone**. Mermaid declara `role="graphics-document document"`,
+  // que es valido pero lo soportan mal los lectores de pantalla, y sobre todo
+  // hace que el mismo documento se anuncie de una forma u otra segun el motor
+  // que dibujara cada figura. El contrato es uno para los nueve.
+  nuevo = setAttr(nuevo, 'role', 'img');
+
+  const etiquetas: string[] = [];
+  const hijos: string[] = [];
+  const resto = svg.slice(tag.index + tag.raw.length);
+
+  // Un motor puede traer ya su `<title>`; en ese caso se le pone id y se usa,
+  // en lugar de insertar un segundo nombre que compita con el primero.
+  const tituloPropio = /^\s*<title\b([^>]*)>/i.exec(resto);
+  if (tituloPropio !== null) {
+    const idTitulo = /\bid\s*=\s*(?:"([^"]*)"|'([^']*)')/i.exec(tituloPropio[1]!);
+    if (idTitulo !== null) {
+      etiquetas.push(idTitulo[1] ?? idTitulo[2] ?? '');
+    } else {
+      const conId = tituloPropio[0].replace(/^(\s*)<title\b/i, `$1<title id="${prefijo}-t"`);
+      return injectAccessibility(
+        svg.slice(0, tag.index + tag.raw.length) + resto.replace(tituloPropio[0], conId),
+        datos,
+      );
+    }
+  } else if (titulo !== undefined && titulo !== '') {
+    hijos.push(`<title id="${prefijo}-t">${escapeXml(titulo)}</title>`);
+    etiquetas.push(`${prefijo}-t`);
+  }
+
+  if (descripcion !== undefined && descripcion !== '' && !/^\s*<desc\b/i.test(resto)) {
+    hijos.push(`<desc id="${prefijo}-d">${escapeXml(descripcion)}</desc>`);
+    etiquetas.push(`${prefijo}-d`);
+  }
+
+  if (etiquetas.length > 0 && tag.attrs['aria-labelledby'] === undefined) {
+    nuevo = setAttr(nuevo, 'aria-labelledby', etiquetas.filter((e) => e !== '').join(' '));
+  }
+
+  const inicio = svg.slice(0, tag.index) + nuevo;
+  // El `<title>` tiene que ser el primer hijo: un lector de pantalla que
+  // encuentre formas antes deja de buscar el nombre.
+  return acotarRoot(`${inicio}${hijos.join('')}${resto}`, idRaiz);
+}
+
+/**
+ * Acota a este SVG las reglas que los motores escriben sobre `:root`.
+ *
+ * Mermaid declara `:root{--mermaid-font-family:...}` dentro de su hoja de
+ * estilos. En un SVG abierto como documento propio eso es su propia raiz, pero
+ * incrustado en una pagina `:root` es el `<html>` del anfitrion: el diagrama
+ * reescribe una variable del sitio que lo muestra. Es el mismo defecto que
+ * tenia DocViz en su bloque de modo oscuro, visto en el motor de al lado.
+ */
+export function acotarRoot(svg: string, idRaiz: string | undefined): string {
+  if (idRaiz === undefined || !svg.includes(':root')) return svg;
+  return svg.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, (bloque) =>
+    bloque.replace(/:root(?![\w-])/g, `#${idRaiz}`),
+  );
+}
+
+export interface FinalizarOpciones {
+  title?: string;
+  description?: string;
+  /**
+   * Prefijo unico de este diagrama.
+   *
+   * Lo fija el builder con el hash truncado del recurso, que ya es unico por
+   * construccion: `HashRegistry` aborta el build si dos diagramas comparten
+   * prefijo, asi que los ids de dos diagramas no pueden colisionar.
+   */
+  idPrefix?: string;
+}
+
 /** Pipeline completo aplicado a todo SVG antes de escribirlo a disco. */
-export function finalizeSvg(svg: string, title?: string): string {
+export function finalizeSvg(svg: string, opciones?: string | FinalizarOpciones): string {
+  const op: FinalizarOpciones = typeof opciones === 'string' ? { title: opciones } : (opciones ?? {});
   let out = svg.replace(/^\uFEFF/, '').trim();
   // PlantUML antepone un PI propio (`<?plantuml ...?>`) que confunde a algunos visores.
   out = out.replace(/^<\?plantuml[^>]*\?>/i, '');
   out = sanitizeSvg(out);
-  out = stabilizeSvgIds(out);
+  out = stabilizeSvgIds(out, op.idPrefix ?? 'dv');
+  out = dedupeSvgIds(out, op.idPrefix ?? 'dv');
   out = ensureNamespace(out);
   out = normalizeSvgDimensions(out);
-  out = injectTitle(out, title);
+  out = injectAccessibility(out, {
+    ...(op.title !== undefined ? { title: op.title } : {}),
+    ...(op.description !== undefined ? { description: op.description } : {}),
+    ...(op.idPrefix !== undefined ? { prefix: op.idPrefix } : {}),
+  });
   if (!/^<\?xml/i.test(out)) {
     out = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n${out}`;
   }
   return `${out}\n`;
+}
+
+/** Id del elemento raiz tras pasar por `finalizeSvg`, para acotar CSS a el. */
+export function svgRootId(svg: string): string | undefined {
+  return rootId(svg);
 }

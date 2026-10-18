@@ -37,7 +37,7 @@ flow:
 
 ## Don't guess the type — ask
 
-There are 57 types. Before writing a block, if you are not sure:
+There are 62 types. Before writing a block, if you are not sure:
 
 ```bash
 npx docviz suggest "the approval process for a request"  # recommends the type
@@ -48,19 +48,69 @@ npx docviz types sequence --lang en                      # one type, plus an exa
 `docviz types <type>` prints the minimal skeleton. Copy it and fill it in: it is
 the fastest way to not get the fields wrong.
 
+## Say where the drawing is going
+
+The same diagram does not read the same embedded in a page and projected in a
+room. Declare the destination and DocViz scales the canvas so the text reaches
+the minimum height that destination requires:
+
+| Destination | What for | Minimum text |
+|---|---|---|
+| `fit` | Whatever the engine emitted (the default) | — |
+| `doc-inline` | Inside a page's reading width | 12 px |
+| `doc-wide` | Full bleed, the page's whole width | 12 px |
+| `slide-16x9` · `slide-4x3` | A projected slide | 16 px |
+| `social-og` | A link card; it is seen as a thumbnail | 18 px |
+| `print-a4-landscape` | A4 landscape | 11 px |
+
+Declare it once in `docviz.config.yaml` (`size: slide-16x9`), and override it
+per block on the fence:
+
+````md
+```diagram size=slide-16x9
+type: flow
+title: Customer onboarding
+description: Three steps, signup to billing, with validation the only retry point
+steps: [Signup, Validation, Billing]
+```
+````
+
+Nothing is laid out again: only the canvas changes, exactly as if you enlarged
+the image. If the drawing **does not fit** the destination at a legible size,
+you get a `WARN [DV108]`. That is not a system failure: it means the diagram
+carries too much information for where it is going. Cut it or change the
+destination; do not silence it.
+
+## Always write a `description`
+
+`title` says **what** the diagram is of; `description` says **what you see in
+it**, and it is the only thing that reaches someone who cannot look at it. It
+becomes the SVG's `<desc>`, next to the `<title>` and `role="img"` that DocViz
+writes for you.
+
+A useful description names what the drawing proves, not its shape: "billing
+depends on validation, the only step with a retry", not "a diagram with three
+connected boxes".
+
 ## Workflow
 
 ```bash
 npx docviz check docs-src                     # validate without drawing (fast)
 npx docviz build docs-src --output docs       # compile to Markdown + SVG
 npx docviz verify docs                        # check for broken images
+npx docviz lint docs                          # review the generated SVGs
 npx docviz diff <previous docs-src> docs-src  # which diagrams changed
 ```
+
+`verify` looks at the **Markdown** (that it cites no image that is missing);
+`lint` looks at the **SVGs** (accessible name, unique ids, references that
+resolve, a usable canvas, text legible for the destination). They answer
+different questions and neither replaces the other.
 
 While writing, `npx docviz preview docs --watch` recompiles on save and reloads
 the browser by itself.
 
-Do not consider the task done while `check` or `verify` fail.
+Do not consider the task done while `check`, `verify` or `lint` fail.
 
 ## When something fails
 
@@ -75,6 +125,8 @@ guess:
 | `DV104` | You wrote a field this type does not use. If it proposes another name, it is a typo |
 | `DV105` | The block is not valid YAML; usually the indentation |
 | `DV106` | The `type` does not exist, or belongs to another fence; use `docviz suggest` |
+| `DV107` | A fallback engine drew it, so it looks different. Something is missing on the machine, not in the block |
+| `DV108` | The drawing does not reach the destination's minimum text size. Cut it or change `size` |
 | `DV005` | Java or Chromium is missing on this machine. Do not change the diagram: say so |
 
 A document with several broken blocks reports them **all at once**: fix them in
@@ -108,6 +160,6 @@ npx docviz init     # config, AGENTS.md and a sample document
 npx docviz doctor   # which engines this machine can use
 ```
 
-`docviz init` leaves an `AGENTS.md` with the full catalog of all 57 types and
+`docviz init` leaves an `AGENTS.md` with the full catalog of all 62 types and
 their decision tables. Consult it when you need detail this summary does not
 carry.

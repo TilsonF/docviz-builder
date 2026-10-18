@@ -18,7 +18,7 @@ El autor declara **la intención**; DocViz elige el motor.
 ## Qué motor atiende cada intención
 
 <!-- docviz:tipos-reparto -->
-![Del tipo declarado al motor](./assets/generated/del-tipo-declarado-al-motor-eaf78ef5dbe7.svg)
+![Del tipo declarado al motor](./assets/generated/del-tipo-declarado-al-motor-276c7d944835.svg)
 <!-- /docviz:tipos-reparto -->
 
 ## Regla de elección
@@ -26,7 +26,7 @@ El autor declara **la intención**; DocViz elige el motor.
 No todo merece un diagrama. Las tablas de abajo son el criterio; cuando una
 tabla Markdown o un párrafo comunican mejor, se usan ellos.
 
-El catálogo cubre <!-- docviz:tipos-total -->57<!-- /docviz:tipos-total --> tipos.
+El catálogo cubre <!-- docviz:tipos-total -->62<!-- /docviz:tipos-total --> tipos.
 Esta sección se genera desde él con `npm run docs:sync`, así que no puede
 describir algo que el compilador no acepte.
 
@@ -48,14 +48,14 @@ describir algo que el compilador no acepte.
 | Estructura de un YAML dibujada como arbol | `yaml` | plantuml |
 | Descomposicion jerarquica del trabajo de un proyecto | `wbs` | plantuml (o d2) |
 | Flujo sencillo de extremo a extremo | `flow` | mermaid (o d2) |
-| Tareas situadas en el calendario | `gantt` | mermaid (o plantuml) |
+| Tareas situadas en el calendario | `gantt` | mermaid (o plantuml / vega-lite) |
 | Recorrido de una persona por un proceso, con su nivel de satisfaccion | `journey` | mermaid (o d2) |
 | Historia de ramas, commits y fusiones | `git-graph` | mermaid |
 | Tarjetas repartidas por columna de estado | `kanban` | mermaid (o d2) |
 | Elementos situados en dos ejes continuos | `quadrant` | mermaid (o vega-lite) |
 | Como se reparte una cantidad al pasar de un estado a otro | `sankey` | mermaid |
 | Composicion de un total por area proporcional | `treemap` | mermaid |
-| Perfil de varias dimensiones a la vez | `radar` | mermaid |
+| Perfil de varias dimensiones a la vez | `radar` | mermaid (o vega-lite) |
 | Exploracion de un tema en ramas libres | `mindmap` | mermaid (o plantuml) |
 | Bloques dispuestos en rejilla, sin semantica de flujo | `block` | mermaid (o d2) |
 | Descomposicion de un objetivo en lineas de accion | `strategy-tree` | d2 |
@@ -89,6 +89,11 @@ describir algo que el compilador no acepte.
 | Distribucion de una variable continua | `histogram` | vega-lite |
 | Mediana, dispersion y valores atipicos por grupo | `box-plot` | vega-lite |
 | Valor real frente a su objetivo | `bullet` | vega-lite |
+| Comparacion entre categorias con menos tinta que una barra | `lollipop` | vega-lite |
+| El gesto de una serie, sin ejes y en el tamano de una frase | `sparkline` | vega-lite |
+| Una fila de numeros grandes, cada uno con su etiqueta y su meta | `kpi-card` | vega-lite |
+| Un periodo largo en celdas: semana en horizontal, dia en vertical | `calendar-heatmap` | vega-lite |
+| Como cambia una clasificacion: quien adelanta a quien | `bump` | vega-lite |
 | Cambio entre dos momentos, elemento a elemento | `slope` | vega-lite |
 | Caida de volumen a lo largo de etapas sucesivas | `funnel` | vega-lite |
 | Reparto de un total entre pocas partes | `pie` | vega-lite |

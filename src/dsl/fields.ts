@@ -29,7 +29,7 @@ const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title'];
  * Campos que admite toda una valla, aunque no aparezcan en el ejemplo del tipo.
  *
  * No son universales a proposito: `include` en un `sequence` no significa nada,
- * y darlo por bueno en los 57 tipos debilitaria la deteccion de erratas justo
+ * y darlo por bueno en los 62 tipos debilitaria la deteccion de erratas justo
  * donde mas sirve. Cada campo vale donde tiene sentido y en ningun sitio mas.
  */
 const POR_VALLA: Readonly<Record<string, readonly string[]>> = {

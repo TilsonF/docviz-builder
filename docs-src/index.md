@@ -46,14 +46,14 @@ flow:
   - API --> Usuario: Token
 ```
 
-## 57 tipos, tres vallas
+## 62 tipos, tres vallas
 
 No hay que aprender seis sintaxis. Hay tres bloques y un catálogo que se
 consulta desde la terminal:
 
 ```bash
 npx docviz suggest "el proceso de aprobación de una solicitud"
-npx docviz types             # los 57, con su propósito
+npx docviz types             # los 62, con su propósito
 npx docviz types sequence    # ficha y ejemplo que compila tal cual
 ```
 
@@ -130,9 +130,9 @@ un banco de casos que mide si un modelo sabe usarlo.
 
 ## Documentación
 
-- [Catálogo completo](./catalogo.html) — los 57 tipos dibujados, cada uno con el bloque que lo produce
+- [Catálogo completo](./catalogo.html) — los 62 tipos dibujados, cada uno con el bloque que lo produce
 - [Arquitectura](./arquitectura.html) — cómo está construido por dentro
-- [El DSL](./dsl.html) — los 57 tipos y su sintaxis
+- [El DSL](./dsl.html) — los 62 tipos y su sintaxis
 - [Seguridad](./seguridad.html) — qué garantiza y cómo se comprueba
 
 El código está en [github.com/TilsonF/docviz-builder](https://github.com/TilsonF/docviz-builder).

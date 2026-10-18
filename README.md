@@ -62,6 +62,8 @@ documentación confidencial a ningún sitio.
 - [Uso](#uso)
 - [El DSL: describes qué quieres ver](#el-dsl-describes-qué-quieres-ver-no-cómo-dibujarlo)
 - [Lenguajes nativos](#lenguajes-nativos)
+- [Para dónde es el dibujo](#para-dónde-es-el-dibujo)
+- [El SVG que sale es usable por todo el mundo](#el-svg-que-sale-es-usable-por-todo-el-mundo)
 - [Configuración](#configuración)
 - [Temas](#temas)
 - [Caché y determinismo](#caché-y-determinismo)
@@ -135,6 +137,7 @@ docviz build <source> --output <target>
 | `docviz diff` | Compara los diagramas de dos versiones de la documentación |
 | `docviz fix` | Corrige las erratas de un bloque que no compila |
 | `docviz verify` | Comprueba que el resultado no tenga imágenes rotas |
+| `docviz lint` | Revisa los SVG generados: nombre accesible, ids, lienzo y legibilidad |
 | `docviz bundle` | Deja la salida lista para subirla a un wiki, sin subirla |
 | `docviz preview` | Sirve el resultado en un visor local, con `--watch` |
 | `docviz types` | Lista los tipos del DSL y los temas |
@@ -546,9 +549,164 @@ aparecería a mitad del build en vez de en `docviz doctor`.
 | Opción | Efecto |
 |---|---|
 | `title="..."` (o `alt="..."`) | Texto alternativo y nombre del archivo |
+| `desc="..."` (o `description="..."`) | Descripción larga, al `<desc>` del SVG |
 | `format=svg\|png` | Formato de salida de ese bloque |
+| `size=<destino>` | Destino de ese bloque (ver [Para dónde es el dibujo](#para-dónde-es-el-dibujo)) |
 
-Sin `title`, DocViz usa el campo `title:` del DSL o el encabezado anterior.
+Sin `title`, DocViz usa el campo `title:` del DSL o el encabezado anterior. Lo
+que se escriba en la valla **gana** sobre lo que diga el bloque.
+
+---
+
+## Para dónde es el dibujo
+
+Un diagrama embebido en una página y el mismo diagrama proyectado en una sala no
+son el mismo problema tipográfico. Hasta la 0.6 DocViz emitía el SVG con el
+tamaño que decidiera cada motor, y quien lo pegaba en una diapositiva lo
+escalaba a mano: las etiquetas acababan a ocho o nueve píxeles efectivos y el
+diagrama era un adorno ilegible.
+
+Ahora se declara el **destino**, y DocViz ajusta el lienzo hasta que la letra
+alcanza la altura que ese destino exige:
+
+| Destino | Lienzo | Letra mínima | Para qué |
+|---|---|---|---|
+| `fit` | el del motor | — | lo que había antes, y sigue siendo el valor por defecto |
+| `doc-inline` | 680 px de ancho | 12 px | dentro del ancho de lectura de una página |
+| `doc-wide` | 1000 px de ancho | 12 px | a sangre, usando todo el ancho |
+| `slide-16x9` | 1280 × 720 | 16 px | una diapositiva panorámica proyectada |
+| `slide-4x3` | 1024 × 768 | 16 px | una diapositiva en formato clásico |
+| `social-og` | 1200 × 630 | 18 px | tarjeta de enlace; se mira en miniatura |
+| `print-a4-landscape` | 1123 × 794 | 11 px | A4 horizontal a 96 ppp |
+
+```yaml
+# docviz.config.yaml
+size: doc-inline
+```
+
+````md
+```diagram size=slide-16x9
+type: flow
+title: Alta de cliente
+```
+````
+
+**Nada se recoloca.** Solo cambian `width` y `height`; el `viewBox` queda
+intacto, que es exactamente lo que hace un navegador al mostrar la imagen más
+grande. Por eso no puede solapar ni recortar nada, y el PNG sale a la misma
+escala sin tocar otra opción.
+
+Las dos reglas, según lo que acote el destino:
+
+- Si acota **las dos dimensiones** (una diapositiva, una tarjeta, una hoja), el
+  dibujo **ocupa** el destino: allí no hay nada más en la página.
+- Si acota **solo el ancho** (una página de documentación), el dibujo convive
+  con el texto: se reduce si desborda y se agranda solo si la letra no llega al
+  mínimo. Un diagrama de tres nodos no se infla a ancho completo.
+
+En los dos casos el encaje manda sobre la legibilidad: pasarse del lienzo
+recorta el dibujo, y un diagrama recortado no se lee en absoluto.
+
+### El veredicto de densidad
+
+Cuando el dibujo cabe pero la letra no llega, sale un aviso:
+
+```
+AVISO docs-src/arquitectura.md:42 [DV108] la letra más pequeña queda a 7.4 px
+efectivos y "slide-16x9" pide al menos 16: el diagrama lleva demasiada
+información para ese destino.
+```
+
+Es el único veredicto de densidad que se puede dar **midiendo** en lugar de
+adivinando: no sale de contar nodos, sale del dibujo ya hecho. No rompe el
+build. Y sale igual cuando el recurso viene del caché, porque se calcula sobre
+los bytes escritos y no se arrastra desde el motor: un aviso que solo apareciera
+la primera vez sería peor que no tenerlo.
+
+> **Lo que DocViz no hace:** elegir *qué recortar* ni *cómo reescribir* las
+> etiquetas para una audiencia. Eso es juicio, y el juicio es del agente que
+> escribe el bloque; el compilador dibuja y mide. Una herramienta que decidiera
+> qué nodo sobra produciría un dibujo distinto en cada ejecución, que es
+> justamente lo que DocViz existe para evitar.
+
+---
+
+## El SVG que sale es usable por todo el mundo
+
+Cada SVG lleva, lo dibuje el motor que lo dibuje:
+
+- `role="img"` **impuesto**. Mermaid declara `role="graphics-document document"`,
+  que es válido pero lo soportan mal los lectores de pantalla y, sobre todo,
+  hace que el mismo documento se anuncie de una forma u otra según qué motor
+  dibujó cada figura. El contrato es uno para los nueve.
+- Un `<title>` como **primer hijo** y un `<desc>` si el bloque declaró
+  `description` (o `descripcion`), con `aria-labelledby` apuntando a los dos.
+- **Ids prefijados por figura.** Antes todos los SVG numeraban sus ids desde
+  `dv1`: dos diagramas en la misma página compartían identificadores, y un
+  `aria-labelledby` resuelve siempre contra el primer elemento del documento con
+  ese id, que era el del otro diagrama. El prefijo sale del hash truncado del
+  recurso, que el detector de colisiones ya garantiza único.
+- **Variables CSS acotadas a la figura.** El bloque de modo oscuro se declaraba
+  sobre `:root`, y en un SVG incrustado `:root` es el `<html>` del anfitrión. Lo
+  mismo le pasaba a Mermaid con su `--mermaid-font-family`: el diagrama
+  reescribía una variable del sitio que lo mostraba. Ahora las dos cosas se
+  declaran sobre la raíz del propio SVG.
+- **Un solo elemento por identificador.** El mapa mental de Mermaid le da el
+  mismo `id` al grupo y al `path` que lo pinta. Se renombra de la segunda
+  aparición en adelante y no se toca ninguna referencia: un navegador ya
+  resolvía `#id` contra el primero, así que el dibujo sale igual y el documento
+  pasa a ser válido.
+
+### `docviz lint` — revisar el artefacto, no la fuente
+
+`check` valida el bloque antes de dibujar. `verify` comprueba que el Markdown no
+cite imágenes que no existen. Entre los dos quedaba un hueco: **nadie miraba el
+SVG que sale.**
+
+```bash
+docviz lint docs                      # exit 1 si hay errores
+docviz lint docs --size slide-16x9    # exige además la letra de ese destino
+docviz lint docs --json
+docviz lint docs --omitir referencia-remota
+```
+
+| Regla | Qué delata |
+|---|---|
+| `nombre-accesible` | Sin `role="img"` o sin un `<title>` con texto |
+| `variables-globales` | Variables CSS declaradas sobre `:root` |
+| `referencia-colgante` | Un atributo apunta a un `#id` que no existe: el elemento se dibuja sin su recorte, su máscara o su flecha |
+| `id-repetido` | Dos elementos con el mismo `id` dentro del archivo |
+| `referencia-remota` | Necesita la red para dibujarse del todo (aviso) |
+| `guion-ejecutable` | Lleva un guion o un manejador de eventos |
+| `lienzo` | Le falta `viewBox`, `width` o `height` en píxeles |
+| `letra-minima` | La letra no llega al mínimo del destino (aviso) |
+| `texto-fuera-del-lienzo` | Un texto anclado fuera del `viewBox` |
+
+**Todo lo que comprueba es exacto**: lee lo que el archivo dice. Lo que no se
+puede saber sin maquetar —si dos etiquetas se solapan, si un texto desborda su
+caja— no se adivina, y el informe **cuenta cuántos elementos quedaron sin
+mirar**, para que un cero de hallazgos no se confunda con un visto bueno:
+
+```
+archivos: 74
+errores:  0
+avisos:   0
+sin medir: 443 textos con transformación heredada (hace falta maquetar para situarlos)
+```
+
+La primera vez que se ejecutó sobre las 74 figuras del catálogo encontró cuatro
+defectos reales que nadie veía: el rol inconsistente, las dos fugas a `:root`,
+el `<title>` que había dejado de ser el primer hijo y los ids duplicados del
+mapa mental. Los cuatro están en la suite como regresión.
+
+Dos reglas de la propia compuerta fueron falsos positivos antes de afinarlas, y
+las dos son instructivas. `referencia-colgante` contaba las referencias escritas
+**dentro de un `<style>`**, que dependen de que su selector llegue a aplicar:
+Mermaid lleva reglas para su aspecto «neo» y D2 para su modo a mano libre, con
+gradientes que esos motores solo definen cuando ese modo está activo. Y
+`id-repetido` usaba `\bid=`, que también casa `data-id=` porque el guion es un
+límite de palabra. Una compuerta que grita 145 veces sin motivo se desactiva en
+una semana.
 
 ---
 
@@ -562,6 +720,9 @@ source: docs-src
 output:
   dir: docs
   assetsDir: assets/generated
+
+# Destino de los dibujos. `fit` deja el tamano que emita cada motor.
+size: fit
 
 theme:
   name: corporate
@@ -912,7 +1073,7 @@ source: docs-src
 
 Los esquemas **se derivan del catálogo**, no se escriben a mano: uno que hubiera
 que mantener en paralelo se desfasaría el mismo día que se añade un tipo, y
-entonces engañaría en lugar de ayudar. Una prueba comprueba que los 57 ejemplos
+entonces engañaría en lugar de ayudar. Una prueba comprueba que los 62 ejemplos
 canónicos validen contra su propio esquema.
 
 Por defecto no marcan los campos que no conocen, porque el ejemplo de cada tipo
@@ -970,6 +1131,8 @@ castellano es frágil: la redacción puede cambiar, el código no.
 | `DV104` | El bloque declara un campo que el tipo no usa |
 | `DV105` | El bloque no es YAML válido |
 | `DV106` | El `type` no existe o no pertenece a esa valla |
+| `DV107` | Se dibujó con un motor de respaldo y el dibujo tiene otro aspecto |
+| `DV108` | El dibujo no alcanza la letra mínima del destino declarado |
 
 Los códigos son parte del contrato: se añaden códigos nuevos en lugar de
 reutilizar los existentes.
@@ -1066,7 +1229,7 @@ Vía `![](...)` el navegador carga el SVG como imagen y no ejecuta nada. Pero en
 cuanto alguien lo **incrusta dentro de un HTML** —que es lo natural para
 conservar el tema claro/oscuro— el SVG pasa a ser markup vivo. Por eso todo SVG
 se sanea con una **lista de permitidos**: 49 elementos y 104 atributos medidos
-sobre lo que emiten de verdad los seis motores en los 57 tipos del catálogo.
+sobre lo que emiten de verdad los seis motores en los 62 tipos del catálogo.
 
 Lo que no está en la lista se cae, incluido lo que no se nos haya ocurrido.
 Además se eliminan los comentarios XML, se escapan `<` y `>` dentro de los
@@ -1076,7 +1239,7 @@ un fragmento interno —resolviendo antes las entidades, porque
 `expression(` y las `url()` ejecutables.
 
 `tests/unit/svg-seguridad.test.ts` mantiene un banco de 23 vectores conocidos y
-comprueba, además, que sanear los 69 diagramas del catálogo no quita nada más
+comprueba, además, que sanear los 74 diagramas del catálogo no quita nada más
 que comentarios. La versión anterior del saneador era una lista de prohibidos y
 dejaba pasar nueve de esos vectores.
 
@@ -1163,7 +1326,7 @@ npx docviz skill --dir .config/opencode/skills   # otro agente
 ```
 
 El skill es un resumen corto: las tres vallas, cómo preguntar el tipo, el flujo
-de trabajo y la tabla de códigos de error. El catálogo completo de los 57 tipos
+de trabajo y la tabla de códigos de error. El catálogo completo de los 62 tipos
 sigue en `AGENTS.md`, al que el skill apunta.
 
 ---

@@ -33,7 +33,7 @@ flow:
 
 Y sale esto:
 
-![Autenticación](./assets/generated/autenticacion-28dce0494e45.svg)
+![Autenticación](./assets/generated/autenticacion-730705b3623c.svg)
 
 ## 57 tipos, tres vallas
 
@@ -54,11 +54,11 @@ npx docviz types sequence    # ficha y ejemplo que compila tal cual
 
 ## Lo mismo sirve para datos
 
-![Tipos del catalogo por motor](./assets/generated/tipos-del-catalogo-por-motor-90f7c2d41445.svg)
+![Tipos del catalogo por motor](./assets/generated/tipos-del-catalogo-por-motor-ed38700eb116.svg)
 
 ## Y para arquitectura
 
-![Qué hace DocViz](./assets/generated/que-hace-docviz-cbdae3423ad7.svg)
+![Qué hace DocViz](./assets/generated/que-hace-docviz-6b40bcb95c80.svg)
 
 ## Todo ocurre en local
 

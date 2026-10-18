@@ -26,7 +26,7 @@ ruta, comando o código ejecutable.
 
 ## Decisión sobre el backend
 
-![Elección del backend de render](./assets/generated/eleccion-del-backend-de-render-acb081ec26ae.svg)
+![Elección del backend de render](./assets/generated/eleccion-del-backend-de-render-e7dc86adca4e.svg)
 
 El camino por defecto es la rama de la derecha: sin configuración, DocViz no
 abre ninguna conexión de red.

@@ -98,6 +98,7 @@ and explains how to point at one.
 | `docviz diff` | Compares the diagrams of two versions of the documentation |
 | `docviz fix` | Fixes the typos of a block that does not compile |
 | `docviz verify` | Checks the result has no broken images |
+| `docviz lint` | Reviews the generated SVGs: accessible name, ids, canvas and legibility |
 | `docviz bundle` | Leaves the output ready to upload to a wiki, without uploading it |
 | `docviz preview` | Serves the result in a local viewer, with `--watch` |
 | `docviz types` | Lists the DSL types and the themes |
@@ -154,7 +155,7 @@ flow:
 ```
 ````
 
-The catalog covers 57 types. Consult it from the terminal instead of
+The catalog covers 62 types. Consult it from the terminal instead of
 remembering it:
 
 ```bash
@@ -339,6 +340,158 @@ format that cannot be produced would be worse than not offering it.
 
 ---
 
+## Where the drawing is going
+
+A diagram embedded in a page and the same diagram projected in a room are not
+the same typographic problem. Up to 0.6 DocViz emitted the SVG at whatever size
+the engine chose, and whoever pasted it into a slide scaled it by hand: the
+labels ended up at eight or nine effective pixels and the diagram was an
+illegible ornament.
+
+Now you declare the **destination**, and DocViz scales the canvas until the text
+reaches the height that destination requires:
+
+| Destination | Canvas | Minimum text | What for |
+|---|---|---|---|
+| `fit` | the engine's | — | what used to happen, and still the default |
+| `doc-inline` | 680 px wide | 12 px | inside a page's reading width |
+| `doc-wide` | 1000 px wide | 12 px | full bleed, the whole width |
+| `slide-16x9` | 1280 × 720 | 16 px | a projected widescreen slide |
+| `slide-4x3` | 1024 × 768 | 16 px | a classic-format slide |
+| `social-og` | 1200 × 630 | 18 px | a link card; seen as a thumbnail |
+| `print-a4-landscape` | 1123 × 794 | 11 px | A4 landscape at 96 dpi |
+
+```yaml
+# docviz.config.yaml
+size: doc-inline
+```
+
+````md
+```diagram size=slide-16x9
+type: flow
+title: Customer onboarding
+```
+````
+
+**Nothing is laid out again.** Only `width` and `height` change; the `viewBox`
+stays intact, which is exactly what a browser does when it shows the image
+larger. That is why it cannot overlap or clip anything, and the PNG comes out at
+the same scale without touching another option.
+
+Two rules, depending on what the destination bounds:
+
+- If it bounds **both dimensions** (a slide, a card, a sheet), the drawing
+  **occupies** the destination: there is nothing else on that page.
+- If it bounds **only the width** (a documentation page), the drawing lives
+  beside the text: it shrinks if it overflows and grows only if the text does
+  not reach the minimum. A three-node diagram is not inflated to full width.
+
+In both cases fitting wins over legibility: exceeding the canvas clips the
+drawing, and a clipped diagram cannot be read at all.
+
+### The density verdict
+
+When the drawing fits but the text does not reach the minimum, you get a
+warning:
+
+```
+WARN docs-src/architecture.md:42 [DV108] the smallest text lands at 7.4
+effective px and "slide-16x9" requires at least 16: the diagram carries too
+much information for that destination.
+```
+
+It is the only density verdict that can be given by **measuring** rather than
+guessing: it does not come from counting nodes, it comes from the finished
+drawing. It does not break the build. And it appears identically on a cache hit,
+because it is computed from the bytes on disk rather than carried from the
+engine: a warning that only showed up the first time would be worse than no
+warning.
+
+> **What DocViz does not do:** decide *what to cut* or *how to reword* labels for
+> an audience. That is judgement, and the judgement belongs to the agent writing
+> the block; the compiler draws and measures. A tool that decided which node was
+> redundant would produce a different drawing on every run, which is precisely
+> what DocViz exists to avoid.
+
+---
+
+## The SVG that comes out is usable by everyone
+
+Every SVG carries, whichever engine drew it:
+
+- `role="img"`, **enforced**. Mermaid declares
+  `role="graphics-document document"`, which is valid but poorly supported by
+  screen readers and, above all, makes the same document announce itself
+  differently depending on which engine drew each figure. The contract is one
+  for all nine.
+- A `<title>` as the **first child** and a `<desc>` when the block declared
+  `description`, with `aria-labelledby` resolving to both.
+- **Ids prefixed per figure.** Every SVG used to number its ids from `dv1`: two
+  diagrams on the same page shared identifiers, and an `aria-labelledby` always
+  resolves against the first element in the document with that id, which was the
+  other diagram's. The prefix comes from the asset's truncated hash, which the
+  collision detector already guarantees unique.
+- **CSS variables scoped to the figure.** The dark-mode block was declared on
+  `:root`, and in an inlined SVG `:root` is the host's `<html>`. Mermaid had the
+  same problem with its `--mermaid-font-family`: the diagram rewrote a variable
+  belonging to the site showing it. Both are now declared on the SVG's own root.
+- **One element per identifier.** Mermaid's mindmap gives the same `id` to the
+  node group and to the `path` that paints it. The second occurrence onwards is
+  renamed and no reference is touched: a browser already resolved `#id` against
+  the first, so the drawing is identical and the document becomes valid.
+
+### `docviz lint` — reviewing the artifact, not the source
+
+`check` validates the block before drawing. `verify` checks the Markdown cites
+no missing image. Between the two there was a gap: **nobody looked at the SVG
+that comes out.**
+
+```bash
+docviz lint docs                      # exit 1 on errors
+docviz lint docs --size slide-16x9    # also require that destination's text size
+docviz lint docs --json
+docviz lint docs --omitir referencia-remota
+```
+
+| Rule | What it catches |
+|---|---|
+| `nombre-accesible` | No `role="img"`, or a `<title>` with no text |
+| `variables-globales` | CSS variables declared on `:root` |
+| `referencia-colgante` | An attribute points at a `#id` that does not exist: the element renders without its clip, mask or arrowhead |
+| `id-repetido` | Two elements with the same `id` in one file |
+| `referencia-remota` | Needs the network to render completely (warning) |
+| `guion-ejecutable` | Carries a script or an event handler |
+| `lienzo` | Missing `viewBox`, `width` or `height` in pixels |
+| `letra-minima` | The text does not reach the destination's minimum (warning) |
+| `texto-fuera-del-lienzo` | Text anchored outside the `viewBox` |
+
+**Everything it checks is exact**: it reads what the file says. What cannot be
+known without laying the document out — whether two labels overlap, whether text
+overflows its box — is not guessed, and the report **counts how many elements
+went unmeasured**, so that zero findings is not mistaken for a clean bill:
+
+```
+archivos: 74
+errores:  0
+avisos:   0
+sin medir: 443 textos con transformacion heredada
+```
+
+The first time it ran over the catalog's 74 figures it found four real defects
+nobody could see: the inconsistent role, the two `:root` leaks, the `<title>`
+that had stopped being the first child, and the mindmap's duplicate ids. All
+four are in the suite as regressions.
+
+Two of the gate's own rules were false positives before being narrowed, and both
+are instructive. `referencia-colgante` counted references written **inside a
+`<style>`**, which depend on their selector ever matching: Mermaid ships rules
+for its "neo" look and D2 for its hand-drawn mode, with gradients those engines
+only define when that mode is active. And `id-repetido` used `\bid=`, which also
+matches `data-id=` because a hyphen is a word boundary. A gate that shouts 145
+times for no reason gets switched off within a week.
+
+---
+
 ## What changed between two versions
 
 A `.md` diff tells you a YAML block was touched, but not whether the resulting
@@ -462,7 +615,7 @@ detalle:
 ```
 
 Every error carries a **stable code** (`DV001`–`DV007` for environment and
-engines, `DV100`–`DV106` for the DSL). The usual reader of the report is an
+engines, `DV100`–`DV108` for the DSL and the output). The usual reader of the report is an
 agent retrying, and deciding the fix by parsing a human-readable sentence is
 fragile: the wording can improve, the code cannot.
 
@@ -487,7 +640,7 @@ SHA256(type + source + theme + theme fingerprint + engine version + format)
 So an unchanged diagram is never re-rendered, changing a theme colour
 invalidates only what it affects, and two documents with the same diagram share
 one file. **The same document, the same version and the same theme produce the
-same bytes** — and a test renders all 57 types twice to prove it.
+same bytes** — and a test renders all 62 types twice to prove it.
 
 ---
 
@@ -531,7 +684,7 @@ is what an agent should be looking at.
 image and executes nothing, but the moment someone inlines it into HTML the SVG
 becomes live markup. So every SVG is sanitised with an **allow-list** — 49
 elements and 104 attributes, measured against what the six engines actually emit
-across the 57 types. A bank of 23 known vectors is part of the test suite.
+across the 62 types. A bank of 23 known vectors is part of the test suite.
 
 Mermaid and BPMN draw inside a local Chromium **with the sandbox on**; it is
 only disabled as root, where Chromium refuses to start otherwise.

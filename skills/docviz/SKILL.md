@@ -37,7 +37,7 @@ flow:
 
 ## No adivines el tipo — pregunta
 
-Hay 57 tipos. Antes de escribir un bloque, si no estás seguro:
+Hay 62 tipos. Antes de escribir un bloque, si no estás seguro:
 
 ```bash
 npx docviz suggest "el proceso de aprobación de una solicitud"   # recomienda el tipo
@@ -48,19 +48,68 @@ npx docviz types sequence                                        # ficha y ejemp
 `docviz types <tipo>` imprime el esqueleto mínimo del tipo. Cópialo y rellénalo:
 es la forma más rápida de no equivocarte de campo.
 
+## Di para dónde es el dibujo
+
+El mismo diagrama no se lee igual embebido en una página que proyectado en una
+sala. Declara el destino y DocViz ajusta el lienzo para que la letra llegue a la
+altura mínima que ese destino exige:
+
+| Destino | Para qué | Letra mínima |
+|---|---|---|
+| `fit` | Lo que emita el motor (por defecto) | — |
+| `doc-inline` | Dentro del ancho de lectura de una página | 12 px |
+| `doc-wide` | A sangre, todo el ancho de la página | 12 px |
+| `slide-16x9` · `slide-4x3` | Una diapositiva proyectada | 16 px |
+| `social-og` | Tarjeta de enlace; se mira en miniatura | 18 px |
+| `print-a4-landscape` | A4 horizontal | 11 px |
+
+Se declara una vez en `docviz.config.yaml` (`size: slide-16x9`) y se puede
+cambiar bloque a bloque en la valla:
+
+````md
+```diagram size=slide-16x9
+type: flow
+title: Alta de cliente
+descripcion: Tres pasos, del alta al cobro, con la validación en el segundo
+steps: [Alta, Validación, Cobro]
+```
+````
+
+No se recoloca nada: solo cambia el lienzo, igual que si agrandaras la imagen.
+Si el dibujo **no cabe** en el destino con la letra legible, sale un
+`AVISO [DV108]`. No es un fallo del sistema: significa que el diagrama lleva
+demasiada información para donde va. Córtalo o cambia de destino; no lo
+silencies.
+
+## Pon siempre `descripcion`
+
+`title` dice **de qué** es el diagrama; `descripcion` dice **qué se ve en él**,
+y es lo único que le llega a quien no puede mirarlo. Va al `<desc>` del SVG,
+junto al `<title>` y a `role="img"`, que DocViz escribe solo.
+
+Una descripción útil nombra lo que el dibujo demuestra, no su forma: «el cobro
+depende de la validación, que es el único punto con reintento», no «diagrama de
+tres cajas conectadas».
+
 ## Flujo de trabajo
 
 ```bash
 npx docviz check docs-src                     # valida sin dibujar (rápido)
 npx docviz build docs-src --output docs       # compila a Markdown + SVG
 npx docviz verify docs                        # comprueba que no haya imágenes rotas
+npx docviz lint docs                          # revisa los SVG generados
 npx docviz diff <docs-src anterior> docs-src  # qué diagramas cambiaron
 ```
+
+`verify` mira el **Markdown** (que no cite imágenes que no existen); `lint` mira
+los **SVG** (nombre accesible, ids únicos, referencias que resuelven, lienzo
+utilizable, letra legible para el destino). Son preguntas distintas y ninguna
+sustituye a la otra.
 
 Mientras escribes, `npx docviz preview docs --watch` recompila al guardar y
 recarga el navegador solo.
 
-No des la tarea por terminada mientras `check` o `verify` fallen.
+No des la tarea por terminada mientras `check`, `verify` o `lint` fallen.
 
 ## Cuando algo falla
 
@@ -74,6 +123,8 @@ Cada error trae un **código** además de archivo y línea. Léelo, no adivines:
 | `DV104` | Escribiste un campo que ese tipo no usa. Si te propone otro nombre, es una errata |
 | `DV105` | El bloque no es YAML válido; suele ser la indentación |
 | `DV106` | El `type` no existe o va en otra valla; usa `docviz suggest` |
+| `DV107` | Se dibujó con un motor de respaldo: el dibujo tiene otro aspecto. Falta algo en la máquina, no en el bloque |
+| `DV108` | El dibujo no alcanza la letra del destino. Córtalo o cambia el `size` |
 | `DV005` | Falta Java o Chromium en la máquina. No cambies el diagrama: dilo |
 
 Un documento con varios bloques rotos los reporta **todos a la vez**:
@@ -109,6 +160,6 @@ npx docviz init     # configuración, AGENTS.md y un documento de ejemplo
 npx docviz doctor   # qué motores puede usar esta máquina
 ```
 
-`docviz init` deja un `AGENTS.md` con el catálogo completo de los 57 tipos y sus
+`docviz init` deja un `AGENTS.md` con el catálogo completo de los 62 tipos y sus
 tablas de decisión. Consúltalo cuando necesites el detalle que este resumen no
 trae.

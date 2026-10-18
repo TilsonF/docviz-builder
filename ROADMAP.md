@@ -86,6 +86,26 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   leía `os.platform()` por dentro, así que dos de sus tres ramas eran
   inalcanzables en cada máquina: 85,06 % en un Mac y 84,94 % en Linux, a los
   dos lados del umbral. La plataforma es ahora un parámetro.
+- **El destino del dibujo** (`size`): siete lienzos con su letra mínima, y el
+  veredicto de densidad (`DV108`) cuando el diagrama no se lee en el destino al
+  que va. Solo cambia `width`/`height`; el `viewBox` queda intacto, así que no
+  puede solapar ni recortar nada.
+- **Contrato de accesibilidad del SVG**: `role="img"` impuesto, `<title>` como
+  primer hijo, `<desc>` desde `description`, ids prefijados por figura y
+  variables CSS acotadas a la raíz del propio SVG. Antes todos los SVG
+  numeraban sus ids desde `dv1` y declaraban su paleta sobre `:root`: dos
+  diagramas en una página se pisaban el nombre accesible y los colores.
+- **`docviz lint`**: la revisión del **artefacto**, que era el hueco entre
+  `check` (la fuente) y `verify` (el Markdown). Nueve reglas exactas, y el
+  informe cuenta cuántos elementos quedaron sin medir para que un cero no se
+  lea como visto bueno. En su primera ejecución sobre las 74 figuras del
+  catálogo encontró cuatro defectos reales invisibles hasta entonces, y dos de
+  sus propias reglas resultaron ser falsos positivos antes de afinarlas.
+- **Versión del post-proceso en el hash** (`PIPELINE_VERSION`). El hash ya
+  invalidaba al cambiar la versión del motor, pero no al cambiar lo que DocViz
+  hace **después** del motor: al añadir el contrato de accesibilidad, un
+  proyecto con caché caliente siguió sirviendo los SVG viejos sin que nada lo
+  dijera.
 
 ---
 
@@ -192,12 +212,24 @@ al usarla para escribir documentación de verdad.
 2. **Una tarjeta KPI con borde.** La de Flint pinta cada indicador en su propia
    caja con su porcentaje —«93 % de 80»—; la nuestra es una fila plana con
    barra de avance. Se lee peor, y es media hora de trabajo.
-3. **Reglas de estilo del catálogo.** Comparar los dibujos al lado de los de
+3. **Los recursos huérfanos no se recogen.** `build` sin `--clean` escribe el
+   recurso nuevo y **deja el viejo** en la salida: al cambiar el hash del
+   pipeline, `docs/assets/generated/` pasó de 9 archivos a 19, y diez eran
+   SVG que ya no referencia nadie. `verify` no los ve —comprueba que lo citado
+   exista, no que lo que existe esté citado— así que en un wiki se quedan para
+   siempre. Lo encontró `lint`, que sí los revisa: fallaba sobre figuras
+   muertas. Recoger lo que ningún documento cita es una pasada al final del
+   build, y `--clean` no es la respuesta porque borra también lo que no generó
+   DocViz.
+4. **Reglas de estilo del catálogo.** Comparar los dibujos al lado de los de
    otra librería destapó seis defectos que leer el código no destapó: un
    «undefined» impreso, un eje de clasificación empezando en cero, un límite C4
    rotulado con el nivel equivocado. No hay nada que vigile eso salvo mirar.
    Una prueba de humo que rasterice los 62 tipos y compare contra una
-   instantánea aceptada los cazaría antes.
+   instantánea aceptada los cazaría antes. `docviz lint` cubre ahora la parte
+   que se puede leer del archivo —un lienzo inutilizable, un texto anclado
+   fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
+   con el nivel equivocado siguen necesitando el ojo o una instantánea.
 
 ---
 

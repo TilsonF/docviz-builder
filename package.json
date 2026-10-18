@@ -1,6 +1,6 @@
 {
   "name": "docviz-builder",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Compila bloques declarativos de diagramas dentro de Markdown a imagenes SVG/PNG, produciendo Markdown estandar y portable.",
   "keywords": [
     "diagrams",
@@ -64,6 +64,7 @@
     "docs:check": "npm run docs:sync:check && node bin/docviz.mjs check docs-src",
     "docs:build": "node bin/docviz.mjs build docs-src --output docs",
     "docs:verify": "node bin/docviz.mjs verify docs",
+    "docs:lint": "node bin/docviz.mjs lint docs",
     "docs:test": "npm run docs:verify && vitest run tests/integration",
     "docs:preview": "node bin/docviz.mjs preview docs",
     "showcase": "node bin/docviz.mjs build examples --output artifacts/showcase --clean",

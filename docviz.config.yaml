@@ -9,6 +9,11 @@ output:
   dir: docs
   assetsDir: assets/generated
 
+# Destino de los dibujos: fija el lienzo y la letra minima exigible.
+# fit | doc-inline | doc-wide | slide-16x9 | slide-4x3 | social-og |
+# print-a4-landscape
+size: fit
+
 theme:
   name: corporate
 

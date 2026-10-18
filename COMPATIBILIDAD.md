@@ -13,7 +13,7 @@ aleja.
 
 ### El DSL
 
-Los nombres de los 57 tipos, sus campos y la forma de sus valores. Un bloque que
+Los nombres de los 62 tipos, sus campos y la forma de sus valores. Un bloque que
 compila hoy tiene que seguir compilando.
 
 Se puede **añadir**: tipos nuevos, campos opcionales nuevos, alias nuevos. No se
@@ -26,7 +26,7 @@ trazado y las posiciones.
 
 ### Los códigos de error
 
-`DV001`–`DV007` y `DV100`–`DV106`. Un código no cambia de significado nunca; si
+`DV001`–`DV007` y `DV100`–`DV108`. Un código no cambia de significado nunca; si
 hace falta distinguir un caso nuevo, se añade un código nuevo.
 
 Lo que **no** es contrato: el texto del mensaje ni el del detalle. Están escritos
@@ -59,6 +59,18 @@ Lo que **no** es contrato: los bytes concretos del SVG. Cambian cuando cambia el
 tema, cuando se actualiza un motor y cuando se endurece el saneador. Lo que sí
 se sostiene es que **el mismo documento, la misma versión y el mismo tema
 producen los mismos bytes**.
+
+Sí es contrato, desde la 0.7, lo que ese SVG **garantiza**: un `role="img"`, un
+`<title>` con texto como primer hijo, y que ningún identificador ni variable CSS
+del archivo se escape de su propia raíz. Dos diagramas de DocViz pueden
+incrustarse en la misma página sin pisarse. `docviz lint` es la compuerta que lo
+comprueba, y sus nueve nombres de regla son estables: se añaden reglas nuevas,
+no se renombran las existentes.
+
+Y el **nombre del archivo** cambia cuando cambia el post-proceso de DocViz, no
+solo el motor: el hash incluye una versión de ese post-proceso desde la 0.7,
+porque antes un proyecto con caché caliente seguía sirviendo los bytes viejos
+tras una mejora de la salida.
 
 ### La configuración
 

@@ -309,3 +309,71 @@ describe('salidas menores', () => {
     expect(JSON.parse(out)).toMatchObject({ ok: false });
   });
 });
+
+describe('docviz lint', () => {
+  const sano =
+    '<svg xmlns="http://www.w3.org/2000/svg" role="img" id="dva" aria-labelledby="dva-t" ' +
+    'viewBox="0 0 100 50" width="100" height="50"><title id="dva-t">Figura</title>' +
+    '<text x="10" y="10" font-size="20">x</text></svg>';
+
+  it('sale con 0 y dice OK cuando la salida cumple el contrato', async () => {
+    const root = await proyecto({ 'docs/assets/generated/a.svg': sano });
+    process.chdir(root);
+    await cli('lint');
+    expect(out).toContain('lint OK');
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('sale con 1 y nombra la regla cuando no', async () => {
+    const root = await proyecto({ 'docs/assets/generated/a.svg': '<svg viewBox="0 0 1 1" width="1" height="1"/>' });
+    process.chdir(root);
+    await cli('lint');
+    expect(err).toContain('[nombre-accesible]');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('`--omitir` desactiva una regla por nombre', async () => {
+    const root = await proyecto({ 'docs/assets/generated/a.svg': '<svg viewBox="0 0 1 1" width="1" height="1"/>' });
+    process.chdir(root);
+    await cli('lint', '--omitir', 'nombre-accesible, ');
+    expect(out).toContain('lint OK');
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('`--size` exige la letra de ese destino y lo deja en aviso, no en error', async () => {
+    const chico = sano.replace('font-size="20"', 'font-size="5"');
+    const root = await proyecto({ 'docs/assets/generated/a.svg': chico });
+    process.chdir(root);
+    await cli('lint', '--size', 'slide-16x9');
+    expect(out).toContain('[letra-minima]');
+    expect(out).toContain('lint OK');
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it('rechaza un destino que no existe', async () => {
+    const root = await proyecto({ 'docs/assets/generated/a.svg': sano });
+    process.chdir(root);
+    expect(await cli('lint', '--size', 'diapositiva')).toBe(1);
+    expect(err).toContain('destinos validos');
+  });
+
+  it('`--json` emite el informe entero, incluido lo que no se pudo medir', async () => {
+    const conTransformacion = sano.replace(
+      '<text x="10"',
+      '<g transform="translate(1,1)"><text x="900" y="9">y</text></g><text x="10"',
+    );
+    const root = await proyecto({ 'docs/assets/generated/a.svg': conTransformacion });
+    process.chdir(root);
+    await cli('lint', '--json');
+    const informe = JSON.parse(out) as { archivos: number; sinMedir: number };
+    expect(informe.archivos).toBe(1);
+    expect(informe.sinMedir).toBe(1);
+  });
+
+  it('acepta el directorio de salida como argumento', async () => {
+    const root = await proyecto({ 'publicado/a.svg': sano });
+    process.chdir(root);
+    await cli('lint', 'publicado');
+    expect(out).toContain('archivos: 1');
+  });
+});

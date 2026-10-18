@@ -30,8 +30,10 @@ import { bundle, formatearBundle } from './build/bundle.js';
 import { installSkill, formatearSkill } from './build/skill.js';
 import { fixBlock } from './mcp/tools.js';
 import { verify } from './build/verify.js';
+import { errores, lint } from './build/lint.js';
+import { esTamanoSalida, TAMANOS_SALIDA } from './core/salida.js';
 import { loadConfig, resolveFromRoot } from './config/load.js';
-import { BuildFailedError, DocVizError } from './core/errors.js';
+import { BuildFailedError, ConfigError, DocVizError } from './core/errors.js';
 import { dslCatalog, findType, TYPE_CATALOG, type TypeSpec } from './dsl/index.js';
 import { esquemaDeConfiguracion, esquemaDeTipo, esquemaDeValla } from './dsl/esquema.js';
 import { suggestType } from './mcp/tools.js';
@@ -269,6 +271,62 @@ export function createProgram(): Command {
       }
       process.stdout.write('\nverify OK\n');
     });
+
+  program
+    .command('lint')
+    .description('revisa los SVG ya generados: nombre accesible, ids, lienzo y legibilidad')
+    .argument('[output]', 'directorio de salida a revisar')
+    .option('-c, --config <file>', 'archivo de configuracion')
+    .option('--size <destino>', 'destino con el que exigir la letra minima')
+    .option('--omitir <reglas>', 'reglas que no se aplican, separadas por coma')
+    .option('--json', 'emite el informe como JSON', false)
+    .action(
+      async (
+        output: string | undefined,
+        opts: { config?: string; size?: string; omitir?: string; json?: boolean },
+      ) => {
+        const config = await loadConfig({
+          configPath: opts.config,
+          overrides: output !== undefined ? { output } : {},
+        });
+        if (opts.size !== undefined && !esTamanoSalida(opts.size)) {
+          throw new ConfigError(
+            `"${opts.size}" no es un destino conocido`,
+            `destinos validos: ${TAMANOS_SALIDA.join(', ')}`,
+          );
+        }
+        const dir = resolveFromRoot(config, config.output);
+        const result = await lint(dir, {
+          size: opts.size ?? config.size,
+          ...(opts.omitir !== undefined
+            ? { omitir: opts.omitir.split(',').map((r) => r.trim()).filter((r) => r !== '') }
+            : {}),
+        });
+
+        if (opts.json === true) {
+          process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+        } else {
+          const fallos = errores(result);
+          for (const h of result.hallazgos) {
+            const salida = h.severidad === 'error' ? process.stderr : process.stdout;
+            salida.write(`${h.severidad === 'error' ? 'ERROR' : 'AVISO'} ${h.file} [${h.regla}] ${h.mensaje}\n`);
+          }
+          process.stdout.write(
+            `\narchivos: ${result.archivos}\nerrores:  ${fallos.length}\n` +
+              `avisos:   ${result.hallazgos.length - fallos.length}\n`,
+          );
+          // Un cero de hallazgos sobre elementos que nadie pudo medir no es un
+          // visto bueno, y decirlo es mas barato que que alguien lo suponga.
+          if (result.sinMedir > 0) {
+            process.stdout.write(
+              `sin medir: ${result.sinMedir} textos con transformacion heredada (hace falta maquetar para situarlos)\n`,
+            );
+          }
+          if (fallos.length === 0) process.stdout.write('\nlint OK\n');
+        }
+        if (errores(result).length > 0) process.exitCode = 1;
+      },
+    );
 
   program
     .command('preview')

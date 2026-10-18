@@ -116,12 +116,20 @@ jobs:
       - name: Verificar que no haya imagenes rotas
         run: npm run docs:verify
 
+      # `verify` mira el Markdown; esto mira los SVG: nombre accesible, ids
+      # unicos, referencias que resuelven y lienzo utilizable.
+      - name: Revisar los SVG de la documentacion
+        run: npm run docs:lint
+
       # Dibuja el catalogo completo: es la prueba manual convertida en automatica.
       - name: Compilar el catalogo
         run: npm run showcase
 
       - name: Verificar el catalogo
         run: node bin/docviz.mjs verify artifacts/showcase
+
+      - name: Revisar los SVG del catalogo
+        run: node bin/docviz.mjs lint artifacts/showcase
 
       # Pide a GitHub que renderice el resultado con su propia API.
       - name: Comprobar el renderizado en GitHub

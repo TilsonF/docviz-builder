@@ -50,6 +50,13 @@ const FAMILIAS = [
     nota: 'por archivo: usarla como libreria sin modificarla es compatible con distribuir MIT; si se modifica un archivo suyo, ese archivo sigue siendo MPL',
   },
   {
+    patron: /^EPL-2\.0$/,
+    familia: 'copyleft debil',
+    nota:
+      'por modulo: usarla como libreria sin modificarla no afecta al codigo propio; ' +
+      'si se modifica, hay que publicar la fuente de lo modificado bajo EPL-2.0',
+  },
+  {
     patron: /^SEE LICENSE IN /,
     familia: 'con clausula propia',
     nota: 'hay que leer su archivo de licencia: no es una licencia estandar',
@@ -170,7 +177,7 @@ const lineas = [
 const NOTA_FAMILIA = {
   permisiva: 'Conservar el aviso de copyright. Nada más.',
   'dominio publico': 'Nada.',
-  'copyleft debil': 'Por archivo. Ver abajo.',
+  'copyleft debil': 'Solo si modificas la libreria. Ver abajo.',
   'con clausula propia': 'No es estándar. Ver abajo.',
 };
 for (const [fam, n] of [...porFamilia].sort((a, b) => b[1] - a[1])) {
@@ -186,9 +193,9 @@ if (destacados.length === 0) {
   }
 }
 
-lineas.push(
-  '## Lo que eso significa en la práctica',
-  '',
+lineas.push('## Lo que eso significa en la práctica', '');
+
+const practica = [
   '- **`@terrastruct/d2`** es el motor de los diagramas D2, y es MPL-2.0. Mientras',
   '  se use como librería sin modificar sus archivos —que es lo que hace DocViz—,',
   '  distribuir bajo MIT es compatible.',
@@ -199,8 +206,30 @@ lineas.push(
   '  trazado.',
   '- **`lightningcss`** llega a través de `likec4`. Si prescindes de LikeC4',
   '  —ver el README—, sale del árbol y con él sus dos entradas MPL.',
-  '',
-);
+];
+
+// El parrafo de `elkjs` solo se escribe si `elkjs` esta de verdad en el arbol.
+// Llega a traves de Mermaid y puede volver a salir cuando Mermaid cambie de
+// motor de trazado; un documento que afirme lo que ya no es cierto es peor que
+// uno que no lo mencione.
+if (paquetes.has('elkjs')) {
+  practica.push(
+    '- **`elkjs`** llega a través de `mermaid` y es la única EPL-2.0 del árbol. Es',
+    '  copyleft **por módulo**: obliga a publicar la fuente de lo que se modifique',
+    '  de ella, no la del código que la usa. DocViz no la modifica, no la empaqueta',
+    '  —el `.tgz` publicado no lleva `node_modules`, y la compilación es `tsc`, no un',
+    '  empaquetador que fundiría su código con el nuestro— y quien instala la trae de',
+    '  su propio registro. El único caso que cambiaría esto es empaquetar DocViz en un',
+    '  solo archivo: ahí el resultado sería una obra combinada y habría que mantener',
+    '  identificables los archivos EPL.',
+    '- No elige la licencia secundaria GPL: su cabecera declara',
+    '  `SPDX-License-Identifier: EPL-2.0` y nada más. El «Anexo A» que aparece en su',
+    '  `LICENSE.md` es parte del texto estándar de la EPL, no una elección —el propio',
+    '  texto dice que incluirlo no basta para licenciar bajo las secundarias—.',
+  );
+}
+
+lineas.push(...practica, '');
 
 const salida = `${lineas.join('\n')}`;
 

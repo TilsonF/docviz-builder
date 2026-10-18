@@ -17,7 +17,7 @@ dependiera del ordenador que lo generó.
 | Familia | Paquetes | Qué obliga |
 |---|---|---|
 | permisiva | 301 | Conservar el aviso de copyright. Nada más. |
-| copyleft debil | 2 | Por archivo. Ver abajo. |
+| copyleft debil | 2 | Solo si modificas la libreria. Ver abajo. |
 | con clausula propia | 1 | No es estándar. Ver abajo. |
 | dominio publico | 1 | Nada. |
 

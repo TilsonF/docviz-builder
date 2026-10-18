@@ -107,6 +107,41 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   proyecto con caché caliente siguió sirviendo los SVG viejos sin que nada lo
   dijera.
 
+### Cerrado en la 0.10
+
+- **El paquete no se podía cargar desde CommonJS, y nadie lo sabía.** El mapa
+  de exportaciones declaraba solo la condición `import`, así que un consumidor
+  CJS podía instalarlo y no podía usarlo: `require('docviz-builder')` moría con
+  `ERR_PACKAGE_PATH_NOT_EXPORTED`. El campo `main` estaba muerto desde siempre,
+  tapado por el mapa. Salió al revisar una afirmación que daba por hecho que
+  ese camino funcionaba.
+- **Es alcance, no corrección.** Como ESM el paquete estaba bien antes y
+  después. Y el *dual-package hazard* nunca existió aquí: lo que lo evita no es
+  `"type": "module"` —un paquete de doble formato también lo declara— sino que
+  no haya una segunda construcción. Las dos condiciones apuntan al mismo
+  fichero, así que `require()` e `import()` devuelven **la misma instancia** y
+  un `instanceof` cruzado sigue siendo cierto.
+- **`require(esm)` depende del suelo de Node, que ya estaba en su sitio.**
+  Funciona sin bandera desde 22.12, exactamente lo que la 0.9 corrigió al medir
+  el árbol real. Si ese suelo bajara, la condición `require` prometería algo
+  incumplible: `tests/unit/empaquetado.test.ts` lo fija como contrato.
+- **El guardián, y por qué no es opcional.** Un solo `await` de nivel superior
+  en cualquier módulo del grafo compilado cierra la puerta: `require()` falla
+  con `ERR_REQUIRE_ASYNC_MODULE` y **ni el compilador ni las pruebas lo ven**.
+  `scripts/comprobar-cjs.mjs` lo mide pidiéndole a Node que requiera los 65
+  módulos de `dist` —no con una expresión regular, que da falsos positivos con
+  `= await` repartido en varias líneas— y corre en CI después de compilar, en
+  medio segundo. Comprueba además que las dos condiciones sigan dando al mismo
+  fichero, que `main` concuerde y que no aparezca un `.cjs` escondido.
+- **El guardián pagó su coste antes de servir de algo**, que es el argumento a
+  favor de tenerlo: falló en Windows con `ERR_UNSUPPORTED_ESM_URL_SCHEME`
+  porque le pasaba a `import()` una ruta `D:\...` que Node lee como esquema de
+  URL. Misma familia que el fallo que rompió la 0.8.1 con
+  `new URL(import.meta.url).pathname`. Se barrió el repositorio buscando
+  hermanos: no queda ningún otro `import()` con ruta calculada. **Etiquetar sin
+  esperar a Windows habría publicado la 0.10 con CI roto**, que es la lección
+  de la 0.8.1 aplicada en vez de recordada.
+
 ### Cerrado en la 0.9
 
 - **El suelo de Node declarado era falso.** `engines` decia `>=22.0.0` y
@@ -225,6 +260,10 @@ no simultáneos.
    allí y 3 s en los demás: también usa D2. El runner tiene **7 GB de RAM**.
    El camino a probar es compartir el módulo compilado entre archivos, o
    reconocer que ese runner necesita más tiempo para los que tocan D2.
+   La corrida de la 0.10 lo cuantifica: `builder.test.ts` tardó **487 s** en
+   macOS para las mismas 22 pruebas, y los tres fallos eran los tres
+   `Test timed out in 180000ms` de siempre. Sirve de referencia para saber si
+   un rojo futuro de ese job es el conocido o es nuevo.
 2. **`watch.test.ts` sigue siendo inestable** sobre el sistema de archivos
    real: FSEvents tarda más de lo que la prueba espera. La parte determinista
    ya se arregló haciendo inyectable el observador; lo que queda es la que
@@ -296,6 +335,16 @@ permisos— y porque, al declararse en plano, `dataFile` los sirve desde un
 `.csv` sin escribir el bloque a mano. Y se midió antes de darlos por buenos: el
 acierto de `suggest` subió, no bajó. Un tipo nuevo cuesta su vocabulario y sus
 casos de evaluación, no su compilador.
+
+**Una segunda construcción CommonJS.** La 0.10 abrió `require()` apuntando al
+**mismo** fichero ESM, no compilando un `dist` paralelo en CJS. Un `.cjs`
+aparte daría compatibilidad con Node anterior a 22.12 a cambio de crear el
+*dual-package hazard* de verdad: dos instancias del módulo, dos cachés, dos
+registros de tipos y un `instanceof` que falla según por qué puerta entró cada
+objeto. El suelo declarado ya es 22.12 por otras razones —`puppeteer-core` y
+Mermaid lo exigen—, así que la compatibilidad extra no compraría nada y el
+riesgo sería real. `scripts/comprobar-cjs.mjs` falla a propósito si alguien
+añade ese segundo fichero.
 
 **HTML interactivo.** Contradice la tesis de salida portable, ya existe
 `docviz preview` para revisar antes de publicar, y sería reimplementar un

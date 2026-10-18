@@ -9,6 +9,7 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const require_ = createRequire(import.meta.url);
 const cache = new Map<string, string>();
@@ -78,7 +79,11 @@ export function packageVersion(name: string, fallback = 'desconocida'): string {
  * misma ejecutando `dist/cli.js` que `src/cli.ts` con tsx.
  */
 export function versionDeDocViz(): string {
-  let dir = path.dirname(new URL(import.meta.url).pathname);
+  // `fileURLToPath` y no `new URL(...).pathname`: en Windows ese `pathname` es
+  // `/C:/Users/...`, con una barra delante que ninguna llamada del sistema de
+  // archivos acepta. Daba `desconocida` solo alli, que es peor que el numero
+  // viejo: parece que la instalacion esta rota.
+  let dir = path.dirname(fileURLToPath(import.meta.url));
   for (let depth = 0; depth < 6; depth += 1) {
     try {
       const pkg = JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')) as {

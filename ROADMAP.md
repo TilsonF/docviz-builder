@@ -128,7 +128,10 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   nadie la subia: la 0.7.0 y la 0.8.0 salieron al registro diciendo las dos
   que eran la 0.6.0, y `--version` es lo primero que mira quien va a abrir un
   informe de fallo. Ahora se lee del manifiesto y una prueba comprueba que
-  coincidan, asi que no puede volver a desincronizarse.
+  coincidan, asi que no puede volver a desincronizarse. El primer intento
+  resolvia la ruta con `new URL(...).pathname`, que en Windows es
+  `/C:/Users/...` y no vale para abrir nada: respondia «desconocida» solo
+  alli. Lo caza la matriz de CI, no el desarrollo local.
 - **El rastreador de campos no se envuelve dos veces.** Un compilador que
   pasara a un ayudante el registro que ya observaba partia las lecturas en dos
   conjuntos, y campos leidos de verdad salian como ignorados.

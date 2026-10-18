@@ -260,3 +260,16 @@ describe('la version que anuncia la CLI', () => {
     expect(versionDeDocViz()).toBe(manifiesto.version);
   });
 });
+
+describe('la version en un sistema con rutas de Windows', () => {
+  it('no depende del `pathname` de la URL del modulo', async () => {
+    // En Windows ese `pathname` es `/C:/Users/...`, con una barra delante que
+    // ninguna llamada del sistema de archivos acepta: `--version` respondia
+    // «desconocida» solo alli, que parece una instalacion rota.
+    const fuente = await (
+      await import('node:fs/promises')
+    ).readFile(new URL('../../src/core/package-version.ts', import.meta.url), 'utf8');
+    expect(fuente).toContain('fileURLToPath(import.meta.url)');
+    expect(fuente).not.toContain('new URL(import.meta.url).pathname');
+  });
+});

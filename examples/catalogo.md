@@ -47,6 +47,7 @@ el compilador admite de verdad.
 | `matrix-2x2` | Cuatro cuadrantes con su contenido, sin coordenadas. | d2 |
 | `timeline` | Hitos en orden cronologico. | d2 |
 | `roadmap` | Fases futuras con su contenido. | d2 |
+| `story-map` | Las actividades que el usuario recorre, cruzadas con los cortes de entrega. | d2 |
 | `dependency-map` | Quien depende de quien. | graphviz |
 | `bpmn` | Proceso de negocio en notacion BPMN estandar. | bpmn |
 | `ascii` | Dibujo hecho con caracteres, convertido a SVG limpio. | svgbob |
@@ -59,6 +60,7 @@ el compilador admite de verdad.
 | `stacked-area` | Evolucion de la composicion de un total. | vega-lite |
 | `scatter` | Relacion entre dos magnitudes. | vega-lite |
 | `heatmap` | Densidad de una magnitud en dos dimensiones categoricas. | vega-lite |
+| `access-matrix` | Que puede hacer cada rol: permitido, condicionado o denegado. | vega-lite |
 | `histogram` | Distribucion de una variable continua. | vega-lite |
 | `box-plot` | Mediana, dispersion y valores atipicos por grupo. | vega-lite |
 | `bullet` | Valor real frente a su objetivo. | vega-lite |
@@ -1210,6 +1212,44 @@ phases:
     items: [Adopcion]
 ```
 
+### `story-map`
+
+Las actividades que el usuario recorre, cruzadas con los cortes de entrega.
+
+**Cuando usarlo.** Para decidir que entra en el primer corte: si solo se entrega la primera fila, ¿puede el usuario terminar su recorrido de principio a fin?
+
+**Cuando no.** Si lo que importa es el estado de cada tarjeta hoy: eso es `kanban`. Si lo que importa son las fechas: `roadmap` o `gantt`.
+
+Alias: `mapa-de-historias`, `user-story-map`.
+
+````md
+```diagram
+type: story-map
+activities: [Alta, Validacion, Cobro]
+releases: [MVP, R2]
+stories:
+  - activity: Alta
+    release: MVP
+    name: Formulario de alta
+  - activity: Cobro
+    release: R2
+    name: Reintento de pago
+```
+````
+
+```diagram title="story-map"
+type: story-map
+activities: [Alta, Validacion, Cobro]
+releases: [MVP, R2]
+stories:
+  - activity: Alta
+    release: MVP
+    name: Formulario de alta
+  - activity: Cobro
+    release: R2
+    name: Reintento de pago
+```
+
 ### `dependency-map`
 
 Quien depende de quien.
@@ -1550,6 +1590,48 @@ data:
   - x: SP1
     y: Backend
     value: 12
+```
+
+### `access-matrix`
+
+Que puede hacer cada rol: permitido, condicionado o denegado.
+
+**Cuando usarlo.** Para revisar permisos por rol, matrices RACI de acceso y evidencias de auditoria.
+
+**Cuando no.** Si lo que se cruza es una magnitud y no un estado —defectos por sprint, actividad por hora— usa `heatmap`.
+
+Alias: `matriz-de-permisos`, `permission-matrix`, `matriz-de-acceso`.
+
+````md
+```chart
+type: access-matrix
+title: Permisos por rol
+data:
+  - role: Analista
+    permission: Consultar expediente
+    access: si
+  - role: Analista
+    permission: Anular deposito
+    access: no
+  - role: Supervisor
+    permission: Anular deposito
+    access: condicionado
+```
+````
+
+```chart title="access-matrix"
+type: access-matrix
+title: Permisos por rol
+data:
+  - role: Analista
+    permission: Consultar expediente
+    access: si
+  - role: Analista
+    permission: Anular deposito
+    access: no
+  - role: Supervisor
+    permission: Anular deposito
+    access: condicionado
 ```
 
 ### `histogram`

@@ -17,7 +17,7 @@
  * se ha pensado se cae por defecto en lugar de colarse.
  *
  * El contenido de la lista sale de medir que emiten de verdad los seis motores
- * sobre los 62 tipos del catalogo, mas el vocabulario SVG estandar que un
+ * sobre los 64 tipos del catalogo, mas el vocabulario SVG estandar que un
  * bloque nativo puede usar legitimamente. Una prueba comprueba que sanear los
  * 74 diagramas del catalogo no cambia ni un byte.
  */

@@ -47,7 +47,7 @@ export function asRecord(value: unknown, field: string): Record<string, unknown>
  * mano dentro del compilador que lo recordo, y ninguno alcanzaba a los campos
  * de dentro. El resultado era arbitrario: `fecha` valia en un tipo, `etiqueta`
  * no valia en ninguno, y `valor` colaba solo porque `docviz fix` lo confunde
- * con una errata de `value`. Aqui estan los de hoja, una vez, para los 62.
+ * con una errata de `value`. Aqui estan los de hoja, una vez, para los 64.
  *
  * Reglas al ampliarla:
  *
@@ -92,6 +92,17 @@ const ALIAS_DE = ((): ReadonlyMap<string, readonly string[]> => {
   }
   return m;
 })();
+
+/** Campo canonico que nombra un alias, si lo es. */
+export function canonicosDe(alias: string): readonly string[] {
+  const canonico = ALIAS_ES[alias];
+  return canonico !== undefined ? [canonico] : [];
+}
+
+/** Alias en espanol que nombran un campo canonico. */
+export function aliasesDe(canonical: string): readonly string[] {
+  return ALIAS_DE.get(canonical) ?? [];
+}
 
 /**
  * Lee un campo por su nombre canonico o por su alias en espanol.
@@ -284,6 +295,70 @@ export class IdFactory {
 /** Cadena entre comillas dobles para D2. */
 export function d2Label(text: string): string {
   return JSON.stringify(text);
+}
+
+/**
+ * Enlace declarado en un nodo.
+ *
+ * El SVG que sale de DocViz **ya** puede llevar enlaces: el saneador admite
+ * `<a href>` con `http(s)` y con fragmentos, y los motores los emiten. Lo que
+ * faltaba era poder declararlos desde el DSL, asi que la capacidad estaba ahi
+ * y no se podia alcanzar.
+ *
+ * Es la unica forma de interactividad que sobrevive al destino real de estos
+ * dibujos: un wiki, un repositorio y un PDF no ejecutan JavaScript, pero los
+ * tres siguen un enlace. Un nodo puede apuntar a su HU en Azure, a su
+ * documento en Outline o a otra figura del mismo documento.
+ *
+ * Se valida aqui y no se deja para el saneador: un `javascript:` lo quitaria
+ * en silencio, y el autor creeria que su enlace funciona.
+ */
+export function leerEnlace(record: Record<string, unknown>, field: string): string | undefined {
+  const bruto = optionalString(record, 'href') ?? optionalString(record, 'link') ?? optionalString(record, 'enlace');
+  if (bruto === undefined) return undefined;
+  const url = bruto.trim();
+  if (url === '') return undefined;
+  if (/^(?:https?:\/\/|#|\.{0,2}\/)/i.test(url)) return url;
+  fail(
+    t(
+      `el enlace de ${field} no es una direccion que un visor pueda seguir`,
+      `the link on ${field} is not an address a viewer can follow`,
+    ),
+    t(
+      `se admite http(s), un fragmento (#id) o una ruta relativa; se recibio ${JSON.stringify(url)}`,
+      `http(s), a fragment (#id) or a relative path are accepted; got ${JSON.stringify(url)}`,
+    ),
+    ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
+  );
+}
+
+/** Sufijo de atributos D2 de un nodo con enlace, o cadena vacia. */
+export function d2Link(url: string | undefined): string {
+  return url !== undefined ? ` { link: ${d2Label(url)} }` : '';
+}
+
+/** Propiedad `link` para meter dentro de un bloque D2 que ya esta abierto. */
+export function d2LinkProp(url: string | undefined, indent = '  '): string[] {
+  return url !== undefined ? [`${indent}link: ${d2Label(url)}`] : [];
+}
+
+export interface NodoD2 {
+  name: string;
+  href?: string;
+}
+
+/**
+ * Nodo de una lista: su nombre y su enlace, si lo declaro.
+ *
+ * Es `nameOf` mas el enlace. Un elemento escrito como cadena suelta sigue
+ * valiendo, que es la forma corta que usa la mitad del catalogo.
+ */
+export function nodoD2(raw: unknown, field: string): NodoD2 {
+  if (esEscalar(raw)) return { name: textoEscalar(raw, field) };
+  const record = asRecord(raw, field);
+  const name = requireString(record, 'name', field);
+  const href = leerEnlace(record, field);
+  return href !== undefined ? { name, href } : { name };
 }
 
 /** Cadena entre comillas simples para LikeC4. */

@@ -5,7 +5,7 @@ Estado y siguientes pasos de DocViz. Lo que ya está hecho vive en el
 
 ## Dónde está hoy
 
-62 tipos sobre seis motores, dibujados de verdad en cada commit. DSL de tres
+64 tipos sobre seis motores, dibujados de verdad en cada commit. DSL de tres
 vallas, salida Markdown portable, todo local. Servidor MCP, skill instalable y
 `AGENTS.md` que no puede desfasarse del catálogo. Códigos de error estables,
 `diff` entre versiones, banco de casos que mide el acierto, saneador de SVG con
@@ -34,7 +34,7 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
 - **Documentación bilingüe**: `README.en.md`, `AGENTS.en.md`, el skill en inglés
   y `docviz types --lang en`, con las tablas generadas desde el catálogo.
 - **Más respaldos**: en una máquina con solo Node —sin Java y sin Chromium—
-  funcionan 53 de los 62 tipos. Antes eran 34 de 57.
+  funcionan 53 de los 64 tipos. Antes eran 34 de 57.
 - **`--watch`** en `preview` y en `build`, con recarga del navegador.
 - **Temas de marca**: se parte de un tema incluido y se sobrescriben los colores.
 - **Datos desde archivo** en los gráficos: `.csv`, `.tsv` y `.json`, relativos al
@@ -107,6 +107,27 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   proyecto con caché caliente siguió sirviendo los SVG viejos sin que nada lo
   dijera.
 
+### Cerrado en la 0.8
+
+- **Enlaces en los nodos** (`href`). La capacidad estaba en el SVG desde
+  siempre —el saneador admite `<a href>`— y **ningun tipo la exponia**. Es la
+  unica interactividad que sobrevive a un wiki, a un repositorio y a un PDF.
+  Un destino que el saneador quitaria falla la compilacion en lugar de
+  desaparecer en silencio.
+- **`story-map` y `access-matrix`.** Los dos entraron porque su insumo ya
+  existe: el backlog y el catalogo de permisos. Y los dos se declaran en plano,
+  asi que `dataFile` los sirve desde un `.csv` sin escribir la matriz a mano.
+  Medido: el acierto de `suggest` subio de 89,7 % a 90,5 % (reservado, de
+  90,0 % a 91,2 %).
+- **Los alias en español dejaron de ser campos desconocidos.** `titulo` y
+  `descripcion` producian un `DV104` aunque el compilador los leyera, y
+  `docviz fix` «corregia» `titulo` a `title` reescribiendo un bloque que
+  funcionaba. A cambio se gano un aviso que no habia: declarar los dos nombres
+  del mismo campo deja uno sin efecto, y ahora se dice.
+- **El rastreador de campos no se envuelve dos veces.** Un compilador que
+  pasara a un ayudante el registro que ya observaba partia las lecturas en dos
+  conjuntos, y campos leidos de verdad salian como ignorados.
+
 ---
 
 ## Corto plazo
@@ -129,7 +150,7 @@ escritas juntas con `t(es, en)` en lugar de un catálogo de claves aparte —una
 clave se queda sin traducir en silencio; así el compilador exige las dos.
 
 El camino común está traducido, y resulta que cubre más de lo que parece: los
-193 errores que produce romper los 62 ejemplos del catálogo salen en inglés,
+193 errores que produce romper los 64 ejemplos del catálogo salen en inglés,
 porque todos pasan por los mismos ayudantes.
 
 Faltan **161 llamadas** en compiladores concretos: `diagram-product.ts` (15),
@@ -225,7 +246,7 @@ al usarla para escribir documentación de verdad.
    otra librería destapó seis defectos que leer el código no destapó: un
    «undefined» impreso, un eje de clasificación empezando en cero, un límite C4
    rotulado con el nivel equivocado. No hay nada que vigile eso salvo mirar.
-   Una prueba de humo que rasterice los 62 tipos y compare contra una
+   Una prueba de humo que rasterice los 64 tipos y compare contra una
    instantánea aceptada los cazaría antes. `docviz lint` cubre ahora la parte
    que se puede leer del archivo —un lienzo inutilizable, un texto anclado
    fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
@@ -235,12 +256,19 @@ al usarla para escribir documentación de verdad.
 
 ## Lo que no está previsto hacer
 
-**Más tipos por tenerlos.** Con 62 el catálogo no es el cuello de botella; la
+**Más tipos por tenerlos.** Con 64 el catálogo no es el cuello de botella; la
 adopción y la tasa de acierto sí. Los cinco últimos entraron porque cubrían
 necesidades reales de un informe —un cronograma, una cifra con su meta, el
 ritmo de un trimestre— y aun así **bajaron el acierto de `suggest` cuatro
 puntos** hasta que se les escribió su vocabulario y sus casos. Un tipo nuevo no
 se añade: compite.
+
+Los dos de la 0.8 compitieron y ganaron: `story-map` y `access-matrix` entraron
+porque su insumo ya existe en los proyectos —el backlog y el catálogo de
+permisos— y porque, al declararse en plano, `dataFile` los sirve desde un
+`.csv` sin escribir el bloque a mano. Y se midió antes de darlos por buenos: el
+acierto de `suggest` subió, no bajó. Un tipo nuevo cuesta su vocabulario y sus
+casos de evaluación, no su compilador.
 
 **HTML interactivo.** Contradice la tesis de salida portable, ya existe
 `docviz preview` para revisar antes de publicar, y sería reimplementar un

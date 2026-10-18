@@ -5,15 +5,21 @@
  * `compile.ts`; aqui solo esta la traduccion al lenguaje de cada motor.
  */
 
+import { t } from '../core/idioma.js';
+import { ERROR_CODES } from '../core/errors.js';
 import { fail, textoEscalar } from './util.js';
 import {
   asNamedRecord,
   asRecord,
   d2Label,
+  d2Link,
+  d2LinkProp,
   dotLabel,
   IdFactory,
+  leerEnlace,
   mermaidLabel,
   nameOf,
+  nodoD2,
   oneOf,
   optionalArray,
   optionalString,
@@ -387,6 +393,7 @@ function sanitizeGantt(text: string): string {
 interface TreeNode {
   name: string;
   children: TreeNode[];
+  href?: string;
 }
 
 function toTreeNode(raw: unknown, field: string): TreeNode {
@@ -395,7 +402,8 @@ function toTreeNode(raw: unknown, field: string): TreeNode {
   const name = requireString(record, 'name', field);
   const rawChildren = record['children'] ?? record['branches'] ?? record['items'];
   const children = optionalArray(rawChildren, `${field}.children`).map((c) => toTreeNode(c, `${field}.children`));
-  return { name, children };
+  const href = leerEnlace(record, field);
+  return href !== undefined ? { name, children, href } : { name, children };
 }
 
 export function tree(doc: Record<string, unknown>): string {
@@ -408,11 +416,14 @@ export function tree(doc: Record<string, unknown>): string {
   const ids = new IdFactory('n');
   const lines: string[] = [`direction: ${direction}`, ''];
   const rootId = ids.id(root);
-  lines.push(`${rootId}: ${d2Label(root)} { style.bold: true }`);
+  const rootHref = leerEnlace(doc, 'diagram.root');
+  lines.push(
+    `${rootId}: ${d2Label(root)} { style.bold: true${rootHref !== undefined ? `; link: ${d2Label(rootHref)}` : ''} }`,
+  );
 
   const walk = (parentId: string, node: TreeNode, path: string): void => {
     const id = ids.id(`${path}/${node.name}`);
-    lines.push(`${id}: ${d2Label(node.name)}`);
+    lines.push(`${id}: ${d2Label(node.name)}${d2Link(node.href)}`);
     lines.push(`${parentId} -> ${id}`);
     for (const child of node.children) walk(id, child, `${path}/${node.name}`);
   };
@@ -458,9 +469,10 @@ export function capabilityMap(doc: Record<string, unknown>): string {
     const id = ids.id(`d/${name}`);
     lines.push(`${id}: ${d2Label(name)} {`);
     lines.push('  grid-columns: 2');
+    lines.push(...d2LinkProp(leerEnlace(domain, 'diagram.domains')));
     for (const cap of capabilities) {
-      const capName = nameOf(cap, 'diagram.domains[].capabilities');
-      lines.push(`  ${ids.id(`d/${name}/${capName}`)}: ${d2Label(capName)}`);
+      const nodo = nodoD2(cap, 'diagram.domains[].capabilities');
+      lines.push(`  ${ids.id(`d/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
     }
     lines.push('}');
   }
@@ -481,9 +493,10 @@ export function operatingModel(doc: Record<string, unknown>): string {
     layerIds.push(id);
     lines.push(`${id}: ${d2Label(name)} {`);
     lines.push(`  grid-columns: ${Math.min(items.length, 4)}`);
+    lines.push(...d2LinkProp(leerEnlace(layer, 'diagram.layers')));
     for (const item of items) {
-      const itemName = nameOf(item, 'diagram.layers[].items');
-      lines.push(`  ${ids.id(`l/${name}/${itemName}`)}: ${d2Label(itemName)}`);
+      const nodo = nodoD2(item, 'diagram.layers[].items');
+      lines.push(`  ${ids.id(`l/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
     }
     lines.push('}');
   }
@@ -498,9 +511,10 @@ export function valueChain(doc: Record<string, unknown>): string {
   const ids = new IdFactory('s');
   const lines: string[] = ['direction: right', ''];
   const stageIds = stages.map((raw) => {
-    const name = nameOf(raw, 'diagram.stages');
-    const id = ids.id(`s/${name}`);
-    lines.push(`${id}: ${d2Label(name)} { shape: step }`);
+    const nodo = nodoD2(raw, 'diagram.stages');
+    const id = ids.id(`s/${nodo.name}`);
+    const enlace = nodo.href !== undefined ? `; link: ${d2Label(nodo.href)}` : '';
+    lines.push(`${id}: ${d2Label(nodo.name)} { shape: step${enlace} }`);
     return id;
   });
   for (let i = 0; i + 1 < stageIds.length; i += 1) lines.push(`${stageIds[i]} -> ${stageIds[i + 1]}`);
@@ -520,8 +534,8 @@ export function beforeAfter(doc: Record<string, unknown>): string {
     lines.push(`${id}: ${d2Label(label)} {`);
     lines.push(`  style.fill: "${style}"`);
     for (const item of items) {
-      const name = nameOf(item, `diagram.${key}`);
-      lines.push(`  ${ids.id(`${key}/${name}`)}: ${d2Label(name)}`);
+      const nodo = nodoD2(item, `diagram.${key}`);
+      lines.push(`  ${ids.id(`${key}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
     }
     lines.push('}');
     return id;
@@ -547,14 +561,16 @@ export function matrix2x2(doc: Record<string, unknown>): string {
     const name = requireString(quadrant, 'name', 'diagram.quadrants');
     const id = ids.id(`q/${name}`);
     const items = optionalArray(quadrant['items'], 'diagram.quadrants[].items');
+    const href = leerEnlace(quadrant, 'diagram.quadrants');
     if (items.length === 0) {
-      lines.push(`${id}: ${d2Label(name)}`);
+      lines.push(`${id}: ${d2Label(name)}${d2Link(href)}`);
       continue;
     }
     lines.push(`${id}: ${d2Label(name)} {`);
+    lines.push(...d2LinkProp(href));
     for (const item of items) {
-      const itemName = nameOf(item, 'diagram.quadrants[].items');
-      lines.push(`  ${ids.id(`q/${name}/${itemName}`)}: ${d2Label(itemName)}`);
+      const nodo = nodoD2(item, 'diagram.quadrants[].items');
+      lines.push(`  ${ids.id(`q/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
     }
     lines.push('}');
   }
@@ -574,19 +590,139 @@ export function roadmap(doc: Record<string, unknown>): string {
     const id = ids.id(`f/${name}`);
     phaseIds.push(id);
     const items = optionalArray(phase['items'], 'diagram.phases[].items');
+    const href = leerEnlace(phase, 'diagram.phases');
     if (items.length === 0) {
-      lines.push(`${id}: ${d2Label(name)}`);
+      lines.push(`${id}: ${d2Label(name)}${d2Link(href)}`);
       continue;
     }
     lines.push(`${id}: ${d2Label(name)} {`);
+    lines.push(...d2LinkProp(href));
     for (const item of items) {
-      const itemName = nameOf(item, 'diagram.phases[].items');
-      lines.push(`  ${ids.id(`f/${name}/${itemName}`)}: ${d2Label(itemName)}`);
+      const nodo = nodoD2(item, 'diagram.phases[].items');
+      lines.push(`  ${ids.id(`f/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
     }
     lines.push('}');
   }
   for (let i = 0; i + 1 < phaseIds.length; i += 1) lines.push(`${phaseIds[i]} -> ${phaseIds[i + 1]}`);
   return lines.join('\n');
+}
+
+/**
+ * Mapa de historias: el esqueleto de actividades por los cortes de entrega.
+ *
+ * Es la rejilla con la que un equipo decide **que entra en el primer corte**:
+ * las columnas son los pasos que el usuario recorre de izquierda a derecha, y
+ * cada fila es una entrega. Lo que responde es «si solo pudiera entregar una
+ * fila, el usuario podria terminar su recorrido?».
+ *
+ * Se declara en plano —una historia por registro, con su actividad y su
+ * entrega— y no como un mapa anidado por actividad. Dos razones: un modelo de
+ * lenguaje rellena una lista de registros con mas fiabilidad que un mapa cuyas
+ * claves tiene que inventar, y en plano `dataFile` funciona sin tocar nada, asi
+ * que el mapa puede salir de un `.csv` exportado del backlog.
+ */
+export function storyMap(doc: Record<string, unknown>): string {
+  const activities = requireArray(doc['activities'] ?? doc['actividades'], 'diagram.activities').map((raw) =>
+    nameOf(raw, 'diagram.activities'),
+  );
+  const stories = requireArray(
+    doc['stories'] ?? doc['historias'] ?? doc['data'],
+    'diagram.stories',
+  ).map((raw) => {
+    const record = asRecord(raw, 'diagram.stories');
+    const href = leerEnlace(record, 'diagram.stories');
+    return {
+      name: requireString(record, 'name', 'diagram.stories[].name'),
+      ...(href !== undefined ? { href } : {}),
+      activity: requireString(record, activityKey(record), 'diagram.stories[].activity'),
+      release: optionalString(record, 'release') ?? optionalString(record, 'entrega'),
+    };
+  });
+
+  // Una actividad mal escrita en una historia es el error que mas duele: la
+  // historia desaparece del mapa sin que nada falle, y el corte que se discute
+  // no es el que se dibujo.
+  for (const story of stories) {
+    if (!activities.includes(story.activity)) {
+      fail(
+        t(
+          `"${story.activity}" no es una de las actividades declaradas`,
+          `"${story.activity}" is not one of the declared activities`,
+        ),
+        t(
+          `actividades: ${activities.join(', ')}`,
+          `activities: ${activities.join(', ')}`,
+        ),
+        ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
+      );
+    }
+  }
+
+  const declaradas = optionalArray(doc['releases'] ?? doc['entregas'], 'diagram.releases').map((raw) =>
+    nameOf(raw, 'diagram.releases'),
+  );
+  // Sin `releases` se deducen del orden de aparicion: un mapa de un solo corte
+  // no deberia obligar a declararlo dos veces.
+  const releases =
+    declaradas.length > 0
+      ? declaradas
+      : [...new Set(stories.map((s) => s.release ?? 'Entrega 1'))];
+
+  for (const story of stories) {
+    if (story.release !== undefined && !releases.includes(story.release)) {
+      fail(
+        t(`"${story.release}" no es una de las entregas declaradas`, `"${story.release}" is not a declared release`),
+        t(`entregas: ${releases.join(', ')}`, `releases: ${releases.join(', ')}`),
+        ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
+      );
+    }
+  }
+
+  const ids = new IdFactory('m');
+  // Una columna mas para rotular la entrega: la fila tiene que decir a que
+  // corte pertenece sin que haya que contar de arriba abajo.
+  //
+  // Las DOS dimensiones se declaran a proposito. Con solo `grid-columns`, D2
+  // reparte las celdas por columnas y el mapa sale transpuesto: las
+  // actividades bajaban por el margen izquierdo y las entregas cruzaban
+  // arriba. Compilaba, se dibujaba, y decia lo contrario de lo que el autor
+  // escribio.
+  const lines: string[] = [
+    `grid-rows: ${releases.length + 1}`,
+    `grid-columns: ${activities.length + 1}`,
+    'grid-gap: 20',
+    '',
+  ];
+  lines.push(`${ids.id('esquina')}: "" { style.opacity: 0 }`);
+  for (const activity of activities) {
+    lines.push(`${ids.id(`a/${activity}`)}: ${d2Label(activity)} { style.bold: true }`);
+  }
+
+  for (const release of releases) {
+    lines.push('');
+    lines.push(`${ids.id(`r/${release}`)}: ${d2Label(release)} { style.bold: true }`);
+    for (const activity of activities) {
+      const celda = stories.filter(
+        (s) => s.activity === activity && (s.release ?? releases[0]) === release,
+      );
+      const id = ids.id(`c/${release}/${activity}`);
+      if (celda.length === 0) {
+        lines.push(`${id}: "" { style.opacity: 0.15 }`);
+        continue;
+      }
+      lines.push(`${id}: "" {`);
+      for (const story of celda) {
+        lines.push(`  ${ids.id(`s/${release}/${activity}/${story.name}`)}: ${d2Label(story.name)}${d2Link(story.href)}`);
+      }
+      lines.push('}');
+    }
+  }
+  return lines.join('\n');
+}
+
+/** Nombre con el que la historia declara su actividad. */
+function activityKey(record: Record<string, unknown>): string {
+  return record['actividad'] !== undefined ? 'actividad' : 'activity';
 }
 
 // --------------------------------------------------------------------------

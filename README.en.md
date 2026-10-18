@@ -81,7 +81,7 @@ documentation does not download anything on its own without being asked.
 D2, Graphviz, Vega-Lite, LikeC4 and svgbob need nothing else: they ship as
 WebAssembly or plain JavaScript. Most types declare a fallback engine, so a
 machine without a browser or without Java still compiles what it can instead of
-failing whole: **without Java only 3 of 62 types are lost, and 4 without a browser.**
+failing whole: **without Java only 3 of 64 types are lost, and 4 without a browser.**
 
 DocViz **never downloads browsers**. It uses the system Chrome, or whatever
 Chromium Playwright or Puppeteer already cached. If it finds none, it says so
@@ -155,7 +155,7 @@ flow:
 ```
 ````
 
-The catalog covers 62 types. Consult it from the terminal instead of
+The catalog covers 64 types. Consult it from the terminal instead of
 remembering it:
 
 ```bash
@@ -203,6 +203,7 @@ npx docviz types sequence --lang en
 | Four quadrants with their content, without coordinates | `matrix-2x2` | d2 |
 | Milestones in chronological order | `timeline` | d2 (or mermaid) |
 | Upcoming phases with their content | `roadmap` | d2 |
+| The activities a user walks through, crossed with the release slices | `story-map` | d2 |
 | Who depends on whom | `dependency-map` | graphviz |
 | A business process in standard BPMN notation | `bpmn` | bpmn |
 | A drawing made of characters, turned into clean SVG | `ascii` | svgbob |
@@ -220,6 +221,7 @@ npx docviz types sequence --lang en
 | How the composition of a total evolves | `stacked-area` | vega-lite |
 | The relationship between two magnitudes | `scatter` | vega-lite |
 | The density of a magnitude across two categorical dimensions | `heatmap` | vega-lite |
+| What each role can do: allowed, conditional or denied | `access-matrix` | vega-lite |
 | The distribution of a continuous variable | `histogram` | vega-lite |
 | Median, spread and outliers per group | `box-plot` | vega-lite |
 | The actual value against its target | `bullet` | vega-lite |
@@ -492,6 +494,50 @@ times for no reason gets switched off within a week.
 
 ---
 
+## A node can carry a link
+
+The SVG DocViz produces **could** already carry links: the sanitiser allows
+`<a href>` with `http(s)` and with fragments, and the engines emit them. What
+was missing was declaring them from the DSL, so the capability was there and
+unreachable.
+
+```yaml
+type: capability-map
+domains:
+  - name: Payments
+    href: https://wiki.example/payments        # the domain links to its page
+    capabilities:
+      - name: Reconcile
+        href: https://dev.azure.com/org/_workitems/edit/437449
+      - Void                                    # no link, as before
+```
+
+It is the **only form of interactivity that survives these drawings' real
+destination**. A wiki, a repository and a PDF do not run JavaScript, but all
+three follow a link: a node can point at its user story in the backlog, at its
+page in the wiki, or at another figure in the same document.
+
+Write `href`, `link` or `enlace`; `http(s)`, a fragment (`#other-figure`) and a
+relative path are accepted. **Anything else is a compile error**, not a
+silence: a `javascript:` would be stripped by the sanitiser and the author
+would believe their link works.
+
+Today it is accepted by the eleven types in the executive and dependency family
+— `strategy-tree`, `issue-tree`, `decision-tree`, `strategy-pillars`,
+`capability-map`, `operating-model`, `value-chain`, `before-after`,
+`matrix-2x2`, `timeline`, `roadmap` — plus `story-map`. Not yet by the rest:
+PlantUML, Mermaid and Vega-Lite each write links their own way, and announcing
+it for all 64 without measuring would amount to not having it.
+
+> **What is not done: interactive HTML.** No zoom, no collapsing nodes, no
+> JavaScript tooltips. It would mean opening a hole in the sanitiser — an
+> allow-list that forbids `<script>` and every event handler — implementing it
+> nine times, once per engine, and none of the places this documentation ends
+> up could display the result anyway. To review before publishing there is
+> `docviz preview`.
+
+---
+
 ## What changed between two versions
 
 A `.md` diff tells you a YAML block was touched, but not whether the resulting
@@ -640,7 +686,7 @@ SHA256(type + source + theme + theme fingerprint + engine version + format)
 So an unchanged diagram is never re-rendered, changing a theme colour
 invalidates only what it affects, and two documents with the same diagram share
 one file. **The same document, the same version and the same theme produce the
-same bytes** — and a test renders all 62 types twice to prove it.
+same bytes** — and a test renders all 64 types twice to prove it.
 
 ---
 
@@ -652,7 +698,7 @@ DOCVIZ_LANG=en npx docviz check docs-src
 
 This translates the error scaffolding —`code`, `file`, `line`, `reason`,
 `detail`— and the common path: field errors, list errors and the three "type
-does not exist". Measured by breaking the 62 catalog examples four ways, the
+does not exist". Measured by breaking the 64 catalog examples four ways, the
 193 errors that produces come out in English.
 
 161 messages in specific compilers are still Spanish; they are counted in the
@@ -684,7 +730,7 @@ is what an agent should be looking at.
 image and executes nothing, but the moment someone inlines it into HTML the SVG
 becomes live markup. So every SVG is sanitised with an **allow-list** — 49
 elements and 104 attributes, measured against what the six engines actually emit
-across the 62 types. A bank of 23 known vectors is part of the test suite.
+across the 64 types. A bank of 23 known vectors is part of the test suite.
 
 Mermaid and BPMN draw inside a local Chromium **with the sandbox on**; it is
 only disabled as root, where Chromium refuses to start otherwise.

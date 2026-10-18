@@ -43,6 +43,9 @@ export function compileChartOfType(doc: Record<string, unknown>, type: string): 
     case 'heatmap':
       Object.assign(spec, heatmap(doc, xTitle, yTitle));
       break;
+    case 'access-matrix':
+      Object.assign(spec, accessMatrix(doc, xTitle, yTitle));
+      break;
     case 'pie':
     case 'donut':
       Object.assign(spec, pie(doc, type === 'donut'));
@@ -254,6 +257,131 @@ function heatmap(
       y: { field: 'y', type: 'nominal', title: yTitle ?? null },
       color: { field: 'value', type: 'quantitative', title: optionalString(doc, 'legend') ?? null },
     },
+  };
+}
+
+/**
+ * Matriz de acceso: que puede hacer cada rol.
+ *
+ * Es un cruce categorico de tres estados, no una magnitud: `heatmap` pinta
+ * intensidad y aqui no hay intensidad que pintar, hay permitido, denegado y
+ * condicionado.
+ *
+ * El estado va **escrito en la celda** ademas de en el color. Un documento que
+ * solo distinga los permisos por color no se puede leer impreso en blanco y
+ * negro ni por quien no distingue esos dos colores, y una matriz de permisos
+ * mal leida es un hallazgo de auditoria.
+ *
+ * Se declara en plano, igual que `heatmap`, asi que `dataFile` lo sirve desde
+ * el catalogo de permisos que el proyecto ya tenga en `.csv` o en `.json` sin
+ * escribir la matriz a mano.
+ */
+const ACCESO: Readonly<Record<string, 'permitido' | 'condicionado' | 'denegado'>> = {
+  si: 'permitido',
+  sí: 'permitido',
+  yes: 'permitido',
+  y: 'permitido',
+  true: 'permitido',
+  permitido: 'permitido',
+  allow: 'permitido',
+  allowed: 'permitido',
+  condicionado: 'condicionado',
+  condicional: 'condicionado',
+  conditional: 'condicionado',
+  parcial: 'condicionado',
+  partial: 'condicionado',
+  propio: 'condicionado',
+  own: 'condicionado',
+  no: 'denegado',
+  n: 'denegado',
+  false: 'denegado',
+  denegado: 'denegado',
+  deny: 'denegado',
+  denied: 'denegado',
+  ninguno: 'denegado',
+  none: 'denegado',
+};
+
+/**
+ * Como se rotula cada estado dentro de la celda.
+ *
+ * En mayuscula para no tener que escribir «si» sin tilde, que en castellano es
+ * otra palabra, en un documento que puede acabar en una evidencia de
+ * auditoria.
+ */
+const ACCESO_ETIQUETA: Readonly<Record<string, string>> = {
+  permitido: 'SI',
+  condicionado: 'COND.',
+  denegado: 'NO',
+};
+
+function accessMatrix(
+  doc: Record<string, unknown>,
+  xTitle: string | undefined,
+  yTitle: string | undefined,
+): Record<string, unknown> {
+  const rows = requireArray(doc['data'] ?? doc['permissions'] ?? doc['permisos'], 'chart.data').map((raw) => {
+    const record = asRecord(raw, 'chart.data');
+    const rol = requireString(record, record['rol'] !== undefined ? 'rol' : 'role', 'chart.data[].role');
+    const permiso = requireString(
+      record,
+      record['permiso'] !== undefined ? 'permiso' : record['permission'] !== undefined ? 'permission' : 'name',
+      'chart.data[].permission',
+    );
+    const bruto = requireString(
+      record,
+      record['acceso'] !== undefined ? 'acceso' : record['access'] !== undefined ? 'access' : 'value',
+      'chart.data[].access',
+    );
+    const estado = ACCESO[bruto.trim().toLowerCase()];
+    if (estado === undefined) {
+      fail(
+        `"${bruto}" no es un estado de acceso`,
+        `admitidos: si, no, condicionado (y sus equivalentes en ingles: yes, no, conditional)`,
+      );
+    }
+    return { role: rol, permission: permiso, estado, etiqueta: ACCESO_ETIQUETA[estado]! };
+  });
+
+  const comun = {
+    x: { field: 'role', type: 'nominal', title: xTitle ?? null, axis: { labelAngle: 0 } },
+    y: { field: 'permission', type: 'nominal', title: yTitle ?? null },
+  };
+  return {
+    data: { values: rows },
+    layer: [
+      {
+        mark: { type: 'rect', stroke: '#FFFFFF', strokeWidth: 1 },
+        encoding: {
+          ...comun,
+          color: {
+            field: 'estado',
+            type: 'nominal',
+            title: optionalString(doc, 'legend') ?? null,
+            scale: {
+              domain: ['permitido', 'condicionado', 'denegado'],
+              range: ['#2F855A', '#B7791F', '#E2E8F0'],
+            },
+          },
+        },
+      },
+      {
+        mark: { type: 'text', fontSize: 11, fontWeight: 'bold' },
+        encoding: {
+          ...comun,
+          text: { field: 'etiqueta', type: 'nominal' },
+          // El color del texto va como condicion sobre el dato y NO como una
+          // segunda escala. Vega-Lite fusiona las escalas del mismo campo
+          // entre capas: con dos escalas de color, el texto heredaba la del
+          // fondo —verde sobre verde, invisible— y la leyenda desaparecia
+          // entera porque esta capa la declaraba nula.
+          color: {
+            condition: { test: "datum.estado === 'denegado'", value: '#486581' },
+            value: '#FFFFFF',
+          },
+        },
+      },
+    ],
   };
 }
 

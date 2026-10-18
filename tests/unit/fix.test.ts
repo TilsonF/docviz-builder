@@ -58,10 +58,18 @@ describe('lo que sabe arreglar', () => {
   });
 
   it('arregla tambien el campo que sobra en un bloque que compila', () => {
-    const r = fixBlock({ source: bloque('type: bar', 'data:', '  - label: A', '    value: 1', 'titulo: X') });
-    // "titulo" se parece a "title": es una errata, no un campo inventado.
-    expect(r['aplicado']).toEqual([{ de: 'titulo', a: 'title' }]);
+    const r = fixBlock({ source: bloque('type: bar', 'data:', '  - label: A', '    value: 1', 'titel: X') });
+    // "titel" se parece a "title": es una errata, no un campo inventado.
+    expect(r['aplicado']).toEqual([{ de: 'titel', a: 'title' }]);
     expect(r['source']).toContain('title: X');
+  });
+
+  it('no toca `titulo`, que no es una errata sino el nombre en espanol', () => {
+    // Lo renombraba a `title` porque se le parece. `leerCampo` ya lo entendia,
+    // asi que «corregirlo» era reescribir un bloque que funcionaba.
+    const r = fixBlock({ source: bloque('type: bar', 'data:', '  - label: A', '    value: 1', 'titulo: X') });
+    expect(r['aplicado']).toEqual([]);
+    expect(r['source']).toContain('titulo: X');
   });
 });
 

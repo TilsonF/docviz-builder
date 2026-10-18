@@ -78,6 +78,7 @@ Search by **what you want to explain**, not by the technology.
 | Four quadrants with their content, without coordinates | `matrix-2x2` | d2 |
 | Milestones in chronological order | `timeline` | d2 (or mermaid) |
 | Upcoming phases with their content | `roadmap` | d2 |
+| The activities a user walks through, crossed with the release slices | `story-map` | d2 |
 | Who depends on whom | `dependency-map` | graphviz |
 | A business process in standard BPMN notation | `bpmn` | bpmn |
 | A drawing made of characters, turned into clean SVG | `ascii` | svgbob |
@@ -95,6 +96,7 @@ Search by **what you want to explain**, not by the technology.
 | How the composition of a total evolves | `stacked-area` | vega-lite |
 | The relationship between two magnitudes | `scatter` | vega-lite |
 | The density of a magnitude across two categorical dimensions | `heatmap` | vega-lite |
+| What each role can do: allowed, conditional or denied | `access-matrix` | vega-lite |
 | The distribution of a continuous variable | `histogram` | vega-lite |
 | Median, spread and outliers per group | `box-plot` | vega-lite |
 | The actual value against its target | `bullet` | vega-lite |

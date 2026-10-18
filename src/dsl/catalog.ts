@@ -726,6 +726,37 @@ const EXECUTIVE: readonly TypeSpec[] = [
     ].join('\n'),
   }),
   t({
+    type: 'story-map',
+    lang: 'diagram',
+    engine: 'd2',
+    aliases: ['mapa-de-historias', 'user-story-map'],
+    purpose: 'Las actividades que el usuario recorre, cruzadas con los cortes de entrega.',
+    whenToUse:
+      'Para decidir que entra en el primer corte: si solo se entrega la primera fila, ' +
+      '¿puede el usuario terminar su recorrido de principio a fin?',
+    whenNotToUse:
+      'Si lo que importa es el estado de cada tarjeta hoy: eso es `kanban`. ' +
+      'Si lo que importa son las fechas: `roadmap` o `gantt`.',
+    keywords: [
+      'mapa de historias', 'story map', 'historias de usuario', 'user stories', 'backlog',
+      'cortes de entrega', 'releases', 'esqueleto', 'backbone', 'mvp', 'primer corte',
+      'que entra en el sprint', 'alcance por entrega', 'slice', 'release planning',
+      'recorrido del usuario por entregas', 'repartir el backlog', 'priorizar historias',
+    ],
+    example: [
+      'type: story-map',
+      'activities: [Alta, Validacion, Cobro]',
+      'releases: [MVP, R2]',
+      'stories:',
+      '  - activity: Alta',
+      '    release: MVP',
+      '    name: Formulario de alta',
+      '  - activity: Cobro',
+      '    release: R2',
+      '    name: Reintento de pago',
+    ].join('\n'),
+  }),
+  t({
     type: 'dependency-map',
     lang: 'diagram',
     engine: 'graphviz',
@@ -903,6 +934,37 @@ const CHARTS: readonly TypeSpec[] = [
     whenNotToUse: 'Si una dimension tiene un solo valor: usa `bar`.',
     keywords: ['mapa de calor', 'cruce', 'matriz', 'densidad', 'concentracion', 'density', 'by day and hour', 'intensity', 'matrix of values', 'calendar heat', 'dia de la semana y hora', 'dos dimensiones', 'cruce de dos categorias'],
     example: ['type: heatmap', 'data:', '  - x: SP1', '    y: Backend', '    value: 12'].join('\n'),
+  }),
+  t({
+    type: 'access-matrix',
+    lang: 'chart',
+    engine: 'vega-lite',
+    aliases: ['matriz-de-permisos', 'permission-matrix', 'matriz-de-acceso'],
+    purpose: 'Que puede hacer cada rol: permitido, condicionado o denegado.',
+    whenToUse: 'Para revisar permisos por rol, matrices RACI de acceso y evidencias de auditoria.',
+    whenNotToUse:
+      'Si lo que se cruza es una magnitud y no un estado —defectos por sprint, actividad por hora— ' +
+      'usa `heatmap`.',
+    keywords: [
+      'permisos', 'matriz de permisos', 'roles', 'rol', 'acceso', 'autorizacion', 'quien puede',
+      'permissions', 'permission matrix', 'access matrix', 'rbac', 'roles and permissions',
+      'who can do what', 'privilegios', 'perfiles', 'auditoria de accesos', 'segregacion de funciones',
+      'control de acceso', 'matriz de autorizacion',
+    ],
+    example: [
+      'type: access-matrix',
+      'title: Permisos por rol',
+      'data:',
+      '  - role: Analista',
+      '    permission: Consultar expediente',
+      '    access: si',
+      '  - role: Analista',
+      '    permission: Anular deposito',
+      '    access: no',
+      '  - role: Supervisor',
+      '    permission: Anular deposito',
+      '    access: condicionado',
+    ].join('\n'),
   }),
   t({
     type: 'histogram',

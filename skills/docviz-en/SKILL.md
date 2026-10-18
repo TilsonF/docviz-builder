@@ -37,7 +37,7 @@ flow:
 
 ## Don't guess the type — ask
 
-There are 62 types. Before writing a block, if you are not sure:
+There are 64 types. Before writing a block, if you are not sure:
 
 ```bash
 npx docviz suggest "the approval process for a request"  # recommends the type
@@ -91,6 +91,25 @@ writes for you.
 A useful description names what the drawing proves, not its shape: "billing
 depends on validation, the only step with a retry", not "a diagram with three
 connected boxes".
+
+## A node can carry a link
+
+A diagram in a wiki does not run JavaScript, but it does follow a link. A node
+can point at its user story, its page, or another figure:
+
+```yaml
+type: capability-map
+domains:
+  - name: Payments
+    href: https://wiki.example/payments
+    capabilities:
+      - {name: Reconcile, href: "https://dev.azure.com/org/_workitems/edit/437449"}
+```
+
+`href`, `link` or `enlace`. Only `http(s)`, a fragment (`#id`) or a relative
+path; anything else **fails the compile** instead of disappearing silently.
+Accepted by the eleven types in the executive and dependency family, plus
+`story-map`.
 
 ## Workflow
 
@@ -160,6 +179,6 @@ npx docviz init     # config, AGENTS.md and a sample document
 npx docviz doctor   # which engines this machine can use
 ```
 
-`docviz init` leaves an `AGENTS.md` with the full catalog of all 62 types and
+`docviz init` leaves an `AGENTS.md` with the full catalog of all 64 types and
 their decision tables. Consult it when you need detail this summary does not
 carry.

@@ -64,6 +64,7 @@ documentación confidencial a ningún sitio.
 - [Lenguajes nativos](#lenguajes-nativos)
 - [Para dónde es el dibujo](#para-dónde-es-el-dibujo)
 - [El SVG que sale es usable por todo el mundo](#el-svg-que-sale-es-usable-por-todo-el-mundo)
+- [Un nodo puede llevar enlace](#un-nodo-puede-llevar-enlace)
 - [Configuración](#configuración)
 - [Temas](#temas)
 - [Caché y determinismo](#caché-y-determinismo)
@@ -288,16 +289,16 @@ relations:
 ```
 ````
 
-El catálogo cubre <!-- docviz:tipos-total -->62<!-- /docviz:tipos-total --> tipos.
+El catálogo cubre <!-- docviz:tipos-total -->64<!-- /docviz:tipos-total --> tipos.
 `docviz types` los lista siempre actualizados, con su propósito y un ejemplo;
 `docviz suggest` recomienda uno a partir de una frase.
 
 <!-- docviz:tipos-resumen -->
 | Motor | Tipos |
 |---|---|
-| vega-lite | 22 |
+| vega-lite | 23 |
+| d2 | 12 |
 | plantuml | 12 |
-| d2 | 11 |
 | mermaid | 11 |
 | likec4 | 3 |
 | bpmn | 1 |
@@ -344,6 +345,7 @@ El catálogo cubre <!-- docviz:tipos-total -->62<!-- /docviz:tipos-total --> tip
 | Cuatro cuadrantes con su contenido, sin coordenadas | `matrix-2x2` | d2 |
 | Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
 | Fases futuras con su contenido | `roadmap` | d2 |
+| Las actividades que el usuario recorre, cruzadas con los cortes de entrega | `story-map` | d2 |
 | Quien depende de quien | `dependency-map` | graphviz |
 | Proceso de negocio en notacion BPMN estandar | `bpmn` | bpmn |
 | Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
@@ -361,6 +363,7 @@ El catálogo cubre <!-- docviz:tipos-total -->62<!-- /docviz:tipos-total --> tip
 | Evolucion de la composicion de un total | `stacked-area` | vega-lite |
 | Relacion entre dos magnitudes | `scatter` | vega-lite |
 | Densidad de una magnitud en dos dimensiones categoricas | `heatmap` | vega-lite |
+| Que puede hacer cada rol: permitido, condicionado o denegado | `access-matrix` | vega-lite |
 | Distribucion de una variable continua | `histogram` | vega-lite |
 | Mediana, dispersion y valores atipicos por grupo | `box-plot` | vega-lite |
 | Valor real frente a su objetivo | `bullet` | vega-lite |
@@ -707,6 +710,50 @@ gradientes que esos motores solo definen cuando ese modo está activo. Y
 `id-repetido` usaba `\bid=`, que también casa `data-id=` porque el guion es un
 límite de palabra. Una compuerta que grita 145 veces sin motivo se desactiva en
 una semana.
+
+---
+
+## Un nodo puede llevar enlace
+
+El SVG que sale de DocViz **ya** podía llevar enlaces: el saneador admite
+`<a href>` con `http(s)` y con fragmentos, y los motores los emiten. Lo que
+faltaba era declararlos desde el DSL, así que la capacidad estaba ahí y no se
+podía alcanzar.
+
+```yaml
+type: capability-map
+domains:
+  - name: Pagos
+    href: https://wiki.empresa/pagos          # el dominio enlaza a su documento
+    capabilities:
+      - name: Conciliar
+        href: https://dev.azure.com/org/_workitems/edit/437449
+      - Anular                                 # sin enlace, como siempre
+```
+
+Es la **única forma de interactividad que sobrevive al destino real** de estos
+dibujos. Un wiki, un repositorio y un PDF no ejecutan JavaScript, pero los tres
+siguen un enlace: un nodo puede apuntar a su historia de usuario en el backlog,
+a su documento en la wiki o a otra figura del mismo documento.
+
+Se escribe `href`, `link` o `enlace`, y se admite `http(s)`, un fragmento
+(`#otra-figura`) o una ruta relativa. **Cualquier otra cosa es un error de
+compilación**, no un silencio: un `javascript:` lo quitaría el saneador y el
+autor creería que su enlace funciona.
+
+Lo aceptan hoy los once tipos de la familia ejecutiva y de dependencias
+—`strategy-tree`, `issue-tree`, `decision-tree`, `strategy-pillars`,
+`capability-map`, `operating-model`, `value-chain`, `before-after`,
+`matrix-2x2`, `timeline`, `roadmap`— y `story-map`. Los demás todavía no:
+PlantUML, Mermaid y Vega-Lite escriben el enlace cada uno a su manera, y
+anunciarlo para los 64 sin haberlo medido sería lo mismo que no tenerlo.
+
+> **Lo que no se hace: HTML interactivo.** Ni zoom, ni plegar nodos, ni
+> tooltips con JavaScript. Habría que abrir un agujero en el saneador —que es
+> una lista de permitidos y prohíbe `<script>` y todo manejador de eventos—,
+> implementarlo nueve veces (una por motor), y el resultado no lo podría
+> mostrar ninguno de los sitios donde acaba esta documentación. Para revisar
+> antes de publicar ya está `docviz preview`.
 
 ---
 
@@ -1073,7 +1120,7 @@ source: docs-src
 
 Los esquemas **se derivan del catálogo**, no se escriben a mano: uno que hubiera
 que mantener en paralelo se desfasaría el mismo día que se añade un tipo, y
-entonces engañaría en lugar de ayudar. Una prueba comprueba que los 62 ejemplos
+entonces engañaría en lugar de ayudar. Una prueba comprueba que los 64 ejemplos
 canónicos validen contra su propio esquema.
 
 Por defecto no marcan los campos que no conocen, porque el ejemplo de cada tipo
@@ -1194,7 +1241,7 @@ DOCVIZ_LANG=en npx docviz check docs-src
 
 Traduce el andamiaje del error —`code`, `file`, `line`, `reason`, `detail`— y
 los mensajes del camino común: los de campos, los de listas y los tres «el
-tipo no existe». Medido rompiendo los 62 ejemplos del catálogo de cuatro
+tipo no existe». Medido rompiendo los 64 ejemplos del catálogo de cuatro
 formas, los 193 errores que eso produce salen en inglés.
 
 Quedan 161 mensajes de compiladores concretos todavía en español. Están
@@ -1229,7 +1276,7 @@ Vía `![](...)` el navegador carga el SVG como imagen y no ejecuta nada. Pero en
 cuanto alguien lo **incrusta dentro de un HTML** —que es lo natural para
 conservar el tema claro/oscuro— el SVG pasa a ser markup vivo. Por eso todo SVG
 se sanea con una **lista de permitidos**: 49 elementos y 104 atributos medidos
-sobre lo que emiten de verdad los seis motores en los 62 tipos del catálogo.
+sobre lo que emiten de verdad los seis motores en los 64 tipos del catálogo.
 
 Lo que no está en la lista se cae, incluido lo que no se nos haya ocurrido.
 Además se eliminan los comentarios XML, se escapan `<` y `>` dentro de los
@@ -1326,7 +1373,7 @@ npx docviz skill --dir .config/opencode/skills   # otro agente
 ```
 
 El skill es un resumen corto: las tres vallas, cómo preguntar el tipo, el flujo
-de trabajo y la tabla de códigos de error. El catálogo completo de los 62 tipos
+de trabajo y la tabla de códigos de error. El catálogo completo de los 64 tipos
 sigue en `AGENTS.md`, al que el skill apunta.
 
 ---

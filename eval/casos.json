@@ -610,5 +610,47 @@
     "tipo": "funnel",
     "idioma": "es",
     "particion": "entrenamiento"
+  },
+  {
+    "id": "story-map-backlog",
+    "necesidad": "Repartir el backlog en cortes de entrega: que historias entran en el MVP y cuales esperan al segundo corte, actividad por actividad.",
+    "tipo": "story-map",
+    "idioma": "es",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "story-map-recorrido",
+    "necesidad": "Ver si con la primera entrega el usuario puede completar su recorrido de principio a fin, o si le falta un paso.",
+    "tipo": "story-map",
+    "idioma": "es",
+    "particion": "reservado"
+  },
+  {
+    "id": "en-story-map",
+    "necesidad": "Plan which user stories ship in the first release slice across the backbone of activities the user walks through.",
+    "tipo": "story-map",
+    "idioma": "en",
+    "particion": "reservado"
+  },
+  {
+    "id": "permisos-rol",
+    "necesidad": "Que puede hacer cada rol del sistema: quien consulta, quien constituye y quien anula, con los casos que dependen de una condicion.",
+    "tipo": "access-matrix",
+    "idioma": "es",
+    "particion": "entrenamiento"
+  },
+  {
+    "id": "permisos-auditoria",
+    "necesidad": "Una matriz de permisos por perfil para la evidencia de auditoria de control de acceso.",
+    "tipo": "access-matrix",
+    "idioma": "es",
+    "particion": "reservado"
+  },
+  {
+    "id": "en-access-matrix",
+    "necesidad": "Show which permissions each role has: allowed, denied or conditional, as RBAC audit evidence.",
+    "tipo": "access-matrix",
+    "idioma": "en",
+    "particion": "reservado"
   }
 ]

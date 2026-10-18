@@ -77,6 +77,7 @@ Busca por **lo que quieres explicar**, no por la tecnología.
 | Cuatro cuadrantes con su contenido, sin coordenadas | `matrix-2x2` | d2 |
 | Hitos en orden cronologico | `timeline` | d2 (o mermaid) |
 | Fases futuras con su contenido | `roadmap` | d2 |
+| Las actividades que el usuario recorre, cruzadas con los cortes de entrega | `story-map` | d2 |
 | Quien depende de quien | `dependency-map` | graphviz |
 | Proceso de negocio en notacion BPMN estandar | `bpmn` | bpmn |
 | Dibujo hecho con caracteres, convertido a SVG limpio | `ascii` | svgbob |
@@ -94,6 +95,7 @@ Busca por **lo que quieres explicar**, no por la tecnología.
 | Evolucion de la composicion de un total | `stacked-area` | vega-lite |
 | Relacion entre dos magnitudes | `scatter` | vega-lite |
 | Densidad de una magnitud en dos dimensiones categoricas | `heatmap` | vega-lite |
+| Que puede hacer cada rol: permitido, condicionado o denegado | `access-matrix` | vega-lite |
 | Distribucion de una variable continua | `histogram` | vega-lite |
 | Mediana, dispersion y valores atipicos por grupo | `box-plot` | vega-lite |
 | Valor real frente a su objetivo | `bullet` | vega-lite |

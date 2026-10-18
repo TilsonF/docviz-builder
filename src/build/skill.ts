@@ -93,7 +93,7 @@ export function formatearSkill(result: SkillResult): string {
   return (
     `\nskill instalado en ${result.destino}\n\n` +
     'A partir de ahora tu agente sabe que DocViz existe y como usarlo.\n' +
-    'Para el catalogo completo de los 62 tipos, ejecuta `docviz init` en el\n' +
+    'Para el catalogo completo de los 64 tipos, ejecuta `docviz init` en el\n' +
     'proyecto: deja un AGENTS.md con las tablas de decision.\n\n'
   );
 }

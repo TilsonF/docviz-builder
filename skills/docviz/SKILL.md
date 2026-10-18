@@ -37,7 +37,7 @@ flow:
 
 ## No adivines el tipo — pregunta
 
-Hay 62 tipos. Antes de escribir un bloque, si no estás seguro:
+Hay 64 tipos. Antes de escribir un bloque, si no estás seguro:
 
 ```bash
 npx docviz suggest "el proceso de aprobación de una solicitud"   # recomienda el tipo
@@ -90,6 +90,25 @@ junto al `<title>` y a `role="img"`, que DocViz escribe solo.
 Una descripción útil nombra lo que el dibujo demuestra, no su forma: «el cobro
 depende de la validación, que es el único punto con reintento», no «diagrama de
 tres cajas conectadas».
+
+## Un nodo puede llevar enlace
+
+Un diagrama en un wiki no ejecuta JavaScript, pero sí sigue un enlace. Un nodo
+puede apuntar a su historia de usuario, a su documento o a otra figura:
+
+```yaml
+type: capability-map
+domains:
+  - name: Pagos
+    href: https://wiki.empresa/pagos
+    capabilities:
+      - {name: Conciliar, href: "https://dev.azure.com/org/_workitems/edit/437449"}
+```
+
+`href`, `link` o `enlace`. Solo `http(s)`, un fragmento (`#id`) o una ruta
+relativa; cualquier otra cosa **falla la compilación** en lugar de desaparecer
+en silencio. Lo aceptan los once tipos de la familia ejecutiva y de
+dependencias, más `story-map`.
 
 ## Flujo de trabajo
 
@@ -160,6 +179,6 @@ npx docviz init     # configuración, AGENTS.md y un documento de ejemplo
 npx docviz doctor   # qué motores puede usar esta máquina
 ```
 
-`docviz init` deja un `AGENTS.md` con el catálogo completo de los 62 tipos y sus
+`docviz init` deja un `AGENTS.md` con el catálogo completo de los 64 tipos y sus
 tablas de decisión. Consúltalo cuando necesites el detalle que este resumen no
 trae.

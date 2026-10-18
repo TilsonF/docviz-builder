@@ -25,6 +25,7 @@ import {
   roadmap,
   sequence,
   stateDiagram,
+  storyMap,
   tree,
   valueChain,
 } from './diagram.js';
@@ -119,6 +120,7 @@ const COMPILERS: Readonly<Record<string, Readonly<Record<string, Compiler>>>> = 
   'matrix-2x2': { d2: matrix2x2 },
   timeline: { d2: roadmap, mermaid: mermaidTimeline },
   roadmap: { d2: roadmap },
+  'story-map': { d2: storyMap },
   'dependency-map': { graphviz: dependencyGraph },
 
   // Notaciones especiales

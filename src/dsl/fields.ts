@@ -18,18 +18,19 @@
  */
 
 import { t } from '../core/idioma.js';
+import { aliasesDe, canonicosDe } from './util.js';
 import { parse as parseYaml } from 'yaml';
 import { ERROR_CODES, type ErrorCode } from '../core/errors.js';
 import type { TypeSpec } from './catalog.js';
 
 /** Campos que admite cualquier bloque, sea cual sea su tipo. */
-const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title'];
+const UNIVERSAL_FIELDS: readonly string[] = ['type', 'title', 'description'];
 
 /**
  * Campos que admite toda una valla, aunque no aparezcan en el ejemplo del tipo.
  *
  * No son universales a proposito: `include` en un `sequence` no significa nada,
- * y darlo por bueno en los 62 tipos debilitaria la deteccion de erratas justo
+ * y darlo por bueno en los 64 tipos debilitaria la deteccion de erratas justo
  * donde mas sirve. Cada campo vale donde tiene sentido y en ningun sitio mas.
  */
 const POR_VALLA: Readonly<Record<string, readonly string[]>> = {
@@ -94,9 +95,19 @@ export function observarAnidado(valor: Record<string, unknown>, ruta: string): R
  */
 export function trackFieldAccess<T extends object>(doc: T): FieldAccessTracker<T> {
   const anidados: RegistroObservado[] = [];
+  /**
+   * Proxy -> registro que lo observa.
+   *
+   * Hace falta porque un compilador puede pasar a un ayudante el registro que
+   * ya observa, y el ayudante lo vuelve a registrar. Envolver un proxy en otro
+   * partia las lecturas en dos conjuntos: las del envoltorio exterior
+   * quedaban fuera del registro interior, que es el que se compara, y campos
+   * leidos de verdad salian como ignorados (DV104).
+   */
+  const envueltos = new WeakMap<object, RegistroObservado>();
 
-  const envolver = <O extends object>(objetivo: O, registro: RegistroObservado | undefined): O =>
-    new Proxy(objetivo, {
+  const envolver = <O extends object>(objetivo: O, registro: RegistroObservado | undefined): O => {
+    const proxy = new Proxy(objetivo, {
       get(t, prop, receiver) {
         if (typeof prop === 'string' && registro !== undefined) registro.accessed.add(prop);
         return Reflect.get(t, prop, receiver);
@@ -110,6 +121,9 @@ export function trackFieldAccess<T extends object>(doc: T): FieldAccessTracker<T
         return Reflect.ownKeys(t);
       },
     });
+    if (registro !== undefined) envueltos.set(proxy, registro);
+    return proxy;
+  };
 
   const raiz: RegistroObservado = {
     ruta: '',
@@ -120,6 +134,9 @@ export function trackFieldAccess<T extends object>(doc: T): FieldAccessTracker<T
 
   const observador = {
     registrar(valor: Record<string, unknown>, ruta: string): Record<string, unknown> {
+      // Lo que ya es un proxy nuestro se devuelve tal cual: envolverlo otra vez
+      // es lo que partia las lecturas.
+      if (envueltos.has(valor)) return valor;
       // El mismo objeto puede llegar dos veces: se observa una sola.
       const previo = anidados.find((r) => r.objetivo === valor);
       if (previo !== undefined) return envolver(valor, previo);
@@ -166,6 +183,10 @@ export function knownFields(spec: TypeSpec): ReadonlySet<string> {
     // Un ejemplo que no parsea es un fallo del catalogo, no de este analisis:
     // se queda con los universales y las pruebas del catalogo lo denuncian.
   }
+  // Todo campo conocido lo es tambien por su nombre en español: `leerCampo` los
+  // acepta, asi que marcarlos como desconocidos era contradecirse. `titulo` y
+  // `descripcion` producian un DV104 aunque el compilador los leyera.
+  for (const campo of [...fields]) for (const alias of aliasesDe(campo)) fields.add(alias);
   knownCache.set(spec.type, fields);
   return fields;
 }
@@ -211,6 +232,25 @@ export function unknownFields(
       ...(suggestion !== undefined ? { suggestion } : {}),
     };
     warnings.push(warning);
+  }
+
+  // Declarar un campo por su nombre canonico Y por su alias deja uno de los dos
+  // sin efecto: `leerCampo` se queda con el canonico. Antes salia como campo
+  // desconocido por accidente; desde que los alias son campos conocidos hay que
+  // decirlo a proposito, porque si no un `titulo:` que nadie lee queda mudo.
+  for (const field of Object.keys(doc)) {
+    for (const canonico of canonicosDe(field)) {
+      if (!Object.hasOwn(doc, canonico)) continue;
+      warnings.push({
+        code: ERROR_CODES.DSL_FIELD_UNKNOWN,
+        field,
+        message: t(
+          `el bloque declara "${field}" y "${canonico}", que son el mismo campo; se usa "${canonico}" y "${field}" se ignora`,
+          `the block declares both "${field}" and "${canonico}", which are the same field; "${canonico}" wins and "${field}" is ignored`,
+        ),
+        suggestion: canonico,
+      });
+    }
   }
 
   return warnings;

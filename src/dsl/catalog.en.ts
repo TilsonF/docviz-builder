@@ -2,7 +2,7 @@
  * Ficha de cada tipo en ingles.
  *
  * Vive aparte del catalogo para que la traduccion se pueda revisar de un
- * vistazo, y para que anadir un idioma no obligue a tocar las 57 definiciones.
+ * vistazo, y para que anadir un idioma no obligue a tocar las 62 definiciones.
  *
  * No es documentacion decorativa: `docviz suggest` puntua la peticion contra
  * esta prosa igual que contra la española, asi que una peticion en ingles deja
@@ -187,6 +187,13 @@ export const CATALOG_EN: Readonly<Record<string, TypeSpecEn>> = {
     whenToUse: 'To communicate the plan by quarter or phase without committing to exact dates.',
     whenNotToUse: 'If there are date commitments: use `gantt`.',
   },
+  'story-map': {
+    purpose: 'The activities a user walks through, crossed with the release slices.',
+    whenToUse:
+      'To decide what goes in the first slice: if only the top row ships, can the user still finish end to end?',
+    whenNotToUse:
+      'If what matters is the state of each card today, that is `kanban`. If what matters is dates, `roadmap` or `gantt`.',
+  },
   'dependency-map': {
     purpose: 'Who depends on whom.',
     whenToUse: 'For dependency graphs between modules, services or teams, cycles included.',
@@ -246,6 +253,12 @@ export const CATALOG_EN: Readonly<Record<string, TypeSpecEn>> = {
     purpose: 'The density of a magnitude across two categorical dimensions.',
     whenToUse: 'For crossings: defects by module and sprint, activity by day and hour.',
     whenNotToUse: 'If one dimension has a single value: use `bar`.',
+  },
+  'access-matrix': {
+    purpose: 'What each role can do: allowed, conditional or denied.',
+    whenToUse: 'To review permissions per role, RACI access matrices and audit evidence.',
+    whenNotToUse:
+      'If what you cross is a magnitude rather than a state — defects per sprint, activity per hour — use `heatmap`.',
   },
   histogram: {
     purpose: 'The distribution of a continuous variable.',

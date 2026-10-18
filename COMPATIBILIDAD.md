@@ -13,7 +13,7 @@ aleja.
 
 ### El DSL
 
-Los nombres de los 62 tipos, sus campos y la forma de sus valores. Un bloque que
+Los nombres de los 64 tipos, sus campos y la forma de sus valores. Un bloque que
 compila hoy tiene que seguir compilando.
 
 Se puede **añadir**: tipos nuevos, campos opcionales nuevos, alias nuevos. No se
@@ -132,7 +132,7 @@ bajarlo no está previsto.
    documentación ya son bilingües. Los mensajes de error tienen ya el
    mecanismo —`DOCVIZ_LANG=en`— y el camino común traducido: el andamiaje del
    error, los ayudantes de campos y de listas, y los tres «el tipo no existe».
-   Medido rompiendo los 62 ejemplos del catálogo de cuatro formas distintas,
+   Medido rompiendo los 64 ejemplos del catálogo de cuatro formas distintas,
    los 193 errores que eso produce salen en inglés.
 
    Lo que falta son **161 mensajes específicos** de compiladores concretos,

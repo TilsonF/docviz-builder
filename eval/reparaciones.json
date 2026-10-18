@@ -206,7 +206,7 @@
   {
     "id": "destino-ya-existe-arriba",
     "lang": "diagram",
-    "roto": "type: sequence\ntitle: A\ntitulo: B\nparticipants: [X]\nflow:\n  - X -> X: eco\n",
+    "roto": "type: sequence\ntitle: A\ntitlee: B\nparticipants: [X]\nflow:\n  - X -> X: eco\n",
     "espera": "no-adivina"
   }
 ]

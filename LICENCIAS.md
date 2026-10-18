@@ -8,7 +8,7 @@ DocViz es MIT, pero un paquete no se instala solo. Esto es lo que entra en
 > script no sepa clasificar hace fallar la comprobación, para que nadie la
 > apruebe por descuido.
 
-Dependencias de producción: **305**, sin contar los binarios
+Dependencias de producción: **302**, sin contar los binarios
 por plataforma —`esbuild`, `lightningcss`, `rolldown`, `fsevents`— de los que
 cada máquina instala el suyo. Esos se clasifican igual, pero no se listan:
 su licencia es la de su paquete padre, y listarlos haría que este documento
@@ -16,7 +16,7 @@ dependiera del ordenador que lo generó.
 
 | Familia | Paquetes | Qué obliga |
 |---|---|---|
-| permisiva | 301 | Conservar el aviso de copyright. Nada más. |
+| permisiva | 298 | Conservar el aviso de copyright. Nada más. |
 | copyleft debil | 2 | Solo si modificas la libreria. Ver abajo. |
 | con clausula propia | 1 | No es estándar. Ver abajo. |
 | dominio publico | 1 | Nada. |

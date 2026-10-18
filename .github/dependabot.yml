@@ -31,6 +31,13 @@ updates:
       # ci` falla antes de compilar nada. Se toma cuando el lint lo soporte.
       - dependency-name: typescript
         update-types: ['version-update:semver-major']
+      # `@types/node` tiene que seguir al Node MINIMO que declara `engines`,
+      # no al ultimo publicado: con los tipos de un Node mas nuevo, el
+      # compilador acepta APIs que no existen en el suelo que prometemos y el
+      # fallo aparece en la maquina de quien instala. Sube cuando suba
+      # `engines.node`, y entonces a mano.
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
 
   - package-ecosystem: github-actions
     directory: /

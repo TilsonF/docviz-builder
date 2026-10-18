@@ -34,7 +34,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Hace falta el historial completo para comprobar que la etiqueta
           # cuelgue de la rama por defecto; el clon superficial no lo trae.
@@ -62,7 +62,7 @@ jobs:
           fi
           echo "$GITHUB_REF_NAME cuelga de $rama"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
@@ -72,13 +72,13 @@ jobs:
       # mismo entorno que el de CI. Sin la JVM y sin el jar no fallan por un
       # error del codigo: fallan por no tener con que dibujar, que es peor,
       # porque parece lo mismo.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Cachear plantuml.jar
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}

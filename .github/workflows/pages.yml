@@ -31,27 +31,27 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
 
       - name: Cachear plantuml.jar
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}
 
       - name: Cachear Chromium
         id: cache-chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -78,14 +78,14 @@ jobs:
       - name: Comprobar que no haya imagenes rotas
         run: node bin/docviz.mjs verify sitio
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
       - uses: actions/jekyll-build-pages@v1
         with:
           source: ./sitio
           destination: ./_site
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
 
   desplegar:
     needs: construir
@@ -95,4 +95,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

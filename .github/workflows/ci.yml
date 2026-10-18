@@ -22,15 +22,15 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22'
           cache: npm
 
       # PlantUML necesita una JVM. El resto de motores van embebidos.
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'
@@ -41,7 +41,7 @@ jobs:
       # El jar pesa 27 MB y no se versiona: se descarga una vez y se cachea por
       # version, de modo que solo se vuelve a bajar al subirla.
       - name: Cachear plantuml.jar
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: vendor
           key: plantuml-${{ hashFiles('scripts/fetch-plantuml.mjs') }}
@@ -53,7 +53,7 @@ jobs:
       # navegadores: se le proporciona uno y lo encuentra en la cache.
       - name: Cachear Chromium
         id: cache-chromium
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: chromium-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -65,7 +65,7 @@ jobs:
       # Un build en frio son 33 segundos dibujando; con cache, medio. Se guarda
       # por contenido de los documentos y del codigo que los compila.
       - name: Cachear los recursos generados
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .docviz-cache
           key: docviz-${{ hashFiles('src/**/*.ts', 'examples/**/*.md', 'docs-src/**/*.md') }}
@@ -139,7 +139,7 @@ jobs:
 
       - name: Publicar los resultados
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: resultados
           path: |
@@ -172,14 +172,14 @@ jobs:
     timeout-minutes: 25
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
           cache: npm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '21'

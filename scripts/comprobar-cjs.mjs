@@ -26,7 +26,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import process from 'node:process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const raiz = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(raiz, 'dist');
@@ -88,8 +88,11 @@ if (conTla.length > 0) {
 }
 
 // 4. Requerir e importar la entrada publica da LA MISMA instancia.
-const porRequire = require(path.join(dist, 'index.js'));
-const porImport = await import(path.join(dist, 'index.js'));
+const entradaPublica = path.join(dist, 'index.js');
+// `import()` quiere una URL, no una ruta: en Windows `D:\...` se lee como
+// esquema y sale ERR_UNSUPPORTED_ESM_URL_SCHEME. `require()` si acepta la ruta.
+const porRequire = require(entradaPublica);
+const porImport = await import(pathToFileURL(entradaPublica).href);
 if (porRequire !== porImport) {
   fallos.push('require() e import() de la entrada publica devuelven objetos distintos: hay dos instancias del modulo');
 }

@@ -313,8 +313,35 @@ no simultáneos.
    llegó al final. Parece un evento aislado de infraestructura y no algo
    nuestro.
 
-El job sigue informativo, pero ya no por desconocimiento: ahora se sabe qué
-arreglar y en qué orden.
+**Y ya no es solo macOS.** En la 0.11 el mismo problema salió en **Windows**,
+donde el job no es informativo. La prueba
+`mcp-tools > escribe el recurso cuando se indica outputDir` agotó el
+`renderers.timeoutMs` de 30 s y devolvió `ok: false`. Medida la misma prueba
+en el mismo trabajo, commit a commit:
+
+| Corrida | Duración |
+|---|---|
+| `561a052` (documentación) | 6 686 ms |
+| `0a7e652` (release 0.10.0) | 15 070 ms |
+| `7427887` (iconos) | **30 186 ms** → falla |
+| `7427887` relanzado, sin tocar nada | 9 842 ms |
+
+Eso no es una tendencia, es **dispersión de un factor cuatro y medio sobre el
+mismo código**. Localmente ese render tarda 0,9 s, y el `disposeAll()` del
+servidor MCP no es el culpable: tres renders seguidos dan 1879 / 904 / 743 ms.
+
+Dos conclusiones que valen más que el rojo concreto:
+
+- **Ese presupuesto de 30 s no tiene margen**, y un rojo así no distingue «D2
+  se rompió» de «el runner iba lento», que es la peor clase de señal. Subir el
+  número lo apagaría sin arreglar nada, igual que una excepción de `audit` sin
+  fecha de caducidad.
+- **El punto 1 de arriba gana una segunda plataforma a favor.** Compartir el
+  módulo WASM compilado entre archivos de prueba deja de ser un arreglo para
+  el job informativo de macOS y pasa a proteger el que sí bloquea.
+
+El job de macOS sigue informativo, pero ya no por desconocimiento: ahora se
+sabe qué arreglar y en qué orden.
 
 ### 5. Determinismo entre plataformas
 

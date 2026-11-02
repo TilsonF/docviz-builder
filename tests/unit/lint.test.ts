@@ -73,6 +73,25 @@ describe('lintSvg', () => {
     expect(errores(lintSvg(guion, 'x.svg')).length).toBeGreaterThan(0);
   });
 
+  it('un enlace en un nodo no es una dependencia de red', () => {
+    // El `href` de un `<a>` es el destino de un enlace: el visor no lo pide
+    // para dibujar. La funcion de enlaces en los nodos —desde la 0.8— avisaba
+    // siempre, y dos veces, porque D2 escribe `href` y `xlink:href` juntos.
+    const enlace = sano('<a href="https://ejemplo.test/doc" xlink:href="https://ejemplo.test/doc"><text>x</text></a>');
+    expect(codigos(enlace)).not.toContain('referencia-remota');
+  });
+
+  it('un recurso remoto sigue avisando, y una sola vez por direccion', () => {
+    expect(codigos(sano('<use xlink:href="https://ejemplo.test/a.svg#i"/>'))).toContain('referencia-remota');
+    const dos = lintSvg(
+      sano('<image href="https://ejemplo.test/a.png"/><image href="https://ejemplo.test/a.png"/>'),
+      'x.svg',
+    );
+    const aviso = dos.hallazgos.find((h) => h.regla === 'referencia-remota');
+    expect(aviso).toBeDefined();
+    expect(aviso!.mensaje.match(/ejemplo\.test/g)?.length).toBe(1);
+  });
+
   it('exige un lienzo con el que un visor pueda trabajar', () => {
     expect(codigos('<svg role="img" width="100%"><title>T</title></svg>')).toContain('lienzo');
   });

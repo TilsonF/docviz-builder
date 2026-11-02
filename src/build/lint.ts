@@ -185,9 +185,23 @@ export function lintSvg(svg: string, file: string, options: LintOptions = {}): L
   }
 
   // --- autosuficiencia --------------------------------------------------
-  const remotas = [
-    ...svg.matchAll(/(?:(?:xlink:)?href|src)\s*=\s*(?:"(https?:[^"]*)"|'(https?:[^']*)')/gi),
-  ].map((m) => m[1] ?? m[2] ?? '');
+  // Se mira elemento por elemento, no con una busqueda ciega sobre el texto:
+  // el `href` de un `<a>` es **el destino de un enlace**, no un recurso que
+  // haga falta para dibujar. Confundirlos hacia que la funcion de enlaces en
+  // los nodos —`href`, desde la 0.8— avisara siempre, y encima dos veces,
+  // porque D2 escribe `href` y `xlink:href` en la misma etiqueta.
+  const remotas: string[] = [];
+  for (const et of svg.matchAll(/<([a-zA-Z][\w:.-]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g)) {
+    const nombre = et[1]?.toLowerCase() ?? '';
+    if (nombre === 'a') continue;
+    const atributos = et[2] ?? '';
+    for (const at of atributos.matchAll(
+      /(?:(?:xlink:)?href|src)\s*=\s*(?:"(https?:[^"]*)"|'(https?:[^']*)')/gi,
+    )) {
+      const url = at[1] ?? at[2] ?? '';
+      if (url !== '' && !remotas.includes(url)) remotas.push(url);
+    }
+  }
   for (const m of svg.matchAll(/@import\s+[^;]+/gi)) remotas.push(m[0]);
   if (remotas.length > 0) {
     add(

@@ -317,6 +317,52 @@ al usarla para escribir documentación de verdad.
    que se puede leer del archivo —un lienzo inutilizable, un texto anclado
    fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
    con el nivel equivocado siguen necesitando el ojo o una instantánea.
+5. **Logos oficiales en los nodos.** Es el hueco más visible del catálogo:
+   `grep -rn "icon" src/` no devuelve **nada**. Una arquitectura dibujada con
+   cajas de texto y otra con la marca real de cada servicio no se leen igual,
+   y es lo que hace que `caru-ini/stack-diagram` —850 líneas, publicado el
+   2026-11-01— juntara mil estrellas en un día. Lo medido al evaluarlo:
+
+   - **La vía ya está abierta, y no es la obvia.** Un logo **anidado como
+     `<svg>` hijo** pasa el saneador intacto: sobreviven su `viewBox`, sus
+     `transform` y sus colores, sin tocar la lista de permitidos. El camino
+     obvio no sirve: `<image>` no está en `ALLOWED_ELEMENTS` y se elimina, y
+     `data:` no pasa `urlSegura`. Inline además pesa **un 25 % menos** que el
+     mismo logo en base64, y los logos reales son pequeños: React 1,4 kB,
+     Docker 1,5 kB, PostgreSQL 3,9 kB, contra los ~19 kB que ya pesa una
+     figura.
+   - **No se usa el `icon:` de D2**, aunque el WASM que empaquetamos lo
+     soporte: con una URL remota emite `<image href="https://...">`, que es
+     justo lo que la regla `referencia-remota` prohíbe, y con un data URI sin
+     comillas **lo trunca en silencio** a `data:image/svg+xml`, porque el `;`
+     es su separador de sentencias. Los logos se inyectan después, en
+     `svg-utils`, que ya es el único punto de paso.
+   - **Dos niveles de licencia, y no son el mismo problema.** Los pictogramas
+     genéricos de Lucide son **ISC**: se pueden vendorizar sin más. Las marcas
+     no. Las colecciones son MIT (svgl, devicon) o CC0 (gilbarbara,
+     simple-icons), pero el propio texto de CC0 dice que «no trademark or
+     patent rights held by Affirmer are waived» y que el donante no responde
+     de los derechos de terceros: la licencia de la colección resuelve el
+     **copyright del archivo**, no el **uso de la marca**. AWS permite
+     expresamente los iconos en diagramas y **no dice nada** de
+     redistribuirlos; Azure los permite «only for the permitted use» y añade
+     prohibiciones concretas —no recortar, no voltear, no rotar, no deformar—;
+     Google Cloud no se pudo verificar, su página no se renderiza sin
+     JavaScript. Conclusión: las marcas **no van al repositorio ni al `.tgz`**,
+     se traen con un `docviz icons` que siga el precedente de `docviz setup`
+     —una vez, explícito, fuera del `postinstall`—.
+   - El «no deformar» de Azure es comprobable y por tanto le toca una regla:
+     el dial de tamaño escala el lienzo entero, lo cual es legítimo, pero un
+     `preserveAspectRatio="none"` sobre una figura con iconos de Azure sí
+     incumple sus términos.
+   - `excalidraw-gen` ya tiene 46 SVG vendorizados con su manifiesto
+     (`src/catalog/icons`, 33 oficiales y 13 genéricos). No habría que empezar
+     de cero, pero ese reparto hay que revisarlo con el criterio de arriba.
+
+   Lo que **no** se trae de esa herramienta: que el modelo coloque las
+   coordenadas a mano. Es lo contrario de la tesis de DocViz —ocho líneas de
+   YAML y un motor determinista— y una geometría escrita a mano no se cachea,
+   no se puede `diff`ear y paga el trazado en cada invocación.
 
 ---
 

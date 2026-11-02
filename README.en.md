@@ -562,6 +562,63 @@ it for all 64 without measuring would amount to not having it.
 
 ---
 
+## A node can carry a logo
+
+An architecture drawn with text boxes and one drawn with each service's real
+mark do not read the same. The field is `icon`, and it sits where `href` sits:
+
+```yaml
+type: strategy-tree
+root: Platform
+branches:
+  - name: React
+    icon: react
+    children:
+      - name: Node.js
+        icon: nodejs
+  - name: PostgreSQL
+    icon: postgresql
+  - name: Cache
+    icon: zap                 # a generic pictogram: not everything is a brand
+```
+
+**21 generic pictograms** ship with the package — they come from
+[Lucide](https://lucide.dev), which is ISC, and they are nobody's trademark.
+They take the theme's ink, so they read in light and in dark.
+
+**Brand logos do not ship with the package**, and that is not a matter of
+taste:
+
+```bash
+docviz icons react postgresql docker "betterauth:better-auth"
+```
+
+It tries [svgl](https://svgl.app), then [devicon](https://devicon.dev), then
+[gilbarbara/logos](https://github.com/gilbarbara/logos), and writes them to
+`vendor/icons`, which is already in `.gitignore`. With `docviz setup` it is one
+of only two operations that touch the network, and it never runs on its own.
+
+The reason: **a logo collection's licence settles the copyright of the file,
+not the use of the mark.** CC0's own text says so — "no trademark or patent
+rights held by Affirmer are waived" — and the donor disclaims responsibility
+for third parties' rights. AWS expressly allows its icons in diagrams and says
+nothing about redistributing them; Azure limits them to the "permitted use" and
+forbids cropping, flipping or distorting them in writing. Fetching on request
+instead of bundling is what keeps that distinction intact.
+
+What the drawing guarantees: a brand is never recoloured (only `currentColor`
+is tinted, which is what the generic pictograms use); it is never distorted
+(`preserveAspectRatio="xMidYMid meet"`, never `none`); it never reaches the
+network (the drawing goes **inside** the SVG as a nested `<svg>`, not as an
+`<image>` nor a data URI, so `docviz lint` still finds no remote reference); a
+missing icon **fails the build** with `DV109` and names the exact command,
+because a gap is invisible when you review the Markdown and an error is not;
+and the cache follows the logo file, so changing one regenerates exactly the
+figures that use it.
+
+Brand logos remain the trademarks of their owners. Today the field is
+understood by the types D2 draws; the LikeC4 `c4-*` ones not yet.
+
 ## What changed between two versions
 
 A `.md` diff tells you a YAML block was touched, but not whether the resulting
@@ -685,7 +742,7 @@ detalle:
 ```
 
 Every error carries a **stable code** (`DV001`–`DV007` for environment and
-engines, `DV100`–`DV108` for the DSL and the output). The usual reader of the report is an
+engines, `DV100`–`DV109` for the DSL and the output). The usual reader of the report is an
 agent retrying, and deciding the fix by parsing a human-readable sentence is
 fragile: the wording can improve, the code cannot.
 

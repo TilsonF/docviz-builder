@@ -7,6 +7,7 @@
 
 import type { Theme } from '../themes/types.js';
 import type { TamanoSalida } from './salida.js';
+import type { ConjuntoIconos } from './iconos.js';
 
 export type OutputFormat = 'svg' | 'png';
 
@@ -39,6 +40,13 @@ export interface RenderOptions {
   idPrefix?: string;
   /** Destino del dibujo: fija el lienzo y la letra minima exigible. */
   size?: TamanoSalida;
+  /**
+   * Iconos instalados, para rellenar los huecos que dejo el motor.
+   *
+   * Sin conjunto, un bloque que nombre un icono falla con DV109 en lugar de
+   * dibujar el hueco vacio.
+   */
+  icons?: ConjuntoIconos;
   /** Milisegundos maximos de render. Superarlo es un error, no un warning. */
   timeoutMs: number;
   /** Tamano maximo aceptado del recurso generado, en bytes. */

@@ -26,7 +26,7 @@ trazado y las posiciones.
 
 ### Los códigos de error
 
-`DV001`–`DV007` y `DV100`–`DV108`. Un código no cambia de significado nunca; si
+`DV001`–`DV007` y `DV100`–`DV109`. Un código no cambia de significado nunca; si
 hace falta distinguir un caso nuevo, se añade un código nuevo.
 
 Lo que **no** es contrato: el texto del mensaje ni el del detalle. Están escritos

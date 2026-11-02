@@ -7,6 +7,7 @@
 
 import { t } from '../core/idioma.js';
 import { DslValidationError, ERROR_CODES, type ErrorCode } from '../core/errors.js';
+import { nombreDeIconoValido, SENTINELA } from '../core/iconos.js';
 import { observarAnidado } from './fields.js';
 
 /**
@@ -332,19 +333,74 @@ export function leerEnlace(record: Record<string, unknown>, field: string): stri
   );
 }
 
+/**
+ * Nombre de icono declarado en un nodo.
+ *
+ * Solo se valida la **forma** aqui: que exista el dibujo no se puede saber
+ * compilando el bloque, se sabe al dibujarlo, y entonces falla con DV109. Lo
+ * que si se puede saber es que el nombre no sirva como nombre de archivo, y
+ * eso se para antes de que llegue a tocar el disco.
+ */
+export function leerIcono(record: Record<string, unknown>, field: string): string | undefined {
+  const bruto = optionalString(record, 'icon') ?? optionalString(record, 'icono');
+  if (bruto === undefined) return undefined;
+  const nombre = bruto.trim().toLowerCase();
+  if (nombre === '') return undefined;
+  if (nombreDeIconoValido(nombre)) return nombre;
+  fail(
+    t(
+      `el icono de ${field} no es un nombre admisible`,
+      `the icon on ${field} is not an allowed name`,
+    ),
+    t(
+      `se admiten minusculas, digitos, guion y guion bajo; se recibio ${JSON.stringify(bruto)}`,
+      `lowercase letters, digits, hyphen and underscore are accepted; got ${JSON.stringify(bruto)}`,
+    ),
+    ERROR_CODES.DSL_VALUE_NOT_ALLOWED,
+  );
+}
+
+/** Lo que un nodo puede llevar colgando ademas de su nombre. */
+export interface AdornosD2 {
+  href?: string;
+  icon?: string;
+}
+
+function adornos(n: AdornosD2): string[] {
+  const partes: string[] = [];
+  if (n.href !== undefined) partes.push(`link: ${d2Label(n.href)}`);
+  // D2 sabe reservar y situar el hueco de un icono, pero solo acepta una URL.
+  // Se le da una que no resuelve a proposito y DocViz la sustituye por el
+  // dibujo despues de que el motor haya hecho el trazado.
+  if (n.icon !== undefined) partes.push(`icon: ${SENTINELA}${n.icon}`);
+  return partes;
+}
+
+/** Sufijo de atributos D2 de un nodo con enlace o icono, o cadena vacia. */
+export function d2Adornos(n: AdornosD2): string {
+  const partes = adornos(n);
+  return partes.length > 0 ? ` { ${partes.join('; ')} }` : '';
+}
+
+/** Los mismos atributos, para meter dentro de un bloque D2 ya abierto. */
+export function d2AdornosProp(n: AdornosD2, indent = '  '): string[] {
+  return adornos(n).map((parte) => `${indent}${parte}`);
+}
+
 /** Sufijo de atributos D2 de un nodo con enlace, o cadena vacia. */
 export function d2Link(url: string | undefined): string {
-  return url !== undefined ? ` { link: ${d2Label(url)} }` : '';
+  return d2Adornos(url !== undefined ? { href: url } : {});
 }
 
 /** Propiedad `link` para meter dentro de un bloque D2 que ya esta abierto. */
 export function d2LinkProp(url: string | undefined, indent = '  '): string[] {
-  return url !== undefined ? [`${indent}link: ${d2Label(url)}`] : [];
+  return d2AdornosProp(url !== undefined ? { href: url } : {}, indent);
 }
 
 export interface NodoD2 {
   name: string;
   href?: string;
+  icon?: string;
 }
 
 /**
@@ -358,7 +414,12 @@ export function nodoD2(raw: unknown, field: string): NodoD2 {
   const record = asRecord(raw, field);
   const name = requireString(record, 'name', field);
   const href = leerEnlace(record, field);
-  return href !== undefined ? { name, href } : { name };
+  const icon = leerIcono(record, field);
+  return {
+    name,
+    ...(href !== undefined ? { href } : {}),
+    ...(icon !== undefined ? { icon } : {}),
+  };
 }
 
 /** Cadena entre comillas simples para LikeC4. */

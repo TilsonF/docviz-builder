@@ -33,16 +33,16 @@ flow:
 
 Y sale esto:
 
-![Autenticación](./assets/generated/autenticacion-730705b3623c.svg)
+![Autenticación](./assets/generated/autenticacion-c9fb8b5b7b02.svg)
 
-## 57 tipos, tres vallas
+## 64 tipos, tres vallas
 
 No hay que aprender seis sintaxis. Hay tres bloques y un catálogo que se
 consulta desde la terminal:
 
 ```bash
 npx docviz suggest "el proceso de aprobación de una solicitud"
-npx docviz types             # los 57, con su propósito
+npx docviz types             # los 64, con su propósito
 npx docviz types sequence    # ficha y ejemplo que compila tal cual
 ```
 
@@ -54,11 +54,11 @@ npx docviz types sequence    # ficha y ejemplo que compila tal cual
 
 ## Lo mismo sirve para datos
 
-![Tipos del catalogo por motor](./assets/generated/tipos-del-catalogo-por-motor-ed38700eb116.svg)
+![Tipos del catalogo por motor](./assets/generated/tipos-del-catalogo-por-motor-7451ba650499.svg)
 
 ## Y para arquitectura
 
-![Qué hace DocViz](./assets/generated/que-hace-docviz-6b40bcb95c80.svg)
+![Qué hace DocViz](./assets/generated/que-hace-docviz-6cc4a64de43b.svg)
 
 ## Todo ocurre en local
 
@@ -78,9 +78,9 @@ un banco de casos que mide si un modelo sabe usarlo.
 
 ## Documentación
 
-- [Catálogo completo](./catalogo.html) — los 57 tipos dibujados, cada uno con el bloque que lo produce
+- [Catálogo completo](./catalogo.html) — los 64 tipos dibujados, cada uno con el bloque que lo produce
 - [Arquitectura](./arquitectura.html) — cómo está construido por dentro
-- [El DSL](./dsl.html) — los 57 tipos y su sintaxis
+- [El DSL](./dsl.html) — los 64 tipos y su sintaxis
 - [Seguridad](./seguridad.html) — qué garantiza y cómo se comprueba
 
 El código está en [github.com/TilsonF/docviz-builder](https://github.com/TilsonF/docviz-builder).

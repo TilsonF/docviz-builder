@@ -8,6 +8,8 @@ import { MIME_TYPES, type OutputFormat, type RenderOptions, type RenderResult } 
 import { ajustarTamano } from '../core/salida.js';
 import { applyColorScheme } from './color-scheme.js';
 import { finalizeSvg } from './svg-utils.js';
+import { conjuntoVacio } from '../core/iconos.js';
+import { inyectarIconos } from './iconos-svg.js';
 
 /** Ejecuta una promesa con limite de tiempo; superarlo es un `RenderError`. */
 export async function withTimeout<T>(
@@ -63,9 +65,17 @@ export function svgResult(
   svg: string,
   options: RenderOptions,
 ): RenderResult {
+  // Los iconos entran ANTES de sanear: el contenido de un logo es un archivo
+  // de un tercero y pasa por la misma lista de permitidos que todo lo demas.
+  const conIconos = inyectarIconos(
+    svg,
+    options.icons ?? conjuntoVacio(),
+    options.idPrefix ?? 'dv',
+    { claro: options.theme.palette.text, oscuro: options.theme.dark.palette.text },
+  ).svg;
   // El esquema dual se aplica al final, sobre los colores que el tema ya inyecto.
   const finalized = applyColorScheme(
-    finalizeSvg(svg, {
+    finalizeSvg(conIconos, {
       ...(options.title !== undefined ? { title: options.title } : {}),
       ...(options.description !== undefined ? { description: options.description } : {}),
       ...(options.idPrefix !== undefined ? { idPrefix: options.idPrefix } : {}),

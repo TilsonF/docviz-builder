@@ -100,3 +100,26 @@ export function versionDeDocViz(): string {
   }
   return 'desconocida';
 }
+
+/**
+ * Raiz del paquete DocViz instalado, para leer lo que viaja con el.
+ *
+ * Se sube por el arbol buscando el `package.json` propio, por la misma razon
+ * que `versionDeDocViz`: la ruta relativa no es la misma ejecutando
+ * `dist/cli.js` que `src/cli.ts` con tsx, ni instalado como dependencia.
+ */
+export function directorioDelPaquete(): string {
+  let dir = path.dirname(fileURLToPath(import.meta.url));
+  for (let depth = 0; depth < 6; depth += 1) {
+    try {
+      const pkg = JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')) as { name?: string };
+      if (pkg.name === 'docviz-builder') return dir;
+    } catch {
+      // seguir subiendo
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return dir;
+}

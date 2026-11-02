@@ -417,6 +417,35 @@ export function createProgram(): Command {
     });
 
   program
+    .command('icons')
+    .description('trae logos oficiales a vendor/icons (operacion de red, a peticion)')
+    .argument('<specs...>', 'nombre | nombre:clave | nombre=URL | nombre:lucide/icono')
+    .action(async (specs: string[]) => {
+      // Los logos de marca no viajan en el paquete: la licencia de la coleccion
+      // cubre el copyright del archivo, no el uso de la marca. Se traen aqui,
+      // a peticion, igual que `setup` trae el jar de PlantUML.
+      const script = path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        '..',
+        'scripts',
+        'iconos.mjs',
+      );
+      try {
+        const { stdout, stderr } = await ejecutar(process.execPath, [script, ...specs], {
+          timeout: 300_000,
+          maxBuffer: 4 * 1024 * 1024,
+        });
+        process.stdout.write(stdout);
+        if (stderr !== '') process.stderr.write(stderr);
+      } catch (err) {
+        const salida = err as { stdout?: string; stderr?: string; message?: string };
+        if (salida.stdout) process.stdout.write(salida.stdout);
+        process.stderr.write(salida.stderr ?? `${salida.message ?? String(err)}\n`);
+        process.exitCode = 1;
+      }
+    });
+
+  program
     .command('setup')
     .description('descarga plantuml.jar dentro del paquete (unica operacion de red)')
     .argument('[version]', 'version de PlantUML a descargar')

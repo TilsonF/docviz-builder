@@ -71,6 +71,16 @@ export const ERROR_CODES = {
    * lugar de adivinando.
    */
   SALIDA_DENSA: 'DV108',
+  /**
+   * El bloque nombra un icono que no esta instalado.
+   *
+   * Es un error y no un aviso a proposito: un icono que falta dejaria un hueco
+   * en el dibujo, y un hueco no se ve al revisar el Markdown. Los logos de
+   * marca no viajan en el paquete —la licencia de la coleccion no cede el uso
+   * de la marca— asi que hay que traerlos con `docviz icons`, y el mensaje lo
+   * dice en lugar de dibujar un diagrama incompleto.
+   */
+  ICONO_DESCONOCIDO: 'DV109',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

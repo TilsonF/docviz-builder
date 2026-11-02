@@ -11,6 +11,8 @@ import { AssetCache } from '../core/cache.js';
 import { BuildFailedError, DocVizError, ERROR_CODES, RenderError } from '../core/errors.js';
 import { fullHash, HashRegistry, shortHash } from '../core/hash.js';
 import { veredictoDensidad } from '../core/salida.js';
+import { cargarIconos, type ConjuntoIconos } from '../core/iconos.js';
+import { directorioDelPaquete } from '../core/package-version.js';
 import {
   assertInside,
   displayPath,
@@ -170,6 +172,13 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
 
   const theme = resolveTheme(config);
   const fingerprintValue = themeFingerprint(theme);
+  // Los genericos viajan en el paquete (Lucide, ISC). Las marcas no: las trae
+  // `docviz icons` a `vendor/icons`, y lo del proyecto gana sobre lo del
+  // paquete para que una organizacion pueda poner su propia marca.
+  const iconos = await cargarIconos([
+    path.join(directorioDelPaquete(), 'assets', 'icons'),
+    resolveFromRoot(config, 'vendor/icons'),
+  ]);
   const registry = buildRegistry(config);
   const cache = new AssetCache(resolveFromRoot(config, config.cache.dir), config.cache.enabled);
   const assetsDir = await ensureAssetsDir(outputDir, config.assetsDir);
@@ -255,6 +264,7 @@ export async function build(config: DocVizConfig, options: BuildOptions = {}): P
               themeName: config.theme.name,
               themeFingerprintValue: fingerprintValue,
               theme,
+              iconos,
             });
             result.assets.push(asset);
             if (asset.fromCache) result.stats.cacheHits += 1;
@@ -362,10 +372,11 @@ interface RenderBlockArgs {
   themeName: string;
   themeFingerprintValue: string;
   theme: ReturnType<typeof resolveTheme>;
+  iconos: ConjuntoIconos;
 }
 
 async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
-  const { block, config, registry, cache, hashes, assetsDir, theme } = args;
+  const { block, config, registry, cache, hashes, assetsDir, theme, iconos } = args;
   const renderer = registry.get(block.rendererType);
   const format = resolveFormat(block, config, renderer.defaultFormat);
   const size = block.requestedSize ?? config.size;
@@ -379,6 +390,9 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     rendererVersion: version,
     format,
     size,
+    ...(iconos.huellaDeFuente(block.source) !== undefined
+      ? { icons: iconos.huellaDeFuente(block.source) }
+      : {}),
   };
   const digest = fullHash(hashInput);
   const short = shortHash(hashInput, config.hash.length);
@@ -419,6 +433,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     // en este build: dos diagramas no pueden compartir ids ni variables CSS.
     idPrefix: `dv${short}`,
     size,
+    icons: iconos,
     ...(block.description !== undefined ? { description: block.description } : {}),
     timeoutMs: config.renderers.timeoutMs,
     maxOutputBytes: config.renderers.maxOutputBytes,

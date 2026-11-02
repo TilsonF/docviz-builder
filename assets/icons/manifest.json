@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "icons": {
+    "box": {
+      "file": "box.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/box"
+    },
+    "clock": {
+      "file": "clock.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/clock"
+    },
+    "cloud": {
+      "file": "cloud.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/cloud"
+    },
+    "cpu": {
+      "file": "cpu.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/cpu"
+    },
+    "database": {
+      "file": "database.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/database"
+    },
+    "folder": {
+      "file": "folder.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/folder"
+    },
+    "git-branch": {
+      "file": "git-branch.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/git-branch"
+    },
+    "globe": {
+      "file": "globe.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/globe"
+    },
+    "hard-drive": {
+      "file": "hard-drive.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/hard-drive"
+    },
+    "inbox": {
+      "file": "inbox.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/inbox"
+    },
+    "lock": {
+      "file": "lock.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/lock"
+    },
+    "mail": {
+      "file": "mail.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/mail"
+    },
+    "monitor": {
+      "file": "monitor.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/monitor"
+    },
+    "network": {
+      "file": "network.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/network"
+    },
+    "server": {
+      "file": "server.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/server"
+    },
+    "share-2": {
+      "file": "share-2.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/share-2"
+    },
+    "shield": {
+      "file": "shield.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/shield"
+    },
+    "smartphone": {
+      "file": "smartphone.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/smartphone"
+    },
+    "user": {
+      "file": "user.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/user"
+    },
+    "users": {
+      "file": "users.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/users"
+    },
+    "zap": {
+      "file": "zap.svg",
+      "source": "Lucide",
+      "license": "ISC",
+      "url": "https://lucide.dev/icons/zap"
+    }
+  }
+}

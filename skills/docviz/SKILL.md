@@ -144,6 +144,7 @@ Cada error trae un **código** además de archivo y línea. Léelo, no adivines:
 | `DV106` | El `type` no existe o va en otra valla; usa `docviz suggest` |
 | `DV107` | Se dibujó con un motor de respaldo: el dibujo tiene otro aspecto. Falta algo en la máquina, no en el bloque |
 | `DV108` | El dibujo no alcanza la letra del destino. Córtalo o cambia el `size` |
+| `DV109` | Nombraste un icono que no está instalado. El detalle trae el `docviz icons` exacto: ejecútalo, no quites el icono |
 | `DV005` | Falta Java o Chromium en la máquina. No cambies el diagrama: dilo |
 
 Un documento con varios bloques rotos los reporta **todos a la vez**:

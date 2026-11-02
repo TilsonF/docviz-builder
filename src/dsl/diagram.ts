@@ -12,8 +12,10 @@ import {
   asNamedRecord,
   asRecord,
   d2Label,
+  d2Adornos,
   d2Link,
   d2LinkProp,
+  leerIcono,
   dotLabel,
   IdFactory,
   leerEnlace,
@@ -28,6 +30,7 @@ import {
   requireString,
   toEdge,
 } from './util.js';
+import { SENTINELA } from '../core/iconos.js';
 
 // --------------------------------------------------------------------------
 // PlantUML
@@ -394,6 +397,7 @@ interface TreeNode {
   name: string;
   children: TreeNode[];
   href?: string;
+  icon?: string;
 }
 
 function toTreeNode(raw: unknown, field: string): TreeNode {
@@ -403,7 +407,13 @@ function toTreeNode(raw: unknown, field: string): TreeNode {
   const rawChildren = record['children'] ?? record['branches'] ?? record['items'];
   const children = optionalArray(rawChildren, `${field}.children`).map((c) => toTreeNode(c, `${field}.children`));
   const href = leerEnlace(record, field);
-  return href !== undefined ? { name, children, href } : { name, children };
+  const icon = leerIcono(record, field);
+  return {
+    name,
+    children,
+    ...(href !== undefined ? { href } : {}),
+    ...(icon !== undefined ? { icon } : {}),
+  };
 }
 
 export function tree(doc: Record<string, unknown>): string {
@@ -417,13 +427,17 @@ export function tree(doc: Record<string, unknown>): string {
   const lines: string[] = [`direction: ${direction}`, ''];
   const rootId = ids.id(root);
   const rootHref = leerEnlace(doc, 'diagram.root');
-  lines.push(
-    `${rootId}: ${d2Label(root)} { style.bold: true${rootHref !== undefined ? `; link: ${d2Label(rootHref)}` : ''} }`,
-  );
+  const rootIcon = leerIcono(doc, 'diagram.root');
+  const extras = [
+    'style.bold: true',
+    ...(rootHref !== undefined ? [`link: ${d2Label(rootHref)}`] : []),
+    ...(rootIcon !== undefined ? [`icon: ${SENTINELA}${rootIcon}`] : []),
+  ];
+  lines.push(`${rootId}: ${d2Label(root)} { ${extras.join('; ')} }`);
 
   const walk = (parentId: string, node: TreeNode, path: string): void => {
     const id = ids.id(`${path}/${node.name}`);
-    lines.push(`${id}: ${d2Label(node.name)}${d2Link(node.href)}`);
+    lines.push(`${id}: ${d2Label(node.name)}${d2Adornos(node)}`);
     lines.push(`${parentId} -> ${id}`);
     for (const child of node.children) walk(id, child, `${path}/${node.name}`);
   };
@@ -472,7 +486,7 @@ export function capabilityMap(doc: Record<string, unknown>): string {
     lines.push(...d2LinkProp(leerEnlace(domain, 'diagram.domains')));
     for (const cap of capabilities) {
       const nodo = nodoD2(cap, 'diagram.domains[].capabilities');
-      lines.push(`  ${ids.id(`d/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
+      lines.push(`  ${ids.id(`d/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Adornos(nodo)}`);
     }
     lines.push('}');
   }
@@ -496,7 +510,7 @@ export function operatingModel(doc: Record<string, unknown>): string {
     lines.push(...d2LinkProp(leerEnlace(layer, 'diagram.layers')));
     for (const item of items) {
       const nodo = nodoD2(item, 'diagram.layers[].items');
-      lines.push(`  ${ids.id(`l/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
+      lines.push(`  ${ids.id(`l/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Adornos(nodo)}`);
     }
     lines.push('}');
   }
@@ -535,7 +549,7 @@ export function beforeAfter(doc: Record<string, unknown>): string {
     lines.push(`  style.fill: "${style}"`);
     for (const item of items) {
       const nodo = nodoD2(item, `diagram.${key}`);
-      lines.push(`  ${ids.id(`${key}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
+      lines.push(`  ${ids.id(`${key}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Adornos(nodo)}`);
     }
     lines.push('}');
     return id;
@@ -570,7 +584,7 @@ export function matrix2x2(doc: Record<string, unknown>): string {
     lines.push(...d2LinkProp(href));
     for (const item of items) {
       const nodo = nodoD2(item, 'diagram.quadrants[].items');
-      lines.push(`  ${ids.id(`q/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
+      lines.push(`  ${ids.id(`q/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Adornos(nodo)}`);
     }
     lines.push('}');
   }
@@ -599,7 +613,7 @@ export function roadmap(doc: Record<string, unknown>): string {
     lines.push(...d2LinkProp(href));
     for (const item of items) {
       const nodo = nodoD2(item, 'diagram.phases[].items');
-      lines.push(`  ${ids.id(`f/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Link(nodo.href)}`);
+      lines.push(`  ${ids.id(`f/${name}/${nodo.name}`)}: ${d2Label(nodo.name)}${d2Adornos(nodo)}`);
     }
     lines.push('}');
   }
@@ -712,7 +726,7 @@ export function storyMap(doc: Record<string, unknown>): string {
       }
       lines.push(`${id}: "" {`);
       for (const story of celda) {
-        lines.push(`  ${ids.id(`s/${release}/${activity}/${story.name}`)}: ${d2Label(story.name)}${d2Link(story.href)}`);
+        lines.push(`  ${ids.id(`s/${release}/${activity}/${story.name}`)}: ${d2Label(story.name)}${d2Adornos(story)}`);
       }
       lines.push('}');
     }

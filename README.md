@@ -65,6 +65,7 @@ documentación confidencial a ningún sitio.
 - [Para dónde es el dibujo](#para-dónde-es-el-dibujo)
 - [El SVG que sale es usable por todo el mundo](#el-svg-que-sale-es-usable-por-todo-el-mundo)
 - [Un nodo puede llevar enlace](#un-nodo-puede-llevar-enlace)
+- [Un nodo puede llevar logo](#un-nodo-puede-llevar-logo)
 - [Configuración](#configuración)
 - [Temas](#temas)
 - [Caché y determinismo](#caché-y-determinismo)
@@ -781,6 +782,82 @@ anunciarlo para los 64 sin haberlo medido sería lo mismo que no tenerlo.
 
 ---
 
+## Un nodo puede llevar logo
+
+Una arquitectura dibujada con cajas de texto y otra con la marca real de cada
+servicio no se leen igual. El campo es `icon`, y va donde ya va `href`:
+
+```yaml
+type: strategy-tree
+root: Plataforma
+branches:
+  - name: React
+    icon: react
+    children:
+      - name: Node.js
+        icon: nodejs
+  - name: PostgreSQL
+    icon: postgresql
+  - name: Caché
+    icon: zap                 # pictograma genérico: no todo es una marca
+```
+
+### Los genéricos vienen puestos; las marcas se traen
+
+En el paquete viajan **21 pictogramas genéricos** de [Lucide](https://lucide.dev)
+—`user`, `server`, `database`, `globe`, `clock`, `lock`, `cloud`…—, que están
+bajo ISC y no son la marca de nadie. Toman la tinta del tema, así que se leen
+igual en claro y en oscuro.
+
+Los **logos de marca no viajan en el paquete**, y no es una decisión estética:
+
+```bash
+docviz icons react postgresql docker "betterauth:better-auth"
+```
+
+Busca en [svgl](https://svgl.app), luego [devicon](https://devicon.dev), luego
+[gilbarbara/logos](https://github.com/gilbarbara/logos), y los deja en
+`vendor/icons`, que ya está en `.gitignore`. Es, junto a `docviz setup`, la
+única operación que usa la red, y tampoco se ejecuta sola.
+
+La razón es que **la licencia de una colección de logos resuelve el copyright
+del archivo, no el uso de la marca**. El propio texto de CC0 lo dice: «no
+trademark or patent rights held by Affirmer are waived», y quien dona no
+responde de los derechos de terceros. AWS permite expresamente sus iconos en
+diagramas y no dice nada de redistribuirlos; Azure los limita al «permitted
+use» y prohíbe por escrito recortarlos, voltearlos o deformarlos. Traerlos a
+petición y no empaquetarlos es lo que mantiene esa distinción intacta.
+
+Formas de pedir uno:
+
+| Forma | Para qué |
+|---|---|
+| `react` | el nombre es también la clave de búsqueda |
+| `betterauth:better-auth` | el nombre del diagrama no coincide con la clave |
+| `orpc=https://orpc.unnoq.com/logo.svg` | el archivo oficial, a mano |
+| `cron:lucide/clock` | un pictograma genérico más |
+
+`simple-icons` queda fuera a propósito: sus glifos son redibujos monocromos y
+no la marca oficial, y se nota a simple vista.
+
+### Lo que el dibujo garantiza
+
+- **No se recolorea una marca.** Solo se tiñe lo que se dibuja con
+  `currentColor`, que es justo lo que hacen los pictogramas genéricos.
+- **No se deforma.** El logo se inserta con `preserveAspectRatio="xMidYMid meet"`,
+  nunca con `none`.
+- **No se sale a la red.** El dibujo va **dentro** del SVG, como un `<svg>`
+  anidado —no como `<image>` ni como data URI—, así que `docviz lint` sigue sin
+  encontrar una sola referencia remota y la figura se ve igual sin conexión.
+- **Un icono que falta no deja un hueco:** falla la compilación con `DV109` y
+  te dice el comando exacto para traerlo. Un hueco no se ve revisando el
+  Markdown; un error sí.
+- **El caché sigue al archivo del logo.** Si cambias el SVG de una marca, se
+  regeneran exactamente las figuras que la usan, y ninguna más.
+
+Las marcas siguen siendo de sus titulares. Hoy el campo lo entienden los tipos
+que dibuja D2; los `c4-*` de LikeC4 todavía no.
+
 ## Configuración
 
 `docviz.config.yaml`, todo opcional:
@@ -1204,6 +1281,7 @@ castellano es frágil: la redacción puede cambiar, el código no.
 | `DV106` | El `type` no existe o no pertenece a esa valla |
 | `DV107` | Se dibujó con un motor de respaldo y el dibujo tiene otro aspecto |
 | `DV108` | El dibujo no alcanza la letra mínima del destino declarado |
+| `DV109` | El bloque nombra un icono que no está instalado |
 
 Los códigos son parte del contrato: se añaden códigos nuevos en lugar de
 reutilizar los existentes.

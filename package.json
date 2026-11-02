@@ -47,6 +47,7 @@
   },
   "files": [
     "AGENTS.md",
+    "assets",
     "LICENCIAS.md",
     "LICENSE",
     "README.md",
@@ -82,6 +83,7 @@
     "test:coverage": "vitest run --coverage",
     "prepack": "npm run build",
     "check:cjs": "node scripts/comprobar-cjs.mjs",
+    "icons": "node scripts/iconos.mjs",
     "licencias": "node scripts/licencias.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

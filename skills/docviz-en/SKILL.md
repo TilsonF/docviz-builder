@@ -146,6 +146,7 @@ guess:
 | `DV106` | The `type` does not exist, or belongs to another fence; use `docviz suggest` |
 | `DV107` | A fallback engine drew it, so it looks different. Something is missing on the machine, not in the block |
 | `DV108` | The drawing does not reach the destination's minimum text size. Cut it or change `size` |
+| `DV109` | You named an icon that is not installed. The detail carries the exact `docviz icons` command: run it, do not drop the icon |
 | `DV005` | Java or Chromium is missing on this machine. Do not change the diagram: say so |
 
 A document with several broken blocks reports them **all at once**: fix them in

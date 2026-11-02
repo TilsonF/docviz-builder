@@ -107,6 +107,46 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   proyecto con caché caliente siguió sirviendo los SVG viejos sin que nada lo
   dijera.
 
+### Cerrado en la 0.11
+
+- **Logos oficiales en los nodos** (`icon`). Era el hueco más visible del
+  catálogo: `grep -rn "icon" src/` no devolvía nada. El trazado lo sigue
+  haciendo el motor —a D2 se le pasa una URL sentinela que no resuelve, él
+  reserva y sitúa el hueco, y DocViz sustituye el `<image>` por un `<svg>`
+  anidado— así que DocViz no calcula ni una coordenada. 21 pictogramas
+  genéricos de Lucide (ISC) viajan en el paquete; las marcas las trae
+  `docviz icons`, por el precedente de `docviz setup`.
+- **Las marcas no se empaquetan, y eso es la función, no una limitación.** La
+  licencia de una colección de logos resuelve el copyright del archivo, no el
+  uso de la marca: el texto de CC0 lo dice, AWS permite el uso en diagramas y
+  calla sobre redistribuir, Azure lo limita al «permitted use» y prohíbe por
+  escrito recortar, voltear y deformar. De ahí salen tres garantías
+  comprobables: no se recolorea nada que no use `currentColor`, nunca se emite
+  `preserveAspectRatio="none"`, y el dibujo va dentro del SVG, así que
+  `referencia-remota` sigue sin encontrar nada.
+- **Lo encontró mirar, no leer.** La primera versión dibujaba los pictogramas
+  como manchas negras: Lucide declara `fill="none" stroke="currentColor"` en su
+  etiqueta **raíz**, y quedarse solo con el interior deja los trazos rellenos.
+  Ninguna comprobación de texto lo habría visto. Segundo fallo de la misma
+  clase: la tinta del tema no se aplicaba porque `currentColor` estaba en esa
+  raíz y la condición miraba solo el interior.
+- **Y lo confirmó el caché.** Al rehacer el dibujo tras arreglarlo, el build
+  sirvió los SVG rotos: el archivo del logo no había cambiado, la fuente
+  tampoco, y lo que había cambiado era el post-proceso. Es exactamente el caso
+  para el que existe `PIPELINE_VERSION`, que pasa a `3`. La huella de iconos
+  entra en el hash **solo cuando el bloque nombra alguno**, para no invalidar
+  el caché de todos los proyectos por una función que la mayoría no usa.
+- **Falso positivo propio, corregido de paso.** La regla `referencia-remota`
+  avisaba sobre el `href` de un `<a>` —un enlace que el lector pulsa no es un
+  recurso para dibujar— y lo hacía dos veces, porque D2 escribe `href` y
+  `xlink:href` juntos. No se vio en un año porque ningún ejemplo del catálogo
+  usa `href`.
+
+Pendiente de esta tanda: los `c4-*` de LikeC4 no entienden `icon` todavía —su
+emisor es nuestro, así que es trabajo, no incógnita—, y un logo íntegramente
+negro se pierde sobre fondo oscuro, que es lo que `stack-diagram` resuelve con
+teselas blancas y aquí no hay.
+
 ### Cerrado en la 0.10
 
 - **El paquete no se podía cargar desde CommonJS, y nadie lo sabía.** El mapa
@@ -317,52 +357,6 @@ al usarla para escribir documentación de verdad.
    que se puede leer del archivo —un lienzo inutilizable, un texto anclado
    fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
    con el nivel equivocado siguen necesitando el ojo o una instantánea.
-5. **Logos oficiales en los nodos.** Es el hueco más visible del catálogo:
-   `grep -rn "icon" src/` no devuelve **nada**. Una arquitectura dibujada con
-   cajas de texto y otra con la marca real de cada servicio no se leen igual,
-   y es lo que hace que `caru-ini/stack-diagram` —850 líneas, publicado el
-   2026-11-01— juntara mil estrellas en un día. Lo medido al evaluarlo:
-
-   - **La vía ya está abierta, y no es la obvia.** Un logo **anidado como
-     `<svg>` hijo** pasa el saneador intacto: sobreviven su `viewBox`, sus
-     `transform` y sus colores, sin tocar la lista de permitidos. El camino
-     obvio no sirve: `<image>` no está en `ALLOWED_ELEMENTS` y se elimina, y
-     `data:` no pasa `urlSegura`. Inline además pesa **un 25 % menos** que el
-     mismo logo en base64, y los logos reales son pequeños: React 1,4 kB,
-     Docker 1,5 kB, PostgreSQL 3,9 kB, contra los ~19 kB que ya pesa una
-     figura.
-   - **No se usa el `icon:` de D2**, aunque el WASM que empaquetamos lo
-     soporte: con una URL remota emite `<image href="https://...">`, que es
-     justo lo que la regla `referencia-remota` prohíbe, y con un data URI sin
-     comillas **lo trunca en silencio** a `data:image/svg+xml`, porque el `;`
-     es su separador de sentencias. Los logos se inyectan después, en
-     `svg-utils`, que ya es el único punto de paso.
-   - **Dos niveles de licencia, y no son el mismo problema.** Los pictogramas
-     genéricos de Lucide son **ISC**: se pueden vendorizar sin más. Las marcas
-     no. Las colecciones son MIT (svgl, devicon) o CC0 (gilbarbara,
-     simple-icons), pero el propio texto de CC0 dice que «no trademark or
-     patent rights held by Affirmer are waived» y que el donante no responde
-     de los derechos de terceros: la licencia de la colección resuelve el
-     **copyright del archivo**, no el **uso de la marca**. AWS permite
-     expresamente los iconos en diagramas y **no dice nada** de
-     redistribuirlos; Azure los permite «only for the permitted use» y añade
-     prohibiciones concretas —no recortar, no voltear, no rotar, no deformar—;
-     Google Cloud no se pudo verificar, su página no se renderiza sin
-     JavaScript. Conclusión: las marcas **no van al repositorio ni al `.tgz`**,
-     se traen con un `docviz icons` que siga el precedente de `docviz setup`
-     —una vez, explícito, fuera del `postinstall`—.
-   - El «no deformar» de Azure es comprobable y por tanto le toca una regla:
-     el dial de tamaño escala el lienzo entero, lo cual es legítimo, pero un
-     `preserveAspectRatio="none"` sobre una figura con iconos de Azure sí
-     incumple sus términos.
-   - `excalidraw-gen` ya tiene 46 SVG vendorizados con su manifiesto
-     (`src/catalog/icons`, 33 oficiales y 13 genéricos). No habría que empezar
-     de cero, pero ese reparto hay que revisarlo con el criterio de arriba.
-
-   Lo que **no** se trae de esa herramienta: que el modelo coloque las
-   coordenadas a mano. Es lo contrario de la tesis de DocViz —ocho líneas de
-   YAML y un motor determinista— y una geometría escrita a mano no se cachea,
-   no se puede `diff`ear y paga el trazado en cada invocación.
 
 ---
 

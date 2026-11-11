@@ -351,6 +351,17 @@ en macOS**. Si las fuentes del sistema entran en el SVG, no los produce, y dos
 personas del mismo equipo se pisan los diagramas en cada commit. La matriz de
 CI ya existe; falta cruzar los hashes entre sus jobs.
 
+**Y hay a quién copiarle.** `heydeer/slimdeer` —un compresor de PNG en Rust—
+se tomó este problema en serio y dejó escrito cómo: usa `libm` explícitamente
+«para que el build del navegador dé los mismos bits que la línea de órdenes»,
+porque la libm del sistema no da los mismos, y desactiva las instrucciones SIMD
+de su decodificador «para que dé los mismos píxeles en todos los targets». Las
+dos son la misma idea: **donde la plataforma puede elegir, se le quita la
+elección**. Nosotros no hacemos aritmética de coma flotante propia, pero sí
+dependemos de fuentes del sistema y de seis motores, así que el primer paso
+sigue siendo el mismo: cruzar los hashes y mirar qué sale distinto, antes de
+decidir qué se fija.
+
 ---
 
 ## Lo que falta como herramienta de uso diario
@@ -384,6 +395,38 @@ al usarla para escribir documentación de verdad.
    que se puede leer del archivo —un lienzo inutilizable, un texto anclado
    fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
    con el nivel equivocado siguen necesitando el ojo o una instantánea.
+5. **El PNG sale más pesado de lo que hace falta.** Medido sobre tres figuras
+   reales compiladas con `format=png`, `@jsquash/oxipng` —Apache-2.0, WASM
+   puro, el mismo oxipng que `slimdeer` lleva dentro— las deja un **17,7 %
+   más pequeñas sin perder un solo píxel**: 38 626 → 31 088 B el árbol,
+   22 197 → 19 836 B las barras, 13 102 → 9 941 B el flujo. Encaja con lo que
+   ya hacemos —D2, Graphviz y svgbob también son WASM— y al ser sin pérdida no
+   abre la pregunta de calidad ni toca el determinismo del caché.
+
+   Dos salvedades encontradas probándolo: el paquete es *browser-first* y hace
+   `fetch` del `.wasm`, así que en Node hay que pasarle el módulo ya compilado
+   a mano; y añade **0,2–1 s por figura**, que sobre un presupuesto de render
+   que ya se agotó una vez en Windows no es gratis. Iría detrás de una opción,
+   no por defecto.
+
+   Lo que **no** se usa, y conviene dejar dicho por qué: `slimdeer` comprime un
+   8–12 % más que TinyPNG y nuestros PNG son su caso ideal —323, 387 y 1 240
+   colores distintos, justo por encima de los 256 de una paleta, por el
+   antialiasing del texto—, pero no publica paquete npm ni WASM precompilado.
+   Construirlo pide rustup estable **y** nightly con `rust-src`, el target
+   `wasm32`, `wasm-bindgen-cli` clavado y el LLVM de Homebrew, porque el clang
+   de Apple no compila a wasm32. Eso no se le pide a CI ni a quien contribuya.
+   Si algún día publican un wasm, son treinta minutos y un 30 % de ahorro.
+6. **No se puede anotar una figura.** `enesozturk/dimensional-drawing` usa
+   números de nota en cajita —`[1]`— que aparecen a la vez junto al elemento
+   del dibujo y en un bloque de notas al margen. Es la forma de decir «esto de
+   aquí tiene una pega» sin meter la frase dentro del diagrama, y no tenemos
+   nada equivalente. De esa misma herramienta vale la pena copiar sus
+   convenciones de cota, que están medidas y no improvisadas (contorno 1,6 px,
+   cota 0,7 px, extensión 0,55 px, flecha de 7 px, y **flechas por fuera
+   cuando el vano baja de 28 px**). Esa última es una regla de `lint` que hoy
+   no existe. Ya convergimos con ellos sin saberlo en el halo blanco con
+   `paint-order: stroke`, lo cual sugiere que el resto también está pensado.
 
 ---
 

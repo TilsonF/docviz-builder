@@ -395,19 +395,38 @@ al usarla para escribir documentación de verdad.
    que se puede leer del archivo —un lienzo inutilizable, un texto anclado
    fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
    con el nivel equivocado siguen necesitando el ojo o una instantánea.
-5. **El PNG sale más pesado de lo que hace falta.** Medido sobre tres figuras
-   reales compiladas con `format=png`, `@jsquash/oxipng` —Apache-2.0, WASM
-   puro, el mismo oxipng que `slimdeer` lleva dentro— las deja un **17,7 %
-   más pequeñas sin perder un solo píxel**: 38 626 → 31 088 B el árbol,
-   22 197 → 19 836 B las barras, 13 102 → 9 941 B el flujo. Encaja con lo que
-   ya hacemos —D2, Graphviz y svgbob también son WASM— y al ser sin pérdida no
-   abre la pregunta de calidad ni toca el determinismo del caché.
+5. **El PNG sale más pesado de lo que hace falta.** Medido sobre el catálogo
+   entero —las 69 figuras de `artifacts/test-results/screenshots/claro`—,
+   `@jsquash/oxipng` —Apache-2.0, WASM puro, el mismo oxipng que `slimdeer`
+   lleva dentro— las deja un **32,1 % más pequeñas**: 837 582 → 569 016 B, a
+   252 ms por figura. Encaja con lo que ya hacemos —D2, Graphviz y svgbob
+   también son WASM— y al ser sin pérdida no abre la pregunta de calidad ni
+   toca el determinismo del caché.
+
+   **Sin perder un solo píxel, verificado**: las 69 salen idénticas al
+   decodificarlas a RGBA. Importa porque son líneas base de comparación
+   visual, y conviene dejar escrita la trampa de medirlo: comparar
+   convirtiendo a TIFF con `sips` da 22 falsos positivos, porque oxipng reduce
+   el tipo de color del PNG y entonces `sips` escribe un TIFF con otro formato
+   interno —687 kB contra 233 kB, los mismos píxeles—. Hay que decodificar a
+   RGBA normalizado.
+
+   **Dónde se cobra el ahorro.** No en la documentación: las 200 figuras de
+   `docs/` son SVG y oxipng no las toca. Se cobra en la historia del
+   repositorio, que es la parte que nunca encoge. Los 140 PNG versionados son
+   el catálogo —6,4 MB de los 6,6 MB de PNG que hay, escritos por
+   `scripts/rasterize.mjs`—, se ha regenerado tres veces y el `.git` pesa
+   18 MB: cada tanda mete 6,4 MB de blobs que se quedan para siempre, y con
+   oxipng serían 4,3 MB. Y se cobra, sobre todo, en el repositorio de quien
+   use `format=png`, que recibe el PNG ya escrito y es el único que no puede
+   decidir nada al respecto.
 
    Dos salvedades encontradas probándolo: el paquete es *browser-first* y hace
    `fetch` del `.wasm`, así que en Node hay que pasarle el módulo ya compilado
-   a mano; y añade **0,2–1 s por figura**, que sobre un presupuesto de render
-   que ya se agotó una vez en Windows no es gratis. Iría detrás de una opción,
-   no por defecto.
+   a mano; y añade 252 ms por figura —17,4 s el catálogo entero—, que sobre un
+   presupuesto de render que ya se agotó una vez en Windows no es gratis. Por
+   eso iría en `rasterize.mjs`, fuera de la ruta de render de cada figura, y
+   para el usuario detrás de una opción apagada por defecto.
 
    Lo que **no** se usa, y conviene dejar dicho por qué: `slimdeer` comprime un
    8–12 % más que TinyPNG y nuestros PNG son su caso ideal —323, 387 y 1 240

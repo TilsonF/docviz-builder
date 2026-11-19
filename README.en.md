@@ -361,6 +361,12 @@ A PNG is a single image and cannot carry both theme variants the way the SVG
 does, so one has to be chosen: `renderers.png.scheme` (`light` by default) and
 `renderers.png.scale`.
 
+PlantUML draws its own PNG instead of going through Chromium, so the scale
+reaches it as `skinparam dpi` (96 × scale): with `scale: 2` a sequence comes
+out at the same density as the C4 or d2 figures next to it. A `skinparam dpi`
+written in the block still wins. The scale is part of the asset hash, so
+changing it regenerates the PNGs instead of serving the old density from cache.
+
 `renderers.png.optimize` recompresses the result with oxipng: **32 % fewer
 bytes** —measured over the 69 figures of this repository's catalogue, 837 582 →
 569 016 B— with the pixels untouched; all 69 decode identically. The saving is

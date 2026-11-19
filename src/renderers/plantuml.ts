@@ -43,6 +43,28 @@ export interface PlantUmlOptions {
   javaPath?: string;
   /** Memoria maxima de la JVM. */
   maxHeap?: string;
+  /**
+   * Densidad del PNG (`renderers.png.scale`).
+   *
+   * PlantUML dibuja su PNG nativo a 96 ppp, asi que sin esto un proyecto con
+   * `scale: 2` recibia los diagramas de PlantUML a la mitad de resolucion que
+   * los demas motores, que si pasan por el rasterizador con esa escala.
+   */
+  pngScale?: number;
+}
+
+/** Resolucion a la que PlantUML dibuja cuando nadie le dice otra cosa. */
+const PLANTUML_BASE_DPI = 96;
+
+/**
+ * `skinparam dpi` equivalente a la escala pedida, o `undefined` si no hace falta.
+ *
+ * A escala 1 no se escribe nada: el PNG sale igual que siempre y el preambulo
+ * no crece por una directiva que no cambia ningun pixel.
+ */
+export function plantUmlDpi(scale: number | undefined): number | undefined {
+  if (scale === undefined || scale === 1) return undefined;
+  return Math.round(PLANTUML_BASE_DPI * scale);
 }
 
 /**
@@ -72,12 +94,14 @@ export class PlantUmlRenderer implements DiagramRenderer {
   private readonly jarPath: string;
   private readonly javaPath: string;
   private readonly maxHeap: string;
+  private readonly pngDpi: number | undefined;
   private cachedVersion?: string;
 
   constructor(options: PlantUmlOptions = {}) {
     this.jarPath = resolveJarPath(options.jarPath);
     this.javaPath = options.javaPath ?? process.env['DOCVIZ_JAVA'] ?? 'java';
     this.maxHeap = options.maxHeap ?? '1024m';
+    this.pngDpi = plantUmlDpi(options.pngScale);
   }
 
   async version(): Promise<string> {
@@ -115,10 +139,15 @@ export class PlantUmlRenderer implements DiagramRenderer {
 
   /**
    * Inserta el preambulo del tema justo despues de la directiva de apertura.
-   * Si el usuario ya definio un `skinparam`, el suyo gana porque va despues.
+   * Si el usuario ya definio un `skinparam`, el suyo gana porque va despues;
+   * tambien un `skinparam dpi` propio frente al que se deriva de la escala.
+   *
+   * La densidad solo se pide para PNG: en un SVG `dpi` no aporta nitidez y
+   * cambiaria las dimensiones del lienzo que ya mide `size`.
    */
   private applyTheme(source: string, options: RenderOptions): string {
-    const skin = options.theme.plantuml.skinparams.join('\n');
+    const dpi = options.format === 'png' && this.pngDpi !== undefined ? [`skinparam dpi ${this.pngDpi}`] : [];
+    const skin = [...options.theme.plantuml.skinparams, ...dpi].join('\n');
     const trimmed = source.trim();
     const openTag = /^@start[a-z]+\b.*$/im.exec(trimmed);
     if (openTag === null) {

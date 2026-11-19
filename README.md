@@ -573,6 +573,13 @@ porque un PNG es un binario versionado: cada regeneración deja un blob nuevo y
 los viejos no se van nunca. Viene apagada porque cuesta unos **250 ms por
 figura**, y ese tiempo sale del presupuesto de render.
 
+PlantUML dibuja su propio PNG en lugar de pasar por Chromium, así que la escala
+le llega como `skinparam dpi` (96 × `scale`): con `scale: 2` una secuencia sale
+a la misma densidad que los C4 o los d2 de al lado. Un `skinparam dpi` escrito
+en el bloque sigue ganando. La escala entra en el hash del recurso, así que
+cambiarla regenera los PNG en lugar de servir la densidad anterior desde el
+caché.
+
 Sin un navegador en la máquina, PNG simplemente no se ofrece: anunciar un
 formato que no se puede producir sería peor que no ofrecerlo, porque el fallo
 aparecería a mitad del build en vez de en `docviz doctor`.

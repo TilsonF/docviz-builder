@@ -45,7 +45,7 @@ export function defaultConfig(rootDir: string): DocVizConfig {
     hash: { length: DEFAULT_HASH_LENGTH },
     renderers: {
       backend: 'local',
-      png: { enabled: true, scale: 2, scheme: 'light' },
+      png: { enabled: true, scale: 2, scheme: 'light', optimize: false },
       timeoutMs: 60_000,
       maxOutputBytes: 8 * 1024 * 1024,
       kroki: {
@@ -214,6 +214,7 @@ export function mergeConfig(base: DocVizConfig, raw: unknown): DocVizConfig {
       if (typeof png['enabled'] === 'boolean') r.png.enabled = png['enabled'];
       if (typeof png['scale'] === 'number') r.png.scale = png['scale'];
       if (png['scheme'] === 'light' || png['scheme'] === 'dark') r.png.scheme = png['scheme'];
+      if (typeof png['optimize'] === 'boolean') r.png.optimize = png['optimize'];
     }
 
     const kroki = obj(renderers['kroki'], 'renderers.kroki');

@@ -28,6 +28,7 @@ import { TYPE_CATALOG, type TypeSpec } from '../dsl/catalog.js';
 import { buildRegistry } from '../renderers/index.js';
 import { resolveTheme, themeNames } from '../themes/index.js';
 import { toPosix } from '../core/paths.js';
+import { optimizarPng } from '../core/png.js';
 
 export interface ToolResult {
   ok: boolean;
@@ -417,18 +418,25 @@ export async function renderDiagram(args: {
     });
     await registry.disposeAll().catch(() => undefined);
 
+    // La misma opcion que en el build: el agente no deberia recibir por esta
+    // puerta un PNG distinto del que escribe `docviz build`.
+    const content =
+      format === 'png' && config.renderers.png.optimize
+        ? await optimizarPng(rendered.content)
+        : rendered.content;
+
     if (args.outputDir !== undefined) {
       const dir = path.resolve(config.rootDir, args.outputDir);
       await ensureDir(dir);
       const name = `${(title ?? rendererType).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.${format}`;
       const target = path.join(dir, name);
-      await writeFile(target, rendered.content);
+      await writeFile(target, content);
       return {
         ok: true,
         engine: rendererType,
         format,
         path: toPosix(path.relative(config.rootDir, target)),
-        bytes: rendered.content.byteLength,
+        bytes: content.byteLength,
         ...(warnings.length > 0 ? { warnings } : {}),
       };
     }
@@ -437,8 +445,8 @@ export async function renderDiagram(args: {
       ok: true,
       engine: rendererType,
       format,
-      bytes: rendered.content.byteLength,
-      content: format === 'svg' ? rendered.content.toString('utf8') : rendered.content.toString('base64'),
+      bytes: content.byteLength,
+      content: format === 'svg' ? content.toString('utf8') : content.toString('base64'),
       encoding: format === 'svg' ? 'utf8' : 'base64',
       ...(warnings.length > 0 ? { warnings } : {}),
     };

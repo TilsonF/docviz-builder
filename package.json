@@ -91,6 +91,7 @@
   },
   "dependencies": {
     "@hpcc-js/wasm-graphviz": "^1.28.0",
+    "@jsquash/oxipng": "^2.3.0",
     "@terrastruct/d2": "^0.1.33",
     "bpmn-js": "^18.24.0",
     "commander": "^15.0.0",

@@ -219,6 +219,13 @@ describe('la configuracion falla al cargar, no a mitad del dibujo', () => {
     expect(cfg.renderers.png).toMatchObject({ enabled: true, scale: 3, scheme: 'dark' });
   });
 
+  it('la compresion del PNG viene apagada y se enciende declarandola', async () => {
+    // Apagada por defecto a proposito: cuesta ~250 ms por figura, y ese tiempo
+    // sale del presupuesto de render que ya se agoto una vez en Windows.
+    expect((await con('renderers:\n  png:\n    scale: 2\n')).renderers.png.optimize).toBe(false);
+    expect((await con('renderers:\n  png:\n    optimize: true\n')).renderers.png.optimize).toBe(true);
+  });
+
   it('un `scheme` que no es claro ni oscuro se ignora en vez de romper', async () => {
     // Es una preferencia, no una ruta: equivocarse ahi no justifica no compilar.
     const cfg = await con('renderers:\n  png:\n    scheme: sepia\n');

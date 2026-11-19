@@ -106,6 +106,18 @@ describe('themeFingerprint', () => {
   it('fingerprint distingue objetos distintos', () => {
     expect(fingerprint({ a: 1 })).not.toBe(fingerprint({ a: 2 }));
   });
+
+  it('encender la compresion del PNG invalida el recurso', () => {
+    const png = { ...base, format: 'png' as const };
+    expect(fullHash({ ...png, optimizePng: true })).not.toBe(fullHash(png));
+  });
+
+  it('no encenderla no invalida nada', () => {
+    // Un proyecto que no usa la opcion no debe perder su cache por existir.
+    const png = { ...base, format: 'png' as const };
+    expect(fullHash({ ...png, optimizePng: false })).toBe(fullHash(png));
+    expect(fullHash({ ...png, optimizePng: undefined })).toBe(fullHash(png));
+  });
 });
 
 describe('HashRegistry — deteccion de colisiones', () => {

@@ -43,8 +43,12 @@ export interface RenderersConfig {
    * `scale` es la densidad —2 da una imagen nitida en una diapositiva— y
    * `scheme` elige que variante del tema se congela, porque un PNG no puede
    * llevar las dos como si hace el SVG.
+   *
+   * `optimize` recomprime el resultado con oxipng: un 32 % menos de bytes sin
+   * tocar un solo pixel, a cambio de unos 250 ms por figura. Apagada por
+   * defecto porque ese tiempo sale del presupuesto de render.
    */
-  png: { enabled: boolean; scale: number; scheme: 'light' | 'dark' };
+  png: { enabled: boolean; scale: number; scheme: 'light' | 'dark'; optimize: boolean };
 }
 
 import type { CustomThemeSpec } from '../themes/index.js';

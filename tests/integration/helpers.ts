@@ -57,6 +57,11 @@ export async function readAsset(root: string, name: string): Promise<string> {
   return readFile(path.join(root, 'docs', 'assets', 'generated', name), 'utf8');
 }
 
+/** Igual que `readAsset` pero sin decodificar: el PNG no es texto. */
+export async function readAssetBytes(root: string, name: string): Promise<Buffer> {
+  return readFile(path.join(root, 'docs', 'assets', 'generated', name));
+}
+
 /** Extrae las rutas de imagen del Markdown compilado. */
 export function imagePaths(markdown: string): string[] {
   return [...markdown.matchAll(/!\[[^\]]*\]\(([^)]+)\)/g)].map((m) => m[1]!);

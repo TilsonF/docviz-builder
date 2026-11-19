@@ -81,6 +81,15 @@ export const ERROR_CODES = {
    * dice en lugar de dibujar un diagrama incompleto.
    */
   ICONO_DESCONOCIDO: 'DV109',
+  /**
+   * La compresion del PNG no se pudo aplicar.
+   *
+   * Es un error y no un aviso porque el proyecto la pidio explicitamente: si
+   * se degradara en silencio, el PNG saldria un tercio mas pesado de lo que el
+   * autor cree que sale, y eso no se ve mirando la imagen. El mensaje dice que
+   * opcion apagar para seguir sin comprimir.
+   */
+  OPTIMIZACION_PNG: 'DV110',
 } as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];

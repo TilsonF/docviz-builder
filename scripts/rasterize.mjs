@@ -6,6 +6,11 @@
  * `artifacts/test-results/screenshots/`. No forma parte del pipeline de build.
  *
  *   node scripts/rasterize.mjs <dirConSvg> <dirDestino> [--scale 2]
+ *
+ * El PNG se recomprime siempre con oxipng, sin tocar un pixel. Aqui no hay
+ * presupuesto de render que cuidar y el catalogo es el que se queda versionado:
+ * cada regeneracion deja blobs nuevos en la historia y los viejos no se van.
+ * `--sin-comprimir` lo desactiva para medir la diferencia.
  */
 
 import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
@@ -13,6 +18,7 @@ import path from 'node:path';
 import process from 'node:process';
 import puppeteer from 'puppeteer-core';
 import { findBrowser, browserNotFoundHelp } from '../dist/renderers/browser.js';
+import { optimizarPng } from '../dist/core/png.js';
 
 const [, , sourceDir, targetDir, ...rest] = process.argv;
 if (sourceDir === undefined || targetDir === undefined) {
@@ -24,6 +30,7 @@ const scale = scaleIndex >= 0 ? Number(rest[scaleIndex + 1]) : 2;
 // `--scheme dark` emula un visor en modo oscuro para comprobar la variante dual.
 const schemeIndex = rest.indexOf('--scheme');
 const scheme = schemeIndex >= 0 ? rest[schemeIndex + 1] : 'light';
+const comprimir = !rest.includes('--sin-comprimir');
 
 const executablePath = findBrowser();
 if (executablePath === undefined) {
@@ -39,6 +46,9 @@ if (files.length === 0) {
 
 await mkdir(targetDir, { recursive: true });
 const browser = await puppeteer.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+
+let crudos = 0;
+let escritos = 0;
 
 for (const file of files) {
   const svg = await readFile(path.join(sourceDir, file), 'utf8');
@@ -59,10 +69,18 @@ for (const file of files) {
     { waitUntil: 'load' },
   );
   const png = await page.screenshot({ type: 'png', fullPage: true });
+  const salida = comprimir ? await optimizarPng(Buffer.from(png)) : Buffer.from(png);
   const target = path.join(targetDir, file.replace(/\.svg$/, '.png'));
-  await writeFile(target, png);
+  await writeFile(target, salida);
   await page.close();
+  crudos += png.byteLength;
+  escritos += salida.byteLength;
   process.stdout.write(`${file} -> ${path.relative(process.cwd(), target)} (${width}x${height})\n`);
 }
 
 await browser.close();
+
+if (comprimir) {
+  const ahorro = crudos > 0 ? (100 * (1 - escritos / crudos)).toFixed(1).replace('.', ',') : '0,0';
+  process.stdout.write(`\ncomprimido: ${crudos} -> ${escritos} B (-${ahorro} %)\n`);
+}

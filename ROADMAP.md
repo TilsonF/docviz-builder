@@ -142,6 +142,34 @@ Lo que falta ya no es construir la herramienta: es **saber si se usa bien** y
   `xlink:href` juntos. No se vio en un año porque ningún ejemplo del catálogo
   usa `href`.
 
+- **El PNG pesa un 32 % menos, con los mismos píxeles**
+  (`renderers.png.optimize`, apagada por defecto). Chromium escribe un PNG
+  correcto pero holgado: no reduce el tipo de color ni busca el filtro por fila
+  que mejor comprime. oxipng —Apache-2.0, WASM puro, ya había diez paquetes
+  Apache en el árbol— recorta 837 582 → 569 016 B en las 69 figuras del
+  catálogo, y las 69 salen **idénticas al decodificarlas a RGBA**. Va apagada
+  porque cuesta ~250 ms por figura, y ese tiempo sale del presupuesto de render
+  que Windows ya agotó una vez. En `scripts/rasterize.mjs`, que escribe el
+  catálogo fuera de ese presupuesto, va siempre.
+- **Dónde se cobra ese ahorro, que no es donde parece.** No en la página: las
+  200 figuras de `docs/` son SVG y oxipng no las toca. Se cobra en la historia
+  del repositorio —el catálogo son 6,4 MB versionados de los 6,6 MB de PNG que
+  hay, y cada regeneración deja blobs nuevos que no se van— y sobre todo en el
+  repositorio de quien use `format=png`, que recibe el archivo ya escrito y es
+  el único de la cadena que no puede decidir nada.
+- **La compresión va antes del caché, no después.** Si se colara después, el
+  archivo del disco y los bytes guardados serían distintos y el primer acierto
+  de caché reintroduciría el PNG sin comprimir sin que nada lo dijera. Y la
+  opción entra en el hash **solo cuando está encendida**: igual que los
+  iconos, para no invalidar el caché de quien no la usa.
+- **La trampa de medirlo, que casi cuela dos veces.** Comparar los píxeles
+  convirtiendo a TIFF con `sips` da 22 falsos positivos de 69: oxipng reduce el
+  tipo de color del PNG y entonces `sips` escribe un TIFF con otro formato
+  interno —687 kB contra 233 kB, los mismos píxeles—. Hay que decodificar a
+  RGBA normalizado. Segundo falso positivo, de otra clase: comparar dos
+  ejecuciones de `rasterize.mjs` también da 3 de 3 «distintas», y eso no es
+  oxipng (ver «Determinismo entre plataformas»).
+
 Pendiente de esta tanda: los `c4-*` de LikeC4 no entienden `icon` todavía —su
 emisor es nuestro, así que es trabajo, no incógnita—, y un logo íntegramente
 negro se pierde sobre fondo oscuro, que es lo que `stack-diagram` resuelve con
@@ -351,6 +379,18 @@ en macOS**. Si las fuentes del sistema entran en el SVG, no los produce, y dos
 personas del mismo equipo se pisan los diagramas en cada commit. La matriz de
 CI ya existe; falta cruzar los hashes entre sus jobs.
 
+**Y del PNG ya sabemos la respuesta: hoy no es determinista entre
+ejecuciones.** Dos pasadas de `rasterize.mjs` sobre el mismo SVG dan archivos
+distintos en la misma máquina, con el 0,1-0,4 % de los subpíxeles cambiados
+—jitter del antialiasing del texto—. Dentro de un mismo proceso sí es estable,
+y eso ya está comprobado: la prueba del catálogo exige que dos renders
+seguidos den los mismos bytes, y pasa. Lo que cambia entre lanzamientos es el
+Chromium recién arrancado. Dos consecuencias: el catálogo versionado churna
+entero en cada regeneración aunque no haya cambiado ningún dibujo —así que ahí
+el peso del blob importa menos que el número de blobs—, y cruzar hashes de PNG
+entre plataformas no tiene sentido mientras no sea estable entre ejecuciones en
+una sola. El cruce empieza por el SVG.
+
 **Y hay a quién copiarle.** `heydeer/slimdeer` —un compresor de PNG en Rust—
 se tomó este problema en serio y dejó escrito cómo: usa `libm` explícitamente
 «para que el build del navegador dé los mismos bits que la línea de órdenes»,
@@ -395,48 +435,7 @@ al usarla para escribir documentación de verdad.
    que se puede leer del archivo —un lienzo inutilizable, un texto anclado
    fuera— pero no la que hay que **ver**: un eje empezando en cero o un rótulo
    con el nivel equivocado siguen necesitando el ojo o una instantánea.
-5. **El PNG sale más pesado de lo que hace falta.** Medido sobre el catálogo
-   entero —las 69 figuras de `artifacts/test-results/screenshots/claro`—,
-   `@jsquash/oxipng` —Apache-2.0, WASM puro, el mismo oxipng que `slimdeer`
-   lleva dentro— las deja un **32,1 % más pequeñas**: 837 582 → 569 016 B, a
-   252 ms por figura. Encaja con lo que ya hacemos —D2, Graphviz y svgbob
-   también son WASM— y al ser sin pérdida no abre la pregunta de calidad ni
-   toca el determinismo del caché.
-
-   **Sin perder un solo píxel, verificado**: las 69 salen idénticas al
-   decodificarlas a RGBA. Importa porque son líneas base de comparación
-   visual, y conviene dejar escrita la trampa de medirlo: comparar
-   convirtiendo a TIFF con `sips` da 22 falsos positivos, porque oxipng reduce
-   el tipo de color del PNG y entonces `sips` escribe un TIFF con otro formato
-   interno —687 kB contra 233 kB, los mismos píxeles—. Hay que decodificar a
-   RGBA normalizado.
-
-   **Dónde se cobra el ahorro.** No en la documentación: las 200 figuras de
-   `docs/` son SVG y oxipng no las toca. Se cobra en la historia del
-   repositorio, que es la parte que nunca encoge. Los 140 PNG versionados son
-   el catálogo —6,4 MB de los 6,6 MB de PNG que hay, escritos por
-   `scripts/rasterize.mjs`—, se ha regenerado tres veces y el `.git` pesa
-   18 MB: cada tanda mete 6,4 MB de blobs que se quedan para siempre, y con
-   oxipng serían 4,3 MB. Y se cobra, sobre todo, en el repositorio de quien
-   use `format=png`, que recibe el PNG ya escrito y es el único que no puede
-   decidir nada al respecto.
-
-   Dos salvedades encontradas probándolo: el paquete es *browser-first* y hace
-   `fetch` del `.wasm`, así que en Node hay que pasarle el módulo ya compilado
-   a mano; y añade 252 ms por figura —17,4 s el catálogo entero—, que sobre un
-   presupuesto de render que ya se agotó una vez en Windows no es gratis. Por
-   eso iría en `rasterize.mjs`, fuera de la ruta de render de cada figura, y
-   para el usuario detrás de una opción apagada por defecto.
-
-   Lo que **no** se usa, y conviene dejar dicho por qué: `slimdeer` comprime un
-   8–12 % más que TinyPNG y nuestros PNG son su caso ideal —323, 387 y 1 240
-   colores distintos, justo por encima de los 256 de una paleta, por el
-   antialiasing del texto—, pero no publica paquete npm ni WASM precompilado.
-   Construirlo pide rustup estable **y** nightly con `rust-src`, el target
-   `wasm32`, `wasm-bindgen-cli` clavado y el LLVM de Homebrew, porque el clang
-   de Apple no compila a wasm32. Eso no se le pide a CI ni a quien contribuya.
-   Si algún día publican un wasm, son treinta minutos y un 30 % de ahorro.
-6. **No se puede anotar una figura.** `enesozturk/dimensional-drawing` usa
+5. **No se puede anotar una figura.** `enesozturk/dimensional-drawing` usa
    números de nota en cajita —`[1]`— que aparecen a la vez junto al elemento
    del dibujo y en un bloque de notas al margen. Es la forma de decir «esto de
    aquí tiene una pega» sin meter la frase dentro del diagrama, y no tenemos
@@ -464,6 +463,16 @@ permisos— y porque, al declararse en plano, `dataFile` los sirve desde un
 `.csv` sin escribir el bloque a mano. Y se midió antes de darlos por buenos: el
 acierto de `suggest` subió, no bajó. Un tipo nuevo cuesta su vocabulario y sus
 casos de evaluación, no su compilador.
+
+**Construir `slimdeer` para comprimir más.** Comprime un 8-12 % más que
+TinyPNG y nuestros PNG son su caso ideal —323, 387 y 1 240 colores distintos,
+justo por encima de los 256 de una paleta, por el antialiasing del texto—, pero
+no publica paquete npm ni WASM precompilado. Construirlo pide rustup estable
+**y** nightly con `rust-src`, el target `wasm32`, `wasm-bindgen-cli` clavado y
+el LLVM de Homebrew, porque el clang de Apple no compila a wasm32. Eso no se le
+pide a CI ni a quien contribuya, y por eso la 0.11 usa oxipng vía
+`@jsquash/oxipng`, que es WASM puro y ya viene compilado. Si algún día publican
+un wasm, son treinta minutos y un 30 % de ahorro adicional.
 
 **Una segunda construcción CommonJS.** La 0.10 abrió `require()` apuntando al
 **mismo** fichero ESM, no compilando un `dist` paralelo en CJS. Un `.cjs`

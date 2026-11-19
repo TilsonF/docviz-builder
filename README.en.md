@@ -361,6 +361,14 @@ A PNG is a single image and cannot carry both theme variants the way the SVG
 does, so one has to be chosen: `renderers.png.scheme` (`light` by default) and
 `renderers.png.scale`.
 
+`renderers.png.optimize` recompresses the result with oxipng: **32 % fewer
+bytes** —measured over the 69 figures of this repository's catalogue, 837 582 →
+569 016 B— with the pixels untouched; all 69 decode identically. The saving is
+not collected on the page but in the repository of whoever writes the
+documentation, because a PNG is a versioned binary: every regeneration leaves a
+new blob and the old ones never go away. It ships off because it costs about
+**250 ms per figure**, and that time comes out of the render budget.
+
 Without a browser on the machine, PNG is simply not offered: advertising a
 format that cannot be produced would be worse than not offering it.
 
@@ -742,7 +750,7 @@ detalle:
 ```
 
 Every error carries a **stable code** (`DV001`–`DV007` for environment and
-engines, `DV100`–`DV109` for the DSL and the output). The usual reader of the report is an
+engines, `DV100`–`DV110` for the DSL and the output). The usual reader of the report is an
 agent retrying, and deciding the fix by parsing a human-readable sentence is
 fragile: the wording can improve, the code cannot.
 

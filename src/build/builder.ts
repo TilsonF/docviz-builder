@@ -13,6 +13,7 @@ import { fullHash, HashRegistry, shortHash } from '../core/hash.js';
 import { veredictoDensidad } from '../core/salida.js';
 import { cargarIconos, type ConjuntoIconos } from '../core/iconos.js';
 import { directorioDelPaquete } from '../core/package-version.js';
+import { optimizarPng } from '../core/png.js';
 import {
   assertInside,
   displayPath,
@@ -393,6 +394,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     ...(iconos.huellaDeFuente(block.source) !== undefined
       ? { icons: iconos.huellaDeFuente(block.source) }
       : {}),
+    ...(format === 'png' && config.renderers.png.optimize ? { optimizePng: true } : {}),
   };
   const digest = fullHash(hashInput);
   const short = shortHash(hashInput, config.hash.length);
@@ -439,16 +441,23 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
     maxOutputBytes: config.renderers.maxOutputBytes,
   });
 
-  await cache.set(digest, format, rendered.content);
-  await writeFile(absolutePath, rendered.content);
+  // La compresion va antes del cache, no despues: asi el cache guarda ya los
+  // bytes definitivos y un acierto no vuelve a pagar los 250 ms.
+  const content =
+    format === 'png' && config.renderers.png.optimize
+      ? await optimizarPng(rendered.content)
+      : rendered.content;
+
+  await cache.set(digest, format, content);
+  await writeFile(absolutePath, content);
   return {
     relativePath,
     absolutePath,
     hash: short,
     format,
-    bytes: rendered.content.byteLength,
+    bytes: content.byteLength,
     fromCache: false,
-    ...densidadDe(rendered.content, format, size),
+    ...densidadDe(content, format, size),
   };
 }
 

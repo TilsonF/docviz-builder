@@ -232,6 +232,12 @@ export function esquemaDeConfiguracion(temas: readonly string[]): Record<string,
               enabled: { type: 'boolean', default: true },
               scale: { type: 'number', exclusiveMinimum: 0, maximum: 4, default: 2 },
               scheme: { enum: ['light', 'dark'], default: 'light' },
+              optimize: {
+                type: 'boolean',
+                default: false,
+                description:
+                  'Recomprime el PNG con oxipng: ~32 % menos bytes sin tocar un pixel, ~250 ms por figura.',
+              },
             },
           },
           plantuml: motor({ jar: { type: 'string' }, java: { type: 'string' }, maxHeap: { type: 'string' } }),

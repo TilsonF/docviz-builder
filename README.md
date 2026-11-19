@@ -562,7 +562,16 @@ renderers:
     enabled: true   # false lo apaga: PNG deja de ofrecerse
     scale: 2        # densidad; 2 queda nítido en una proyección
     scheme: light   # o dark
+    optimize: false # recomprimir con oxipng, sin perder un píxel
 ```
+
+`optimize` recorta un **32 %** de bytes —medido sobre las 69 figuras del
+catálogo de este repositorio, 837 582 → 569 016 B— y deja los píxeles
+intactos: las 69 salen idénticas al decodificarlas. Donde se cobra ese ahorro
+no es en la página sino en el repositorio de quien escribe la documentación,
+porque un PNG es un binario versionado: cada regeneración deja un blob nuevo y
+los viejos no se van nunca. Viene apagada porque cuesta unos **250 ms por
+figura**, y ese tiempo sale del presupuesto de render.
 
 Sin un navegador en la máquina, PNG simplemente no se ofrece: anunciar un
 formato que no se puede producir sería peor que no ofrecerlo, porque el fallo
@@ -1282,6 +1291,7 @@ castellano es frágil: la redacción puede cambiar, el código no.
 | `DV107` | Se dibujó con un motor de respaldo y el dibujo tiene otro aspecto |
 | `DV108` | El dibujo no alcanza la letra mínima del destino declarado |
 | `DV109` | El bloque nombra un icono que no está instalado |
+| `DV110` | La compresión del PNG pedida no se pudo aplicar |
 
 Los códigos son parte del contrato: se añaden códigos nuevos en lugar de
 reutilizar los existentes.

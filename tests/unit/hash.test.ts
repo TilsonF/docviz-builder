@@ -118,6 +118,18 @@ describe('themeFingerprint', () => {
     expect(fullHash({ ...png, optimizePng: false })).toBe(fullHash(png));
     expect(fullHash({ ...png, optimizePng: undefined })).toBe(fullHash(png));
   });
+
+  it('cambiar la escala del PNG invalida el recurso', () => {
+    // Sin esto, subir renderers.png.scale con cache caliente seguia sirviendo
+    // los PNG a la densidad anterior.
+    const png = { ...base, format: 'png' as const };
+    expect(fullHash({ ...png, pngScale: 2 })).not.toBe(fullHash({ ...png, pngScale: 1 }));
+    expect(fullHash({ ...png, pngScale: 2 })).toBe(fullHash({ ...png, pngScale: 2 }));
+  });
+
+  it('la escala del PNG no toca el hash de un SVG', () => {
+    expect(fullHash({ ...base, pngScale: 3 })).toBe(fullHash(base));
+  });
 });
 
 describe('HashRegistry — deteccion de colisiones', () => {

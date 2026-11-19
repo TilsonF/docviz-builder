@@ -77,6 +77,7 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
             jarPath: r.plantuml.jar !== undefined ? path.resolve(config.rootDir, r.plantuml.jar) : undefined,
             javaPath: r.plantuml.java,
             maxHeap: r.plantuml.maxHeap,
+            pngScale: r.png.scale,
           }),
         r.plantuml,
       ),
@@ -138,6 +139,7 @@ export function buildRegistry(config: DocVizConfig): RendererRegistry {
         jarPath: r.plantuml.jar !== undefined ? path.resolve(config.rootDir, r.plantuml.jar) : undefined,
         javaPath: r.plantuml.java,
         maxHeap: r.plantuml.maxHeap,
+        pngScale: r.png.scale,
       }),
     );
   }

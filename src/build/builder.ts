@@ -395,6 +395,7 @@ async function renderBlock(args: RenderBlockArgs): Promise<RenderedAsset> {
       ? { icons: iconos.huellaDeFuente(block.source) }
       : {}),
     ...(format === 'png' && config.renderers.png.optimize ? { optimizePng: true } : {}),
+    ...(format === 'png' ? { pngScale: config.renderers.png.scale } : {}),
   };
   const digest = fullHash(hashInput);
   const short = shortHash(hashInput, config.hash.length);
